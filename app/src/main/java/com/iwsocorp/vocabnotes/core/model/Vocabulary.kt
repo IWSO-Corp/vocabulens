@@ -1,4 +1,4 @@
-package com.iwsocorp.vocabnotes.data.model
+package com.iwsocorp.vocabnotes.core.model
 
 data class Vocabulary(
     val word: String,

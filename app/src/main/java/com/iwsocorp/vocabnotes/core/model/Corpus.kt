@@ -1,8 +1,8 @@
-package com.iwsocorp.vocabnotes.data.model
+package com.iwsocorp.vocabnotes.core.model
 
 data class Corpus(
     val id: String,
-    val vocabularyId: String,
+    var noteId: String,
     val word: String,
     val meaning: String,
     var phonetic: String,

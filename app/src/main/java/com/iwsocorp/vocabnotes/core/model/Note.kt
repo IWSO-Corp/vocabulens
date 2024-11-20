@@ -1,4 +1,4 @@
-package com.iwsocorp.vocabnotes.data.model
+package com.iwsocorp.vocabnotes.core.model
 
 data class Note(
     val id: String,
