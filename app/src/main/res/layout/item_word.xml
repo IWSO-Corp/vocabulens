@@ -17,7 +17,7 @@
         tools:text="1." />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/tv_word"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -38,8 +38,8 @@
         android:visibility="gone"
         app:drawableEndCompat="@drawable/baseline_volume_up_14"
         app:drawableTint="#808080"
-        app:layout_constraintStart_toStartOf="@+id/textView3"
-        app:layout_constraintTop_toBottomOf="@+id/textView3"
+        app:layout_constraintStart_toStartOf="@+id/tv_word"
+        app:layout_constraintTop_toBottomOf="@+id/tv_word"
         tools:text="eb'nokses" />
 
     <TextView
@@ -51,19 +51,19 @@
         android:visibility="visible"
         android:layout_marginStart="8dp"
         app:drawableTint="#808080"
-        app:layout_constraintBottom_toBottomOf="@+id/textView3"
-        app:layout_constraintStart_toEndOf="@+id/textView3"
-        app:layout_constraintTop_toTopOf="@+id/textView3"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_word"
+        app:layout_constraintStart_toEndOf="@+id/tv_word"
+        app:layout_constraintTop_toTopOf="@+id/tv_word"
         tools:text="@string/underline" />
 
     <TextView
-        android:id="@+id/textView5"
+        android:id="@+id/tv_meaning"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textColor="@color/teal_700"
         android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="@+id/textView3"
+        app:layout_constraintStart_toStartOf="@+id/tv_word"
         app:layout_constraintTop_toBottomOf="@+id/textView4"
         tools:text="menjengkelkan" />
 
@@ -75,9 +75,10 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="4dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textView3">
+        app:layout_constraintTop_toTopOf="@+id/tv_word">
 
         <TextView
+            android:id="@+id/tv_pos"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/purple_200"

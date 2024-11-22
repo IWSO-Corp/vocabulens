@@ -9,7 +9,11 @@
         android:id="@+id/nav_home"
         android:name="com.iwsocorp.vocabnotes.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_nav_home_to_noteFragment"
+            app:destination="@id/noteFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_gallery"
@@ -22,4 +26,11 @@
         android:name="com.iwsocorp.vocabnotes.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
+
+    <fragment
+        android:id="@+id/noteFragment"
+        android:name="com.iwsocorp.vocabnotes.ui.note.NoteFragment"
+        android:label="fragment_note"
+        tools:layout="@layout/fragment_note" />
+
 </navigation>

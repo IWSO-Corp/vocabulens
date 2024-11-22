@@ -6,11 +6,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
+import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
+import com.iwsocorp.vocabnotes.core.data.model.createCorpus
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
-import kotlin.random.Random
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
+@AndroidEntryPoint
 class NoteFragment(
     private val noteId: String? = null,
 ) : Fragment() {
@@ -28,73 +36,83 @@ class NoteFragment(
 
         viewModel.noteId.observe(viewLifecycleOwner) {
             it?.let { id ->
-                viewModel.getNote(id) { note ->
-                    setupRecyclerView(note.content)
+//                viewModel.getNote(id) { note ->
+//                    Timber.d("note: $note")
+//                    Timber.d("noteCorpus: ${note.content}")
+//                    setupRecyclerView(note.content)
+//                }
+                viewModel.getCorpusByNoteId(id)
+                viewModel.corpusList.observe(viewLifecycleOwner) { corpusList ->
+                    Timber.d("corpusList: $corpusList")
+                    setupRecyclerView(corpusList)
                 }
             }
         }
 
         binding.btnAdd.setOnClickListener {
-            onSubmit()
+            lifecycleScope.launch {
+                onSubmit()
+            }
         }
     }
 
-    private fun onSubmit() {
+    private suspend fun onSubmit() {
         val word = binding.edWord.text.toString()
         val meaning = binding.edMeaning.text.toString()
-        val now = System.currentTimeMillis()
+        if (word.isEmpty() || meaning.isEmpty()) return
+
         val random = generateRandomString(10)
         val id = "corpus-$random"
         val noteIdNew = "note-$random"
 
-        viewModel.searchWord(word) { vocab ->
-            val corpus = Corpus(
-                id = id,
-                noteId = noteId ?: noteIdNew,
-                word = word,
-                meaning = meaning,
-                phonetic = "",
-                audio = "",
-                meanings = listOf(),
+        val vocab = viewModel.getVocabulary(word)
+        val corpus: Corpus =
+            vocab.createCorpus(id, viewModel.noteId.value ?: noteIdNew, word, meaning)
+
+        viewModel.insertCorpus(corpus)
+        viewModel.insertWordMeanings(id, vocab.meanings)
+
+        if (viewModel.noteId.value == null) {
+            val now = System.currentTimeMillis()
+            val note = Note(
+                id = noteIdNew,
+                title = "",
+                wordLang = "",
+                meaningLang = "",
+                content = listOf(corpus),
                 createdAt = now,
                 updatedAt = now
             )
+            viewModel.createNewNote(note)
+            viewModel.updateNoteId(noteIdNew)
+        }
 
-            vocab?.let {
-                corpus.phonetic = it.phonetic
-                corpus.audio = it.audio
-                corpus.meanings = it.meanings
+        binding.edWord.text?.clear()
+        binding.edMeaning.text?.clear()
+    }
+
+    private fun setupRecyclerView(corpusList: List<Corpus>) {
+        binding.tvEmpty.visibility = if (corpusList.isEmpty()) View.VISIBLE else View.GONE
+
+        val listener = object : WordAdapter.ClickListener {
+
+            override fun onClick(corpus: Corpus) {
+                val def = corpus.meanings.takeIf { it.isNotEmpty() }
+                    ?.first()?.definitions?.first()?.definition
+                Snackbar.make(
+                    binding.root,
+                    def ?: "Undefined",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
 
-            insertCorpus(corpus)
-2f
-            if (noteId == null) {
-                val note = Note(
-                    id = noteIdNew,
-                    title = "",
-                    wordLang = "",
-                    meaningLang = "",
-                    content = listOf(corpus),
-                    createdAt = now,
-                    updatedAt = now
-                )
-                viewModel.createNewNote(note)
-                viewModel.updateNoteId(noteIdNew)
-            }
+        }
+
+        binding.rvNote.apply {
+            adapter = WordAdapter(corpusList, listener)
+            layoutManager = LinearLayoutManager(requireContext())
         }
     }
-
-    private fun generateRandomString(length: Int): String {
-        val charset = ('A'..'Z') + ('a'..'z') + ('0'..'9') // Alphanumeric characters
-        return (1..length)
-            .map { Random.nextInt(0, charset.size) }
-            .map(charset::get)
-            .joinToString("")
-    }
-
-    private fun insertCorpus(corpus: Corpus) {}
-
-    private fun setupRecyclerView(corpusList: List<Corpus>) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

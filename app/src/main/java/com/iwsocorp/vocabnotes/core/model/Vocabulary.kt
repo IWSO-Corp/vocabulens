@@ -4,17 +4,17 @@ data class Vocabulary(
     val word: String,
     val phonetic: String,
     val audio: String,
-    val meanings: List<Meanings>
+    val meanings: List<Meaning>,
 )
 
-data class Meanings(
+data class Meaning(
     val partOfSpeech: String,
-    val definitions: List<Definitions>,
+    val definitions: List<Definition>,
     val synonyms: List<String>,
-    val antonyms: List<String>
+    val antonyms: List<String>,
 )
 
-data class Definitions(
+data class Definition(
     val definition: String,
-    val example: String
+    val example: String?,
 )
