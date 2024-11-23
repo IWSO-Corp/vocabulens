@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.kotlin.serialization)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.currentactivefragment)
 
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)

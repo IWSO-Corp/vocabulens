@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes.ui.note
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,7 +8,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.data.model.createCorpus
@@ -18,20 +18,26 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-@AndroidEntryPoint
-class NoteFragment(
-    private val noteId: String? = null,
-) : Fragment() {
+const val noteIdKey = "NOTE_ID"
 
-    private val viewModel: NoteViewModel by viewModels()
+@AndroidEntryPoint
+class NoteFragment() : Fragment() {
+
+    private var mediaPlayer: MediaPlayer? = null
     private var _binding: FragmentNoteBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: NoteViewModel by viewModels()
+    private val noteId: String? by lazy {
+        arguments?.getString(noteIdKey)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         noteId?.let {
             viewModel.updateNoteId(it)
+        } ?: run {
+            binding.tvEmpty.visibility = View.VISIBLE
         }
 
         viewModel.noteId.observe(viewLifecycleOwner) {
@@ -57,6 +63,8 @@ class NoteFragment(
     }
 
     private suspend fun onSubmit() {
+        val worldLang = binding.tvWordLang.text.toString()
+        val meaningLang = binding.tvMeaningLang.text.toString()
         val word = binding.edWord.text.toString()
         val meaning = binding.edMeaning.text.toString()
         if (word.isEmpty() || meaning.isEmpty()) return
@@ -77,14 +85,16 @@ class NoteFragment(
             val note = Note(
                 id = noteIdNew,
                 title = "",
-                wordLang = "",
-                meaningLang = "",
+                wordLang = worldLang,
+                meaningLang = meaningLang,
                 content = listOf(corpus),
                 createdAt = now,
                 updatedAt = now
             )
             viewModel.createNewNote(note)
             viewModel.updateNoteId(noteIdNew)
+        } else {
+            viewModel.updateUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
         }
 
         binding.edWord.text?.clear()
@@ -92,8 +102,6 @@ class NoteFragment(
     }
 
     private fun setupRecyclerView(corpusList: List<Corpus>) {
-        binding.tvEmpty.visibility = if (corpusList.isEmpty()) View.VISIBLE else View.GONE
-
         val listener = object : WordAdapter.ClickListener {
 
             override fun onClick(corpus: Corpus) {
@@ -106,16 +114,43 @@ class NoteFragment(
                 ).show()
             }
 
+            override fun onPlay(url: String) {
+                if (url.isNotEmpty()) playAudio(url)
+            }
+
         }
 
-        binding.rvNote.apply {
-            adapter = WordAdapter(corpusList, listener)
-            layoutManager = LinearLayoutManager(requireContext())
+        binding.rvCorpus.adapter = WordAdapter(corpusList.sortedBy { it.word }, listener)
+        binding.tvEmpty.visibility = if (corpusList.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    private fun playAudio(url: String) {
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(url)
+                prepareAsync()
+                setOnPreparedListener {
+                    start()
+                    Timber.d("Audio started playing")
+                }
+                setOnCompletionListener {
+                    resetMediaPlayer()
+                    Timber.d("Audio finished playing")
+                }
+                setOnErrorListener { _, what, extra ->
+                    resetMediaPlayer()
+                    Timber.e("Error occurred while playing audio: what=$what, extra=$extra")
+                    true
+                }
+            }
+        } else {
+            mediaPlayer?.start()
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private fun resetMediaPlayer() {
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 
     override fun onCreateView(
@@ -129,6 +164,7 @@ class NoteFragment(
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        resetMediaPlayer()
     }
 
 }

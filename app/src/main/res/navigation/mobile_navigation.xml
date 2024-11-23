@@ -31,6 +31,11 @@
         android:id="@+id/noteFragment"
         android:name="com.iwsocorp.vocabnotes.ui.note.NoteFragment"
         android:label="fragment_note"
-        tools:layout="@layout/fragment_note" />
+        tools:layout="@layout/fragment_note" >
+        <argument
+            android:name="noteId"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
 
 </navigation>

@@ -30,9 +30,9 @@ internal class RetrofitVobyNetwork @Inject constructor(networkJson: Json) : Voby
         .create(RetrofitVobyNetworkApi::class.java)
 
     override suspend fun getVocabulary(word: String): List<VocabularyResponseItem> {
-        Timber.d("getVocabulary: ${networkApi.getVocabulary(word)}")
         return try {
             val response = networkApi.getVocabulary(word)
+            Timber.d("response: $response")
             if (response.isSuccessful) {
                 response.body() ?: listOf(VocabularyResponseItem())
             } else {

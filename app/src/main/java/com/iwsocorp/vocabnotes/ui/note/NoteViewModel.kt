@@ -62,4 +62,12 @@ class NoteViewModel @Inject constructor(
         }
     }
 
+    fun updateNote(note: Note) = viewModelScope.launch {
+        noteRepository.updateNote(note)
+    }
+
+    fun updateUpdatedAt(id: String, updatedAt: Long) = viewModelScope.launch {
+        noteRepository.updateUpdatedAt(id, updatedAt)
+    }
+
 }

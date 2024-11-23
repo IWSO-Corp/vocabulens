@@ -11,6 +11,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import com.iwsocorp.vocabnotes.databinding.ActivityMainBinding
+import com.iwsocorp.vocabnotes.ui.home.HomeFragment
+import com.wikosac.currentactivefragment.CurrentActiveFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -18,6 +20,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private val currentActiveFragment: CurrentActiveFragment by lazy {
+        CurrentActiveFragment(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +48,10 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        currentActiveFragment.get(R.id.nav_host_fragment_content_main) {
+            if (it is HomeFragment) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

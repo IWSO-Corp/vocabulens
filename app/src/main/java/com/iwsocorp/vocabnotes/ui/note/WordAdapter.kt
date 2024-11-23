@@ -8,21 +8,31 @@ import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
 import java.util.Locale
 
 class WordAdapter(
-    val corpusList: List<Corpus>,
-    val listener: ClickListener,
+    private val corpusList: List<Corpus>,
+    private val listener: ClickListener,
 ) : RecyclerView.Adapter<WordAdapter.ViewHolder>() {
 
     interface ClickListener {
         fun onClick(corpus: Corpus)
+        fun onPlay(url: String)
     }
 
     inner class ViewHolder(val binding: ItemWordBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(corpus: Corpus, position: Int) {
-            binding.tvNumber.text = String.format(Locale.US, "%d", position + 1)
-            binding.tvWord.text = corpus.word
-            binding.tvMeaning.text = corpus.meaning
-            binding.tvPos.text = corpus.meanings.takeIf { it.isNotEmpty() }?.first()?.partOfSpeech
+        fun bind(corpus: Corpus, position: Int) = with(binding) {
+            tvNumber.text = String.format(Locale.US, "%d", position + 1)
+            tvWord.text = corpus.word
+            tvMeaning.text = corpus.meaning
+            tvPos.text = corpus.meanings.takeIf { it.isNotEmpty() }?.first()?.partOfSpeech
+            cardPos.visibility = if (tvPos.text.isEmpty()) ViewGroup.GONE else ViewGroup.VISIBLE
+            underline.visibility = if (corpus.audio.isEmpty()) ViewGroup.GONE else ViewGroup.VISIBLE
+            tvPronun.apply {
+                text = corpus.phonetic
+                visibility = if (corpus.phonetic.isEmpty()) ViewGroup.GONE else ViewGroup.VISIBLE
+                setOnClickListener {
+                    listener.onPlay(corpus.audio)
+                }
+            }
 
             itemView.setOnClickListener {
                 listener.onClick(corpus)
@@ -30,10 +40,7 @@ class WordAdapter(
         }
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int,
-    ): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             ItemWordBinding.inflate(
                 LayoutInflater.from(parent.context),

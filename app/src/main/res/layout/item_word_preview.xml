@@ -4,77 +4,40 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="8dp">
-
-    <TextView
-        android:id="@+id/tv_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="1." />
+    android:paddingHorizontal="4dp"
+    android:paddingVertical="1dp">
 
     <TextView
         android:id="@+id/tv_word"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
-        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="obnoxious" />
 
     <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:drawablePadding="8dp"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:drawableEndCompat="@drawable/baseline_volume_up_14"
-        app:drawableTint="#808080"
-        app:layout_constraintStart_toStartOf="@+id/tv_word"
-        app:layout_constraintTop_toBottomOf="@+id/tv_word"
-        tools:text="eb'nokses" />
-
-    <TextView
         android:id="@+id/tv_pronun"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:drawablePadding="8dp"
-        android:textColor="#646464"
-        android:textSize="12sp"
+        android:textSize="10sp"
         android:visibility="visible"
+        android:layout_marginStart="8dp"
+        app:drawableTint="#808080"
         app:layout_constraintBottom_toBottomOf="@+id/tv_word"
         app:layout_constraintStart_toEndOf="@+id/tv_word"
         app:layout_constraintTop_toTopOf="@+id/tv_word"
-        tools:text="@string/underline" />
-
-    <View
-        android:id="@+id/underline"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginHorizontal="4dp"
-        android:layout_marginTop="-2dp"
-        android:background="#646464"
-        app:layout_constraintEnd_toEndOf="@id/tv_pronun"
-        app:layout_constraintStart_toStartOf="@id/tv_pronun"
-        app:layout_constraintTop_toBottomOf="@id/tv_pronun" />
+        tools:text="@string/underline"
+        tools:ignore="SmallSp" />
 
     <TextView
         android:id="@+id/tv_meaning"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:textColor="@color/teal_700"
-        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="@+id/tv_word"
-        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        app:layout_constraintTop_toBottomOf="@+id/tv_word"
         tools:text="menjengkelkan" />
 
     <androidx.cardview.widget.CardView
@@ -93,8 +56,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/purple_200"
-            android:textSize="12sp"
-            tools:text="adjective" />
+            android:textSize="10sp"
+            tools:text="adjective"
+            tools:ignore="SmallSp" />
 
     </androidx.cardview.widget.CardView>
 

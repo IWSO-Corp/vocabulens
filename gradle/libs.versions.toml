@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.2"
+currentactivefragment = "1.0.3"
 gsonVersion = "2.11.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
@@ -25,6 +26,7 @@ okhttp = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+currentactivefragment = { module = "com.github.wikosac:CurrentActiveFragment", version.ref = "currentactivefragment" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

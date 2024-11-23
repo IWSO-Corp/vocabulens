@@ -4,37 +4,52 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentHomeBinding
+import com.iwsocorp.vocabnotes.ui.note.noteIdKey
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
+    private val viewModel: HomeViewModel by activityViewModels()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.notes.observe(viewLifecycleOwner) {
+            Timber.d("notes: $it")
+            setupRecyclerView(it)
+        }
+    }
+
+    private fun setupRecyclerView(notes: List<Note>) {
+        val listener = object : NoteAdapter.ClickListener {
+            override fun onClick(note: Note) {
+                findNavController().navigate(
+                    R.id.action_nav_home_to_noteFragment,
+                    Bundle().apply { putString(noteIdKey, note.id) }
+                )
+            }
+        }
+
+        binding.rvNote.adapter = NoteAdapter(notes.sortedByDescending { it.updatedAt }, listener)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
-
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
-        return root
+        return binding.root
     }
 
     override fun onDestroyView() {

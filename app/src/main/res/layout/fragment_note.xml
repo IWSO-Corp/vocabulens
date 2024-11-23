@@ -6,12 +6,11 @@
     android:layout_height="match_parent"
     tools:context=".ui.note.NoteFragment">
 
-
-
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_note"
+        android:id="@+id/rv_corpus"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/cs_add"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="11"
@@ -22,7 +21,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add item"
-        app:layout_constraintBottom_toBottomOf="@+id/rv_note"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/rv_corpus"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -36,7 +36,7 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/tv_word_lang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
@@ -44,9 +44,10 @@
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout"
             app:layout_constraintStart_toStartOf="@+id/textInputLayout"
-            tools:text="English" />
+            android:text="English" />
 
         <TextView
+            android:id="@+id/tv_meaning_lang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
@@ -54,7 +55,7 @@
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout2"
             app:layout_constraintStart_toStartOf="@+id/textInputLayout2"
-            tools:text="Indonesian" />
+            android:text="Indonesian" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout"

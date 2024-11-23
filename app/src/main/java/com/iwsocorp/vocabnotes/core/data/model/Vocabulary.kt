@@ -10,7 +10,6 @@ import com.iwsocorp.vocabnotes.core.network.model.DefinitionsItem
 import com.iwsocorp.vocabnotes.core.network.model.MeaningsItem
 import com.iwsocorp.vocabnotes.core.network.model.PhoneticsItem
 import com.iwsocorp.vocabnotes.core.network.model.VocabularyResponseItem
-import timber.log.Timber
 
 fun VocabularyResponseItem.asVocabulary(): Vocabulary {
     val phonetic: String = phonetic ?: phonetics?.takeIf { it.isNotEmpty() }?.first()?.text ?: ""

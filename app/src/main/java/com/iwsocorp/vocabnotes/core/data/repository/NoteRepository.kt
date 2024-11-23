@@ -22,6 +22,10 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.updateNote(note.asEntity())
     }
 
+    override suspend fun updateUpdatedAt(id: String, updatedAt: Long) {
+        noteDao.updateUpdatedAt(id, updatedAt)
+    }
+
     override suspend fun deleteNote(id: String) {
         noteDao.deleteNoteById(id)
     }
@@ -64,6 +68,7 @@ class NoteRepositoryImpl @Inject constructor(
 interface NoteRepository {
     suspend fun addNote(note: Note)
     suspend fun updateNote(note: Note)
+    suspend fun updateUpdatedAt(id: String, updatedAt: Long)
     suspend fun deleteNote(id: String)
     suspend fun getNoteById(id: String): Note
     suspend fun getNotes(): Flow<List<Note>>
