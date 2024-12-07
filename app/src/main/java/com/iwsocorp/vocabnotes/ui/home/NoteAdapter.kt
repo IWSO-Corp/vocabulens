@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
@@ -20,7 +19,7 @@ class NoteAdapter(
 ) : RecyclerView.Adapter<NoteAdapter.ViewHolder>() {
 
     interface ClickListener {
-        fun onClick(note: Note)
+        fun onClick(noteId: String)
     }
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -33,11 +32,10 @@ class NoteAdapter(
             tvDate.text = note.updatedAt.asString()
 
             itemView.setOnClickListener {
-                listener.onClick(note)
+                listener.onClick(note.id)
             }
-            rvPreview.adapter = PreviewAdapter(note.content.take(5).sortedBy { it.word }, note.id) {
-                listener.onClick(note)
-            }
+
+            rvPreview.adapter = PreviewAdapter(note.content.take(5).sortedBy { it.word }, note.id) { listener.onClick(it) }
         }
 
         private fun Long.asString(): String {

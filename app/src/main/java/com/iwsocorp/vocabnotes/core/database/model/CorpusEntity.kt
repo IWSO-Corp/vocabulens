@@ -3,6 +3,7 @@ package com.iwsocorp.vocabnotes.core.database.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Meaning
 
 @Entity(tableName = "corpus")
 data class CorpusEntity(
@@ -16,7 +17,7 @@ data class CorpusEntity(
     val updatedAt: Long,
 )
 
-fun CorpusEntity.asExternalModel(meanings: List<MeaningEntity>) = Corpus(
+fun CorpusEntity.asExternalModel(meanings: List<Meaning>) = Corpus(
     id = id,
     noteId = noteId,
     word = word,
@@ -25,5 +26,5 @@ fun CorpusEntity.asExternalModel(meanings: List<MeaningEntity>) = Corpus(
     audio = audio,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    meanings = meanings.map { it.asExternalModel() }
+    meanings = meanings
 )

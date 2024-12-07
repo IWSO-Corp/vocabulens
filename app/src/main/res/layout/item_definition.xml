@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="8dp">
+
+    <TextView
+        android:id="@+id/tv_part_of_speech"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Adverb"
+        android:textColor="@color/teal_700" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_definitions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_word_definition" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Synonyms"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/tv_synonyms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ex, amp, le" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Antonyms"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/tv_antonyms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ex, amp, le" />
+
+    </LinearLayout>
+
+</LinearLayout>

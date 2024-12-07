@@ -2,6 +2,7 @@ package com.iwsocorp.vocabnotes.core.data.repository
 
 import com.iwsocorp.vocabnotes.core.database.dao.CorpusDao
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
+import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
@@ -19,19 +20,9 @@ class CorpusRepositoryImpl @Inject constructor(
         this.map { corpusEntities ->
             corpusEntities.map {
                 Timber.d("corpusEntities: $corpusEntities")
-                val wordMeanings = meaningRepository.getMeanings(it.id).first()
+                val wordMeanings = meaningRepository.getMeanings(it.word).first()
                 Timber.d("wordMeanings: $wordMeanings")
-                Corpus(
-                    id = it.id,
-                    noteId = it.noteId,
-                    word = it.word,
-                    meaning = it.meaning,
-                    phonetic = it.phonetic,
-                    audio = it.audio,
-                    meanings = wordMeanings,
-                    createdAt = it.createdAt,
-                    updatedAt = it.updatedAt
-                )
+                it.asExternalModel(wordMeanings)
             }
         }
 
@@ -47,9 +38,9 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.deleteCorpusById(id)
     }
 
-    override suspend fun getCorpusById(id: String): Corpus {
-        val wordMeanings = meaningRepository.getMeanings(id).first()
-        return corpusDao.getCorpusById(id).let {
+    override suspend fun getCorpusByWord(word: String): Corpus {
+        val wordMeanings = meaningRepository.getMeanings(word).first()
+        return corpusDao.getCorpusByWord(word).let {
             Corpus(
                 id = it.id,
                 noteId = it.noteId,
@@ -86,7 +77,7 @@ interface CorpusRepository {
     suspend fun addCorpus(corpus: Corpus)
     suspend fun updateCorpus(corpus: Corpus)
     suspend fun deleteCorpus(id: String)
-    suspend fun getCorpusById(id: String): Corpus
+    suspend fun getCorpusByWord(word: String): Corpus
     suspend fun searchCorpus(query: String): Flow<List<Corpus>>
     suspend fun getAllCorpus(): Flow<List<Corpus>>
     suspend fun getCorpusByNoteId(noteId: String): Flow<List<Corpus>>

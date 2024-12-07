@@ -1,6 +1,7 @@
 package com.iwsocorp.vocabnotes.core.data.repository
 
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
+import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
@@ -33,32 +34,14 @@ class NoteRepositoryImpl @Inject constructor(
     override suspend fun getNoteById(id: String): Note {
         val noteCorpus = corpusRepository.getCorpusByNoteId(id).first()
         Timber.d("note: ${noteDao.getNoteById(id).createdAt}")
-        return noteDao.getNoteById(id).let {
-            Note(
-                id = it.id,
-                title = it.title,
-                wordLang = it.wordLang,
-                meaningLang = it.meaningLang,
-                content = noteCorpus,
-                createdAt = it.createdAt,
-                updatedAt = it.updatedAt
-            )
-        }
+        return noteDao.getNoteById(id).asExternalModel(noteCorpus)
     }
 
     override suspend fun getNotes(): Flow<List<Note>> {
         return noteDao.getAllNotes().map { noteEntities ->
             noteEntities.map {
                 val noteCorpus = corpusRepository.getCorpusByNoteId(it.id).first()
-                Note(
-                    id = it.id,
-                    title = it.title,
-                    wordLang = it.wordLang,
-                    meaningLang = it.meaningLang,
-                    content = noteCorpus,
-                    createdAt = it.createdAt,
-                    updatedAt = it.updatedAt
-                )
+                it.asExternalModel(noteCorpus)
             }
         }
     }

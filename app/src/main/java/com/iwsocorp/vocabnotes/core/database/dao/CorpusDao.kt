@@ -20,8 +20,8 @@ interface CorpusDao {
     @Query("DELETE FROM corpus WHERE id = :id")
     suspend fun deleteCorpusById(id: String)
 
-    @Query("SELECT * FROM corpus WHERE id = :id")
-    suspend fun getCorpusById(id: String): CorpusEntity
+    @Query("SELECT * FROM corpus WHERE word = :word")
+    suspend fun getCorpusByWord(word: String): CorpusEntity
 
     @Query("SELECT * FROM corpus WHERE word LIKE '%' || :query || '%'")
     fun searchCorpus(query: String): Flow<List<CorpusEntity>>

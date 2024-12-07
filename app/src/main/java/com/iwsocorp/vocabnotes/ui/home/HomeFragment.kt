@@ -10,7 +10,7 @@ import androidx.navigation.fragment.findNavController
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentHomeBinding
-import com.iwsocorp.vocabnotes.ui.note.noteIdKey
+import com.iwsocorp.vocabnotes.ui.note.ARG_NOTE_ID
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -27,20 +27,25 @@ class HomeFragment : Fragment() {
         viewModel.notes.observe(viewLifecycleOwner) {
             Timber.d("notes: $it")
             setupRecyclerView(it)
+
+            binding.tvEmpty.visibility = if (it.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
     private fun setupRecyclerView(notes: List<Note>) {
         val listener = object : NoteAdapter.ClickListener {
-            override fun onClick(note: Note) {
-                findNavController().navigate(
-                    R.id.action_nav_home_to_noteFragment,
-                    Bundle().apply { putString(noteIdKey, note.id) }
-                )
+            override fun onClick(noteId: String) {
+                navigate(noteId)
             }
         }
-
         binding.rvNote.adapter = NoteAdapter(notes.sortedByDescending { it.updatedAt }, listener)
+    }
+
+    private fun navigate(noteId: String) {
+        findNavController().navigate(
+            R.id.action_nav_home_to_noteFragment,
+            Bundle().apply { putString(ARG_NOTE_ID, noteId) }
+        )
     }
 
     override fun onCreateView(

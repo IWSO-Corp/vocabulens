@@ -8,7 +8,7 @@ import com.iwsocorp.vocabnotes.core.model.Meaning
 @Entity(tableName = "meaning")
 class MeaningEntity(
     @PrimaryKey val id: String,
-    val wordId: String,
+    val word: String,
     val partOfSpeech: String,
     val definition: String,
     val example: String?,

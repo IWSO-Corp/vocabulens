@@ -7,18 +7,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
+import androidx.navigation.fragment.findNavController
+import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
-import com.iwsocorp.vocabnotes.core.data.model.createCorpus
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
+import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
-const val noteIdKey = "NOTE_ID"
+const val ARG_NOTE_ID = "noteIdParam"
 
 @AndroidEntryPoint
 class NoteFragment() : Fragment() {
@@ -28,7 +27,7 @@ class NoteFragment() : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: NoteViewModel by viewModels()
     private val noteId: String? by lazy {
-        arguments?.getString(noteIdKey)
+        arguments?.getString(ARG_NOTE_ID)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -36,33 +35,31 @@ class NoteFragment() : Fragment() {
 
         noteId?.let {
             viewModel.updateNoteId(it)
+            viewModel.getNote(it) { note ->
+                Timber.d("note: $note")
+            }
         } ?: run {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
         viewModel.noteId.observe(viewLifecycleOwner) {
             it?.let { id ->
-//                viewModel.getNote(id) { note ->
-//                    Timber.d("note: $note")
-//                    Timber.d("noteCorpus: ${note.content}")
-//                    setupRecyclerView(note.content)
-//                }
                 viewModel.getCorpusByNoteId(id)
                 viewModel.corpusList.observe(viewLifecycleOwner) { corpusList ->
                     Timber.d("corpusList: $corpusList")
                     setupRecyclerView(corpusList)
+                    binding.tvEmpty.visibility =
+                        if (corpusList.isEmpty()) View.VISIBLE else View.GONE
                 }
             }
         }
 
         binding.btnAdd.setOnClickListener {
-            lifecycleScope.launch {
-                onSubmit()
-            }
+            onSubmit()
         }
     }
 
-    private suspend fun onSubmit() {
+    private fun onSubmit() {
         val worldLang = binding.tvWordLang.text.toString()
         val meaningLang = binding.tvMeaningLang.text.toString()
         val word = binding.edWord.text.toString()
@@ -73,12 +70,16 @@ class NoteFragment() : Fragment() {
         val id = "corpus-$random"
         val noteIdNew = "note-$random"
 
-        val vocab = viewModel.getVocabulary(word)
-        val corpus: Corpus =
-            vocab.createCorpus(id, viewModel.noteId.value ?: noteIdNew, word, meaning)
+        val corpus = Corpus(
+            id = id,
+            noteId = viewModel.noteId.value ?: noteIdNew,
+            word = word,
+            meaning = meaning,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
 
         viewModel.insertCorpus(corpus)
-        viewModel.insertWordMeanings(id, vocab.meanings)
 
         if (viewModel.noteId.value == null) {
             val now = System.currentTimeMillis()
@@ -105,13 +106,11 @@ class NoteFragment() : Fragment() {
         val listener = object : WordAdapter.ClickListener {
 
             override fun onClick(corpus: Corpus) {
-                val def = corpus.meanings.takeIf { it.isNotEmpty() }
-                    ?.first()?.definitions?.first()?.definition
-                Snackbar.make(
-                    binding.root,
-                    def ?: "Undefined",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+                findNavController().navigate(
+                    R.id.action_noteFragment_to_corpusDetailFragment,
+                    Bundle().apply {
+                        putString(ARG_CORPUS_WORD, corpus.word)
+                    })
             }
 
             override fun onPlay(url: String) {
@@ -121,7 +120,6 @@ class NoteFragment() : Fragment() {
         }
 
         binding.rvCorpus.adapter = WordAdapter(corpusList.sortedBy { it.word }, listener)
-        binding.tvEmpty.visibility = if (corpusList.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun playAudio(url: String) {
@@ -157,7 +155,7 @@ class NoteFragment() : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentNoteBinding.inflate(layoutInflater, container, false)
+        _binding = FragmentNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
 

@@ -13,13 +13,13 @@ class MeaningRepositoryImpl @Inject constructor(
     private val meaningDao: MeaningDao,
 ) : MeaningRepository {
 
-    override suspend fun insertMeanings(wordId: String, meanings: List<Meaning>) {
+    override suspend fun insertMeanings(word: String, meanings: List<Meaning>) {
         Timber.d("meaningsData: $meanings")
-        meaningDao.insertWordMeanings(meanings.map { it.asEntity(wordId) })
+        meaningDao.insertWordMeanings(meanings.map { it.asEntity(word) })
     }
 
-    override fun getMeanings(wordId: String): Flow<List<Meaning>> {
-        return meaningDao.getWordMeanings(wordId).map { meaningEntities ->
+    override fun getMeanings(word: String): Flow<List<Meaning>> {
+        return meaningDao.getWordMeanings(word).map { meaningEntities ->
             meaningEntities.map { it.asExternalModel() }
         }
     }
@@ -27,6 +27,6 @@ class MeaningRepositoryImpl @Inject constructor(
 }
 
 interface MeaningRepository {
-    suspend fun insertMeanings(wordId: String, meanings: List<Meaning>)
-    fun getMeanings(wordId: String): Flow<List<Meaning>>
+    suspend fun insertMeanings(word: String, meanings: List<Meaning>)
+    fun getMeanings(word: String): Flow<List<Meaning>>
 }

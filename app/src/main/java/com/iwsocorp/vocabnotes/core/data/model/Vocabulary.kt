@@ -12,7 +12,7 @@ import com.iwsocorp.vocabnotes.core.network.model.PhoneticsItem
 import com.iwsocorp.vocabnotes.core.network.model.VocabularyResponseItem
 
 fun VocabularyResponseItem.asVocabulary(): Vocabulary {
-    val phonetic: String = phonetic ?: phonetics?.takeIf { it.isNotEmpty() }?.first()?.text ?: ""
+    val phonetic: String = phonetic ?: phonetics?.takeIf { it.isNotEmpty() }?.first()?.text ?: "-"
     val phoneticsWithAudio: List<PhoneticsItem?>? =
         phonetics?.filter { !it?.audio.isNullOrEmpty() }.takeIf { it?.isNotEmpty() == true }
     val audio: String = phoneticsWithAudio?.first()?.audio ?: ""
@@ -59,9 +59,9 @@ fun Vocabulary.createCorpus(
     updatedAt = System.currentTimeMillis()
 )
 
-fun Meaning.asEntity(wordId: String) = MeaningEntity(
+fun Meaning.asEntity(word: String) = MeaningEntity(
     id = "meaning-${generateRandomString(10)}",
-    wordId = wordId,
+    word = word,
     partOfSpeech = partOfSpeech,
     definition = definitions.first().definition,
     example = definitions.first().example,

@@ -4,12 +4,12 @@ import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
 
 data class Corpus(
     val id: String,
-    var noteId: String,
+    val noteId: String,
     val word: String,
     val meaning: String,
-    var phonetic: String,
-    var audio: String,
-    var meanings: List<Meaning>,
+    val phonetic: String = "",
+    val audio: String = "",
+    val meanings: List<Meaning> = emptyList(),
     val createdAt: Long,
     val updatedAt: Long
 )

@@ -2,6 +2,7 @@ package com.iwsocorp.vocabnotes.core.database.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 
 @Entity(tableName = "notes")
@@ -14,15 +15,12 @@ class NoteEntity(
     val updatedAt: Long,
 )
 
-fun NoteEntity.asExternalModel(
-    content: List<CorpusEntity>,
-    meanings: List<MeaningEntity>
-) = Note(
+fun NoteEntity.asExternalModel(content: List<Corpus>) = Note(
     id = id,
     title = title,
     wordLang = wordLang,
     meaningLang = meaningLang,
-    content = content.map { it.asExternalModel(meanings) },
+    content = content,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
+import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -24,6 +25,15 @@ class HomeViewModel @Inject constructor(
     fun getAllNotes() = viewModelScope.launch {
         noteRepository.getNotes().collectLatest {
             _notes.value = it
+        }
+    }
+
+    private val _corpus = MutableLiveData<List<Corpus>>()
+    val corpus: LiveData<List<Corpus>> = _corpus
+
+    fun getCorpusByNoteId(noteId: String) = viewModelScope.launch {
+        corpusRepository.getCorpusByNoteId(noteId).collectLatest {
+            _corpus.value = it
         }
     }
 

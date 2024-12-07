@@ -13,7 +13,7 @@ interface MeaningDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWordMeanings(meaning: List<MeaningEntity>)
 
-    @Query("SELECT * FROM meaning WHERE wordId = :wordId")
-    fun getWordMeanings(wordId: String): Flow<List<MeaningEntity>>
+    @Query("SELECT * FROM meaning WHERE word = :word")
+    fun getWordMeanings(word: String): Flow<List<MeaningEntity>>
 
 }

@@ -9,9 +9,7 @@ import com.iwsocorp.vocabnotes.core.data.repository.MeaningRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
-import com.iwsocorp.vocabnotes.core.model.Meaning
 import com.iwsocorp.vocabnotes.core.model.Note
-import com.iwsocorp.vocabnotes.core.model.Vocabulary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -41,16 +39,8 @@ class NoteViewModel @Inject constructor(
         noteRepository.addNote(note)
     }
 
-    suspend fun getVocabulary(word: String): Vocabulary {
-        return vocabularyRepository.getVocabulary(word)
-    }
-
     fun insertCorpus(corpus: Corpus) = viewModelScope.launch {
         corpusRepository.addCorpus(corpus)
-    }
-
-    fun insertWordMeanings(wordId: String, meanings: List<Meaning>) = viewModelScope.launch {
-        meaningRepository.insertMeanings(wordId = wordId, meanings = meanings)
     }
 
     private val _corpusList = MutableLiveData<List<Corpus>>()

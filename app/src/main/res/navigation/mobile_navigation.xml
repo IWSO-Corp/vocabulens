@@ -36,6 +36,18 @@
             android:name="noteId"
             app:argType="string"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_noteFragment_to_corpusDetailFragment"
+            app:destination="@id/corpusDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/corpusDetailFragment"
+        android:name="com.iwsocorp.vocabnotes.ui.detail.CorpusDetailFragment"
+        android:label="fragment_corpus_detail"
+        tools:layout="@layout/fragment_corpus_detail" >
+        <argument
+            android:name="word"
+            app:argType="string" />
     </fragment>
 
 </navigation>
