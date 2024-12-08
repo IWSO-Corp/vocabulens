@@ -29,6 +29,22 @@ class NoteFragment() : Fragment() {
     private val noteId: String? by lazy {
         arguments?.getString(ARG_NOTE_ID)
     }
+    private val wordAdapter: WordAdapter by lazy {
+        WordAdapter(object : WordAdapter.ClickListener {
+            override fun onClick(corpus: Corpus) {
+                findNavController().navigate(
+                    R.id.action_noteFragment_to_corpusDetailFragment,
+                    Bundle().apply {
+                        putString(ARG_CORPUS_WORD, corpus.word)
+                    }
+                )
+            }
+
+            override fun onPlay(url: String) {
+                if (url.isNotEmpty()) playAudio(url)
+            }
+        })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,13 +63,16 @@ class NoteFragment() : Fragment() {
                 viewModel.getCorpusByNoteId(id)
                 viewModel.corpusList.observe(viewLifecycleOwner) { corpusList ->
                     Timber.d("corpusList: $corpusList")
-                    setupRecyclerView(corpusList)
+
+                    wordAdapter.appendData(corpusList)
+
                     binding.tvEmpty.visibility =
                         if (corpusList.isEmpty()) View.VISIBLE else View.GONE
                 }
             }
         }
 
+        binding.rvCorpus.adapter = wordAdapter
         binding.btnAdd.setOnClickListener {
             onSubmit()
         }
@@ -75,6 +94,8 @@ class NoteFragment() : Fragment() {
             noteId = viewModel.noteId.value ?: noteIdNew,
             word = word,
             meaning = meaning,
+            wordLang = worldLang,
+            meaningLang = meaningLang,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
@@ -100,26 +121,6 @@ class NoteFragment() : Fragment() {
 
         binding.edWord.text?.clear()
         binding.edMeaning.text?.clear()
-    }
-
-    private fun setupRecyclerView(corpusList: List<Corpus>) {
-        val listener = object : WordAdapter.ClickListener {
-
-            override fun onClick(corpus: Corpus) {
-                findNavController().navigate(
-                    R.id.action_noteFragment_to_corpusDetailFragment,
-                    Bundle().apply {
-                        putString(ARG_CORPUS_WORD, corpus.word)
-                    })
-            }
-
-            override fun onPlay(url: String) {
-                if (url.isNotEmpty()) playAudio(url)
-            }
-
-        }
-
-        binding.rvCorpus.adapter = WordAdapter(corpusList.sortedBy { it.word }, listener)
     }
 
     private fun playAudio(url: String) {

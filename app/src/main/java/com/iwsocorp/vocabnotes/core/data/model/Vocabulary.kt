@@ -2,7 +2,6 @@ package com.iwsocorp.vocabnotes.core.data.model
 
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.database.model.MeaningEntity
-import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Definition
 import com.iwsocorp.vocabnotes.core.model.Meaning
 import com.iwsocorp.vocabnotes.core.model.Vocabulary
@@ -41,23 +40,6 @@ fun MeaningsItem.asMeaning(): Meaning {
         antonyms = antonyms
     )
 }
-
-fun Vocabulary.createCorpus(
-    id: String,
-    noteId: String,
-    word: String,
-    meaning: String,
-) = Corpus(
-    id = id,
-    noteId = noteId,
-    word = word,
-    meaning = meaning,
-    phonetic = phonetic,
-    audio = audio,
-    meanings = meanings,
-    createdAt = System.currentTimeMillis(),
-    updatedAt = System.currentTimeMillis()
-)
 
 fun Meaning.asEntity(word: String) = MeaningEntity(
     id = "meaning-${generateRandomString(10)}",

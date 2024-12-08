@@ -44,6 +44,8 @@ class CorpusDetailFragment : Fragment() {
                             noteId = corpus.noteId,
                             word = corpus.word,
                             meaning = corpus.meaning,
+                            wordLang = corpus.wordLang,
+                            meaningLang = corpus.meaningLang,
                             phonetic = vocabulary.phonetic,
                             audio = vocabulary.audio,
                             meanings = vocabulary.meanings,

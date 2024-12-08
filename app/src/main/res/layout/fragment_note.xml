@@ -10,6 +10,7 @@
         android:id="@+id/rv_corpus"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:paddingTop="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/cs_add"
         app:layout_constraintTop_toTopOf="parent"
@@ -40,22 +41,22 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:text="English"
             android:textColor="@color/white"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout"
-            app:layout_constraintStart_toStartOf="@+id/textInputLayout"
-            android:text="English" />
+            app:layout_constraintStart_toStartOf="@+id/textInputLayout" />
 
         <TextView
             android:id="@+id/tv_meaning_lang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:text="Indonesian"
             android:textColor="@color/white"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout2"
-            app:layout_constraintStart_toStartOf="@+id/textInputLayout2"
-            android:text="Indonesian" />
+            app:layout_constraintStart_toStartOf="@+id/textInputLayout2" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout"

@@ -5,13 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
-import com.iwsocorp.vocabnotes.core.data.repository.MeaningRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
-import com.iwsocorp.vocabnotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,8 +16,6 @@ import javax.inject.Inject
 class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
-    private val meaningRepository: MeaningRepository,
-    private val vocabularyRepository: VocabularyRepository,
 ) : ViewModel() {
 
     private val _noteId = MutableLiveData<String>()
@@ -43,12 +38,16 @@ class NoteViewModel @Inject constructor(
         corpusRepository.addCorpus(corpus)
     }
 
+    fun insertCorpusList(corpusList: List<Corpus>) = viewModelScope.launch {
+        corpusRepository.insertCorpusList(corpusList)
+    }
+
     private val _corpusList = MutableLiveData<List<Corpus>>()
     val corpusList: LiveData<List<Corpus>> get() = _corpusList
 
     fun getCorpusByNoteId(noteId: String) = viewModelScope.launch {
-        corpusRepository.getCorpusByNoteId(noteId).collectLatest {
-            _corpusList.value = it
+        corpusRepository.getCorpusByNoteId(noteId).collect {
+            _corpusList.postValue(it)
         }
     }
 

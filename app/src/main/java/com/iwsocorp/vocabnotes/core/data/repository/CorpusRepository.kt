@@ -7,6 +7,7 @@ import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
@@ -16,18 +17,42 @@ class CorpusRepositoryImpl @Inject constructor(
     private val meaningRepository: MeaningRepository,
 ) : CorpusRepository {
 
-    private suspend fun Flow<List<CorpusEntity>>.asExternalModel(): Flow<List<Corpus>> =
-        this.map { corpusEntities ->
-            corpusEntities.map {
-                Timber.d("corpusEntities: $corpusEntities")
-                val wordMeanings = meaningRepository.getMeanings(it.word).first()
-                Timber.d("wordMeanings: $wordMeanings")
-                it.asExternalModel(wordMeanings)
+    private fun Flow<List<CorpusEntity>>.asExternalModel(): Flow<List<Corpus>> = flow {
+        val corpusBatch = mutableListOf<Corpus>()
+
+        this@asExternalModel.collect { corpusEntities ->
+            for (corpusEntity in corpusEntities) {
+                // Fetch word meanings (this is the potentially long operation)
+                val wordMeanings = meaningRepository.getMeanings(corpusEntity.word).first()
+
+                // Convert the entity to its external model representation
+                val corpus = corpusEntity.asExternalModel(wordMeanings)
+
+                // Add the result to the batch
+                corpusBatch.add(corpus)
+
+                // Emit the batch every 10 items
+                if (corpusBatch.size == 10) {
+                    emit(corpusBatch.toList())  // Emit the current batch
+                    corpusBatch.clear()         // Clear the batch for the next set of items
+                }
+            }
+
+            // Emit any remaining items (less than 10)
+            if (corpusBatch.isNotEmpty()) {
+                emit(corpusBatch.toList())
             }
         }
+    }
 
     override suspend fun addCorpus(corpus: Corpus) {
         corpusDao.insertCorpus(corpus.asEntity())
+    }
+
+    override suspend fun insertCorpusList(corpusList: List<Corpus>) {
+        Timber.d("imported data: ${corpusList.take(5)}")
+        Timber.d("imported data size: ${corpusList.size}")
+        corpusDao.insertCorpusList(corpusList.map { it.asEntity() })
     }
 
     override suspend fun updateCorpus(corpus: Corpus) {
@@ -40,30 +65,18 @@ class CorpusRepositoryImpl @Inject constructor(
 
     override suspend fun getCorpusByWord(word: String): Corpus {
         val wordMeanings = meaningRepository.getMeanings(word).first()
-        return corpusDao.getCorpusByWord(word).let {
-            Corpus(
-                id = it.id,
-                noteId = it.noteId,
-                word = it.word,
-                meaning = it.meaning,
-                phonetic = it.phonetic,
-                audio = it.audio,
-                meanings = wordMeanings,
-                createdAt = it.createdAt,
-                updatedAt = it.updatedAt
-            )
-        }
+        return corpusDao.getCorpusByWord(word).asExternalModel(wordMeanings)
     }
 
-    override suspend fun searchCorpus(query: String): Flow<List<Corpus>> {
+    override fun searchCorpus(query: String): Flow<List<Corpus>> {
         return corpusDao.searchCorpus(query).asExternalModel()
     }
 
-    override suspend fun getAllCorpus(): Flow<List<Corpus>> {
+    override fun getAllCorpus(): Flow<List<Corpus>> {
         return corpusDao.getAllCorpus().asExternalModel()
     }
 
-    override suspend fun getCorpusByNoteId(noteId: String): Flow<List<Corpus>> {
+    override fun getCorpusByNoteId(noteId: String): Flow<List<Corpus>> {
         return corpusDao.getCorpusByNoteId(noteId).asExternalModel()
     }
 
@@ -75,11 +88,12 @@ class CorpusRepositoryImpl @Inject constructor(
 
 interface CorpusRepository {
     suspend fun addCorpus(corpus: Corpus)
+    suspend fun insertCorpusList(corpusList: List<Corpus>)
     suspend fun updateCorpus(corpus: Corpus)
     suspend fun deleteCorpus(id: String)
     suspend fun getCorpusByWord(word: String): Corpus
-    suspend fun searchCorpus(query: String): Flow<List<Corpus>>
-    suspend fun getAllCorpus(): Flow<List<Corpus>>
-    suspend fun getCorpusByNoteId(noteId: String): Flow<List<Corpus>>
+    fun searchCorpus(query: String): Flow<List<Corpus>>
+    fun getAllCorpus(): Flow<List<Corpus>>
+    fun getCorpusByNoteId(noteId: String): Flow<List<Corpus>>
     suspend fun deleteCorpusByNoteId(noteId: String)
 }

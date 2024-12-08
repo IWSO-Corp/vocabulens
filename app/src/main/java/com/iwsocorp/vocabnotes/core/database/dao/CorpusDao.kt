@@ -14,6 +14,9 @@ interface CorpusDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertCorpus(corpus: CorpusEntity)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCorpusList(corpusList: List<CorpusEntity>)
+
     @Update
     suspend fun updateCorpus(corpus: CorpusEntity)
 

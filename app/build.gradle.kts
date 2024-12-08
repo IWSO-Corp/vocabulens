@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.iwsocorp.vocabnotes"
-        minSdk = 23
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.retrofit.kotlin.serialization)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.currentactivefragment)
+    implementation(libs.poi.ooxml)
 
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)

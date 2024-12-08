@@ -2,15 +2,34 @@ package com.iwsocorp.vocabnotes.ui.note
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
 import java.util.Locale
 
 class WordAdapter(
-    private val corpusList: List<Corpus>,
     private val listener: ClickListener,
-) : RecyclerView.Adapter<WordAdapter.ViewHolder>() {
+) : ListAdapter<Corpus, WordAdapter.ViewHolder>(DiffCallback()) {
+
+    // Store the current list of items to append new data
+    private val currentListData = mutableListOf<Corpus>()
+
+    // Custom method to append new data without replacing existing data and avoid duplicates
+    fun appendData(newData: List<Corpus>) {
+        // Filter out the new data that is already present in the current list
+        val uniqueNewData = newData.filterNot { newItem ->
+            currentListData.any { it == newItem }
+        }
+
+        // Add only unique items to the current list
+        currentListData.addAll(uniqueNewData)
+
+        // Submit the updated list to the adapter
+        submitList(ArrayList(currentListData))
+    }
 
     interface ClickListener {
         fun onClick(corpus: Corpus)
@@ -51,10 +70,13 @@ class WordAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(corpusList[position], position)
+        val item = getItem(position)
+        holder.bind(item, position)
     }
 
-    override fun getItemCount(): Int {
-        return corpusList.size
+    class DiffCallback : DiffUtil.ItemCallback<Corpus>() {
+        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean = oldItem == newItem
     }
+
 }

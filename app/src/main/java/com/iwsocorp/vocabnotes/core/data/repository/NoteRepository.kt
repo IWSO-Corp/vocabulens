@@ -1,11 +1,13 @@
 package com.iwsocorp.vocabnotes.core.data.repository
 
+import android.R.attr.data
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
@@ -37,11 +39,27 @@ class NoteRepositoryImpl @Inject constructor(
         return noteDao.getNoteById(id).asExternalModel(noteCorpus)
     }
 
-    override suspend fun getNotes(): Flow<List<Note>> {
-        return noteDao.getAllNotes().map { noteEntities ->
-            noteEntities.map {
-                val noteCorpus = corpusRepository.getCorpusByNoteId(it.id).first()
-                it.asExternalModel(noteCorpus)
+    override fun getNotes(): Flow<List<Note>> = flow {
+        val notesBatch = mutableListOf<Note>()
+
+        noteDao.getAllNotes().collect { noteEntities ->
+            for (noteEntity in noteEntities) {
+                val noteCorpus = corpusRepository.getCorpusByNoteId(noteEntity.id).first().take(3)
+                val note = noteEntity.asExternalModel(noteCorpus)
+
+                // Add the note to the batch
+                notesBatch.add(note)
+
+                // Emit the batch when it reaches 10 items
+                if (notesBatch.size == 10) {
+                    emit(notesBatch.toList()) // Emit the current batch
+                    notesBatch.clear() // Clear the batch for the next 10 items
+                }
+            }
+
+            // If there are remaining items (less than 10), emit them
+            if (notesBatch.isNotEmpty()) {
+                emit(notesBatch.toList())
             }
         }
     }
@@ -54,5 +72,5 @@ interface NoteRepository {
     suspend fun updateUpdatedAt(id: String, updatedAt: Long)
     suspend fun deleteNote(id: String)
     suspend fun getNoteById(id: String): Note
-    suspend fun getNotes(): Flow<List<Note>>
+    fun getNotes(): Flow<List<Note>>
 }

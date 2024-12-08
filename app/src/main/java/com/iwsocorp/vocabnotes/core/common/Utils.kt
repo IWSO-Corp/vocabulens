@@ -3,8 +3,6 @@ package com.iwsocorp.vocabnotes.core.common
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
-import androidx.annotation.RequiresApi
 import kotlin.random.Random
 
 object Utils {

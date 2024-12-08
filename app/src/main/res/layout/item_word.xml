@@ -12,69 +12,77 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="1." />
-
-    <TextView
-        android:id="@+id/tv_word"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/black"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="obnoxious" />
+        tools:text="1" />
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/tv_number_hid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:drawablePadding="8dp"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:drawableEndCompat="@drawable/baseline_volume_up_14"
-        app:drawableTint="#808080"
-        app:layout_constraintStart_toStartOf="@+id/tv_word"
-        app:layout_constraintTop_toBottomOf="@+id/tv_word"
-        tools:text="eb'nokses" />
+        android:text="999"
+        android:textColor="@color/black"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_pronun"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:drawablePadding="8dp"
-        android:textColor="#646464"
-        android:textSize="12sp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/tv_word"
-        app:layout_constraintStart_toEndOf="@+id/tv_word"
-        app:layout_constraintTop_toTopOf="@+id/tv_word"
-        tools:text="@string/underline" />
-
-    <View
-        android:id="@+id/underline"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ll_word"
         android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginHorizontal="4dp"
-        android:layout_marginTop="-2dp"
-        android:background="#646464"
-        app:layout_constraintEnd_toEndOf="@id/tv_pronun"
-        app:layout_constraintStart_toStartOf="@id/tv_pronun"
-        app:layout_constraintTop_toBottomOf="@id/tv_pronun" />
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/card_pos"
+        app:layout_constraintStart_toEndOf="@+id/tv_number_hid"
+        app:layout_constraintTop_toTopOf="@+id/tv_number_hid">
+
+        <TextView
+            android:id="@+id/tv_word"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@id/tv_pronun"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="obnoxious" />
+
+        <TextView
+            android:id="@+id/tv_pronun"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawablePadding="8dp"
+            android:textColor="#646464"
+            android:textSize="12sp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_word"
+            app:layout_constraintStart_toEndOf="@+id/tv_word"
+            app:layout_constraintTop_toTopOf="@+id/tv_word"
+            tools:text="@string/underline" />
+
+        <View
+            android:id="@+id/underline"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginTop="-2dp"
+            android:background="#646464"
+            app:layout_constraintEnd_toEndOf="@id/tv_pronun"
+            app:layout_constraintStart_toStartOf="@id/tv_pronun"
+            app:layout_constraintTop_toBottomOf="@id/tv_pronun" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/tv_meaning"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:textColor="@color/teal_700"
         android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="@+id/tv_word"
-        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        app:layout_constraintStart_toStartOf="@+id/ll_word"
+        app:layout_constraintTop_toBottomOf="@+id/ll_word"
         tools:text="menjengkelkan" />
 
     <androidx.cardview.widget.CardView
