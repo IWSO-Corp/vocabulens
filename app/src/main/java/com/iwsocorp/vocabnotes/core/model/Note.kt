@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes.core.model
 
+import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 
 data class Note(
@@ -12,11 +13,15 @@ data class Note(
     val updatedAt: Long
 )
 
-fun Note.asEntity() = NoteEntity(
-    id = id,
-    title = title,
-    wordLang = wordLang,
-    meaningLang = meaningLang,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Note.asEntity() : NoteEntity {
+    val contentJson = Gson().toJson(content)
+    return NoteEntity(
+        id = id,
+        title = title,
+        wordLang = wordLang,
+        meaningLang = meaningLang,
+        contentJson = contentJson,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
+}

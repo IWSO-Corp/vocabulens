@@ -6,27 +6,20 @@ import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import timber.log.Timber
 import javax.inject.Inject
 
 class CorpusRepositoryImpl @Inject constructor(
     private val corpusDao: CorpusDao,
-    private val meaningRepository: MeaningRepository,
 ) : CorpusRepository {
 
-    private fun Flow<List<CorpusEntity>>.asExternalModel(): Flow<List<Corpus>> = flow {
+    private fun Flow<List<CorpusEntity>>.asExternalModelList(): Flow<List<Corpus>> = flow {
         val corpusBatch = mutableListOf<Corpus>()
 
-        this@asExternalModel.collect { corpusEntities ->
+        this@asExternalModelList.collect { corpusEntities ->
             for (corpusEntity in corpusEntities) {
-                // Fetch word meanings (this is the potentially long operation)
-                val wordMeanings = meaningRepository.getMeanings(corpusEntity.word).first()
-
                 // Convert the entity to its external model representation
-                val corpus = corpusEntity.asExternalModel(wordMeanings)
+                val corpus = corpusEntity.asExternalModel()
 
                 // Add the result to the batch
                 corpusBatch.add(corpus)
@@ -50,8 +43,6 @@ class CorpusRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertCorpusList(corpusList: List<Corpus>) {
-        Timber.d("imported data: ${corpusList.take(5)}")
-        Timber.d("imported data size: ${corpusList.size}")
         corpusDao.insertCorpusList(corpusList.map { it.asEntity() })
     }
 
@@ -64,20 +55,19 @@ class CorpusRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCorpusByWord(word: String): Corpus {
-        val wordMeanings = meaningRepository.getMeanings(word).first()
-        return corpusDao.getCorpusByWord(word).asExternalModel(wordMeanings)
+        return corpusDao.getCorpusByWord(word).asExternalModel()
     }
 
     override fun searchCorpus(query: String): Flow<List<Corpus>> {
-        return corpusDao.searchCorpus(query).asExternalModel()
+        return corpusDao.searchCorpus(query).asExternalModelList()
     }
 
     override fun getAllCorpus(): Flow<List<Corpus>> {
-        return corpusDao.getAllCorpus().asExternalModel()
+        return corpusDao.getAllCorpus().asExternalModelList()
     }
 
     override fun getCorpusByNoteId(noteId: String): Flow<List<Corpus>> {
-        return corpusDao.getCorpusByNoteId(noteId).asExternalModel()
+        return corpusDao.getCorpusByNoteId(noteId).asExternalModelList()
     }
 
     override suspend fun deleteCorpusByNoteId(noteId: String) {

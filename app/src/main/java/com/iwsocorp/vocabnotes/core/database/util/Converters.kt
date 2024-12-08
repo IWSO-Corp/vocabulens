@@ -3,6 +3,7 @@ package com.iwsocorp.vocabnotes.core.database.util
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.iwsocorp.vocabnotes.core.model.Meaning
 
 class Converters {
 
@@ -15,6 +16,17 @@ class Converters {
     @TypeConverter
     fun fromList(list: List<String>): String {
         return Gson().toJson(list)
+    }
+
+    @TypeConverter
+    fun fromMeanings(meanings: List<Meaning>): String {
+        return Gson().toJson(meanings)
+    }
+
+    @TypeConverter
+    fun toMeanings(meaningsJson: String): List<Meaning> {
+        val type = object : TypeToken<List<Meaning>>() {}.type
+        return Gson().fromJson(meaningsJson, type)
     }
 
 }

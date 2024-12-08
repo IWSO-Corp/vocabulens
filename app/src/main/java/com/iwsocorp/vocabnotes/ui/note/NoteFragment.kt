@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.asLiveData
 import androidx.navigation.fragment.findNavController
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
@@ -51,17 +52,24 @@ class NoteFragment() : Fragment() {
 
         noteId?.let {
             viewModel.updateNoteId(it)
-            viewModel.getNote(it) { note ->
-                Timber.d("note: $note")
-            }
         } ?: run {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
         viewModel.noteId.observe(viewLifecycleOwner) {
             it?.let { id ->
-                viewModel.getCorpusByNoteId(id)
-                viewModel.corpusList.observe(viewLifecycleOwner) { corpusList ->
+//                viewModel.getNote(id) { note ->
+//                    Timber.d("note: $note")
+//
+//                    wordAdapter.appendData(note.content)
+//
+//                    binding.tvEmpty.visibility =
+//                        if (note.content.isEmpty()) View.VISIBLE else View.GONE
+//                }
+
+//                viewModel.getCorpusByNoteId(id)
+
+                viewModel.corpusListFlow(id).asLiveData().observe(viewLifecycleOwner) { corpusList ->
                     Timber.d("corpusList: $corpusList")
 
                     wordAdapter.appendData(corpusList)

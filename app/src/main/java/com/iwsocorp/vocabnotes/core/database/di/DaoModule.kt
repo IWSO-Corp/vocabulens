@@ -2,7 +2,7 @@ package com.iwsocorp.vocabnotes.core.database.di
 
 import com.iwsocorp.vocabnotes.core.database.MainDatabase
 import com.iwsocorp.vocabnotes.core.database.dao.CorpusDao
-import com.iwsocorp.vocabnotes.core.database.dao.MeaningDao
+import com.iwsocorp.vocabnotes.core.database.dao.ExampleDao
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
 import dagger.Module
 import dagger.Provides
@@ -20,6 +20,6 @@ object DaoModule {
     fun providesCorpusDao(database: MainDatabase): CorpusDao = database.corpusDao()
 
     @Provides
-    fun providesMeaningDao(database: MainDatabase): MeaningDao = database.meaningDao()
+    fun providesExampleDao(database: MainDatabase): ExampleDao = database.exampleDao()
 
 }

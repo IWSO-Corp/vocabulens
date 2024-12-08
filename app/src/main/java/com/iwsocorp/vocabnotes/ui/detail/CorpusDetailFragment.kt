@@ -37,8 +37,6 @@ class CorpusDetailFragment : Fragment() {
                     viewModel.getVocabulary(it) { vocabulary ->
                         Timber.d("vocabulary: $vocabulary")
 
-                        viewModel.insertWordMeanings(it, vocabulary.meanings)
-
                         val newCorpus = Corpus(
                             id = corpus.id,
                             noteId = corpus.noteId,

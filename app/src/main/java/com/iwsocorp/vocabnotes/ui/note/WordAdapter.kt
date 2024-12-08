@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.core.model.Corpus
-import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
 import java.util.Locale
 
@@ -21,7 +20,7 @@ class WordAdapter(
     fun appendData(newData: List<Corpus>) {
         // Filter out the new data that is already present in the current list
         val uniqueNewData = newData.filterNot { newItem ->
-            currentListData.any { it == newItem }
+            currentListData.any { it.id == newItem.id }
         }
 
         // Add only unique items to the current list

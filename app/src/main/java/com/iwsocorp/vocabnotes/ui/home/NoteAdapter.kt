@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
@@ -14,7 +15,6 @@ import com.iwsocorp.vocabnotes.ui.home.NoteAdapter.ClickListener
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.iwsocorp.vocabnotes.R
 
 class NoteAdapter(
     private val listener: ClickListener,
@@ -56,7 +56,7 @@ class NoteAdapter(
             }
 
             val previewAdapter = PreviewAdapter(note.id) { listener.onClick(it) }
-            previewAdapter.appendData(note.content.sortedByDescending { it.updatedAt })
+            previewAdapter.appendData(note.content.sortedByDescending { it.updatedAt }.take(3))
             rvPreview.adapter = previewAdapter
         }
 

@@ -2,8 +2,8 @@ package com.iwsocorp.vocabnotes.core.data.di
 
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepositoryImpl
-import com.iwsocorp.vocabnotes.core.data.repository.MeaningRepository
-import com.iwsocorp.vocabnotes.core.data.repository.MeaningRepositoryImpl
+import com.iwsocorp.vocabnotes.core.data.repository.ExampleRepository
+import com.iwsocorp.vocabnotes.core.data.repository.ExampleRepositoryImpl
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepositoryImpl
 import com.iwsocorp.vocabnotes.core.data.repository.VocabularyRepository
@@ -24,8 +24,8 @@ abstract class DataModule {
 
     @Binds
     internal abstract fun bindsMeaningRepository(
-        meaningRepository: MeaningRepositoryImpl,
-    ): MeaningRepository
+        meaningRepository: ExampleRepositoryImpl,
+    ): ExampleRepository
 
     @Binds
     internal abstract fun bindsNoteRepository(

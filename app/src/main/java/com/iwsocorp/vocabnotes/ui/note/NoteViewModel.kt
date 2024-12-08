@@ -9,7 +9,11 @@ import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,14 +46,8 @@ class NoteViewModel @Inject constructor(
         corpusRepository.insertCorpusList(corpusList)
     }
 
-    private val _corpusList = MutableLiveData<List<Corpus>>()
-    val corpusList: LiveData<List<Corpus>> get() = _corpusList
-
-    fun getCorpusByNoteId(noteId: String) = viewModelScope.launch {
-        corpusRepository.getCorpusByNoteId(noteId).collect {
-            _corpusList.postValue(it)
-        }
-    }
+    fun corpusListFlow(noteId: String): StateFlow<List<Corpus>> = corpusRepository.getCorpusByNoteId(noteId)
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun updateNote(note: Note) = viewModelScope.launch {
         noteRepository.updateNote(note)

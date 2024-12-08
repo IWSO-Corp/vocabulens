@@ -1,7 +1,5 @@
 package com.iwsocorp.vocabnotes.core.data.model
 
-import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
-import com.iwsocorp.vocabnotes.core.database.model.MeaningEntity
 import com.iwsocorp.vocabnotes.core.model.Definition
 import com.iwsocorp.vocabnotes.core.model.Meaning
 import com.iwsocorp.vocabnotes.core.model.Vocabulary
@@ -40,13 +38,3 @@ fun MeaningsItem.asMeaning(): Meaning {
         antonyms = antonyms
     )
 }
-
-fun Meaning.asEntity(word: String) = MeaningEntity(
-    id = "meaning-${generateRandomString(10)}",
-    word = word,
-    partOfSpeech = partOfSpeech,
-    definition = definitions.first().definition,
-    example = definitions.first().example,
-    synonyms = synonyms,
-    antonyms = antonyms
-)

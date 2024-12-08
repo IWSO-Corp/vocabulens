@@ -1,6 +1,5 @@
 package com.iwsocorp.vocabnotes.core.data.repository
 
-import android.R.attr.data
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Note
@@ -8,13 +7,11 @@ import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
 
 class NoteRepositoryImpl @Inject constructor(
     private val noteDao: NoteDao,
-    private val corpusRepository: CorpusRepository,
 ) : NoteRepository {
 
     override suspend fun addNote(note: Note) {
@@ -34,9 +31,7 @@ class NoteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getNoteById(id: String): Note {
-        val noteCorpus = corpusRepository.getCorpusByNoteId(id).first()
-        Timber.d("note: ${noteDao.getNoteById(id).createdAt}")
-        return noteDao.getNoteById(id).asExternalModel(noteCorpus)
+        return noteDao.getNoteById(id).asExternalModel()
     }
 
     override fun getNotes(): Flow<List<Note>> = flow {
@@ -44,8 +39,7 @@ class NoteRepositoryImpl @Inject constructor(
 
         noteDao.getAllNotes().collect { noteEntities ->
             for (noteEntity in noteEntities) {
-                val noteCorpus = corpusRepository.getCorpusByNoteId(noteEntity.id).first().take(3)
-                val note = noteEntity.asExternalModel(noteCorpus)
+                val note = noteEntity.asExternalModel()
 
                 // Add the note to the batch
                 notesBatch.add(note)
