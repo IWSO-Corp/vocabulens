@@ -4,16 +4,18 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.flatMap
+import androidx.paging.map
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,6 +40,9 @@ class NoteViewModel @Inject constructor(
         noteRepository.addNote(note)
     }
 
+    fun getCorpusPagingDataFlow(noteId: String): Flow<PagingData<Corpus>> =
+        corpusRepository.getCorpusByNoteId(noteId).cachedIn(viewModelScope)
+
     fun insertCorpus(corpus: Corpus) = viewModelScope.launch {
         corpusRepository.addCorpus(corpus)
     }
@@ -46,15 +51,16 @@ class NoteViewModel @Inject constructor(
         corpusRepository.insertCorpusList(corpusList)
     }
 
-    fun corpusListFlow(noteId: String): StateFlow<List<Corpus>> = corpusRepository.getCorpusByNoteId(noteId)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
     fun updateNote(note: Note) = viewModelScope.launch {
         noteRepository.updateNote(note)
     }
 
-    fun updateUpdatedAt(id: String, updatedAt: Long) = viewModelScope.launch {
+    fun updateNoteUpdatedAt(id: String, updatedAt: Long) = viewModelScope.launch {
         noteRepository.updateUpdatedAt(id, updatedAt)
+    }
+
+    fun updateNoteContentSize(id: String, contentSize: Int) = viewModelScope.launch {
+        noteRepository.updateContentSize(id, contentSize)
     }
 
 }

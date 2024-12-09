@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                     title = fileName ?: "Imported Vocabulary",
                     wordLang = data.first().wordLang,
                     meaningLang = data.first().meaningLang,
-                    content = data,
+                    contentSize = data.size,
                     createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis()
                 )

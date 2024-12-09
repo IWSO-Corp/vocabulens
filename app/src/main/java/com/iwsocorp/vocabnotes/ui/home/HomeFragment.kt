@@ -20,7 +20,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by activityViewModels()
     private val noteAdapter: NoteAdapter by lazy {
-        NoteAdapter(object : NoteAdapter.ClickListener {
+        NoteAdapter(viewModel, object : NoteAdapter.ClickListener {
             override fun onClick(noteId: String) {
                 navigate(noteId)
             }
@@ -30,10 +30,11 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        viewModel.getAllNotes()
         viewModel.notes.observe(viewLifecycleOwner) {
             Timber.d("notes: $it")
 
-            noteAdapter.appendData(it)
+            noteAdapter.submitList(it)
 
             binding.tvEmpty.visibility = if (it.isEmpty()) View.VISIBLE else View.GONE
         }

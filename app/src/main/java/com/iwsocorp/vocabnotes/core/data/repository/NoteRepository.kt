@@ -1,13 +1,12 @@
 package com.iwsocorp.vocabnotes.core.data.repository
 
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
+import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import timber.log.Timber
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class NoteRepositoryImpl @Inject constructor(
@@ -26,6 +25,10 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.updateUpdatedAt(id, updatedAt)
     }
 
+    override suspend fun updateContentSize(id: String, contentSize: Int) {
+        noteDao.updateContentSize(id, contentSize)
+    }
+
     override suspend fun deleteNote(id: String) {
         noteDao.deleteNoteById(id)
     }
@@ -34,26 +37,11 @@ class NoteRepositoryImpl @Inject constructor(
         return noteDao.getNoteById(id).asExternalModel()
     }
 
-    override fun getNotes(): Flow<List<Note>> = flow {
-        val notesBatch = mutableListOf<Note>()
-
-        noteDao.getAllNotes().collect { noteEntities ->
-            for (noteEntity in noteEntities) {
-                val note = noteEntity.asExternalModel()
-
-                // Add the note to the batch
-                notesBatch.add(note)
-
-                // Emit the batch when it reaches 10 items
-                if (notesBatch.size == 10) {
-                    emit(notesBatch.toList()) // Emit the current batch
-                    notesBatch.clear() // Clear the batch for the next 10 items
-                }
-            }
-
-            // If there are remaining items (less than 10), emit them
-            if (notesBatch.isNotEmpty()) {
-                emit(notesBatch.toList())
+    override fun getNotes(): Flow<List<Note>> {
+        val notes: Flow<List<NoteEntity>> = noteDao.getAllNotes()
+        return notes.map {
+            it.map { entity ->
+                entity.asExternalModel()
             }
         }
     }
@@ -64,6 +52,7 @@ interface NoteRepository {
     suspend fun addNote(note: Note)
     suspend fun updateNote(note: Note)
     suspend fun updateUpdatedAt(id: String, updatedAt: Long)
+    suspend fun updateContentSize(id: String, contentSize: Int)
     suspend fun deleteNote(id: String)
     suspend fun getNoteById(id: String): Note
     fun getNotes(): Flow<List<Note>>

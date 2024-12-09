@@ -17,25 +17,9 @@ import java.util.Date
 import java.util.Locale
 
 class NoteAdapter(
+    private val viewModel: HomeViewModel,
     private val listener: ClickListener,
 ) : ListAdapter<Note, NoteAdapter.ViewHolder>(DiffCallback()) {
-
-    // Store the current list of items to append new data
-    private val currentListData = mutableListOf<Note>()
-
-    // Custom method to append new data without replacing existing data and avoid duplicates
-    fun appendData(newData: List<Note>) {
-        // Filter out the new data that is already present in the current list
-        val uniqueNewData = newData.filterNot { newItem ->
-            currentListData.any { it.id == newItem.id }
-        }
-
-        // Add only unique items to the current list
-        currentListData.addAll(uniqueNewData)
-
-        // Submit the updated list to the adapter
-        submitList(ArrayList(currentListData))
-    }
 
     interface ClickListener {
         fun onClick(noteId: String)
@@ -49,15 +33,17 @@ class NoteAdapter(
                 visibility = if (note.title.isEmpty()) View.GONE else View.VISIBLE
             }
             tvDate.text = note.updatedAt.asString()
-            tvWordCount.text = itemView.context.getString(R.string.word_amount, note.content.size)
+            tvWordCount.text = itemView.context.getString(R.string.word_amount, note.contentSize)
 
             itemView.setOnClickListener {
                 listener.onClick(note.id)
             }
 
             val previewAdapter = PreviewAdapter(note.id) { listener.onClick(it) }
-            previewAdapter.appendData(note.content.sortedByDescending { it.updatedAt }.take(3))
             rvPreview.adapter = previewAdapter
+            viewModel.getCorpusByNoteId(note.id) {
+                previewAdapter.submitList(it)
+            }
         }
 
         private fun Long.asString(): String {
@@ -67,10 +53,7 @@ class NoteAdapter(
         }
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int,
-    ): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             ItemNoteBinding.inflate(
                 LayoutInflater.from(parent.context),
@@ -80,16 +63,15 @@ class NoteAdapter(
         )
     }
 
-    override fun onBindViewHolder(
-        holder: ViewHolder,
-        position: Int,
-    ) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
         holder.bind(item)
     }
 
     class DiffCallback : DiffUtil.ItemCallback<Note>() {
-        override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean = oldItem.id == newItem.id
+        override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean =
+            oldItem.id == newItem.id
+
         override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean = oldItem == newItem
     }
 
@@ -99,23 +81,6 @@ class PreviewAdapter(
     private val noteId: String,
     private val onClick: (noteId: String) -> Unit,
 ) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DiffCallback()) {
-
-    // Store the current list of items to append new data
-    private val currentListData = mutableListOf<Corpus>()
-
-    // Custom method to append new data without replacing existing data and avoid duplicates
-    fun appendData(newData: List<Corpus>) {
-        // Filter out the new data that is already present in the current list
-        val uniqueNewData = newData.filterNot { newItem ->
-            currentListData.any { it == newItem }
-        }
-
-        // Add only unique items to the current list
-        currentListData.addAll(uniqueNewData)
-
-        // Submit the updated list to the adapter
-        submitList(ArrayList(currentListData))
-    }
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -151,8 +116,11 @@ class PreviewAdapter(
     }
 
     class DiffCallback : DiffUtil.ItemCallback<Corpus>() {
-        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean = oldItem == newItem
+        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+            oldItem == newItem
     }
 
 }

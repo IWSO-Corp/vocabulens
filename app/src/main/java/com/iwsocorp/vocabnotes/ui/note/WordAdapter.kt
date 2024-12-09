@@ -2,8 +2,9 @@ package com.iwsocorp.vocabnotes.ui.note
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
@@ -11,24 +12,7 @@ import java.util.Locale
 
 class WordAdapter(
     private val listener: ClickListener,
-) : ListAdapter<Corpus, WordAdapter.ViewHolder>(DiffCallback()) {
-
-    // Store the current list of items to append new data
-    private val currentListData = mutableListOf<Corpus>()
-
-    // Custom method to append new data without replacing existing data and avoid duplicates
-    fun appendData(newData: List<Corpus>) {
-        // Filter out the new data that is already present in the current list
-        val uniqueNewData = newData.filterNot { newItem ->
-            currentListData.any { it.id == newItem.id }
-        }
-
-        // Add only unique items to the current list
-        currentListData.addAll(uniqueNewData)
-
-        // Submit the updated list to the adapter
-        submitList(ArrayList(currentListData))
-    }
+) : PagingDataAdapter<Corpus, WordAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     interface ClickListener {
         fun onClick(corpus: Corpus)
@@ -42,11 +26,11 @@ class WordAdapter(
             tvWord.text = corpus.word
             tvMeaning.text = corpus.meaning
             tvPos.text = corpus.meanings.takeIf { it.isNotEmpty() }?.first()?.partOfSpeech
-            cardPos.visibility = if (tvPos.text.isEmpty()) ViewGroup.GONE else ViewGroup.VISIBLE
-            underline.visibility = if (corpus.audio.isEmpty()) ViewGroup.GONE else ViewGroup.VISIBLE
+            cardPos.isVisible = tvPos.text.isNotEmpty()
+            underline.isVisible = corpus.audio.isNotEmpty()
             tvPronun.apply {
                 text = corpus.phonetic
-                visibility = if (corpus.phonetic.isEmpty()) ViewGroup.GONE else ViewGroup.VISIBLE
+                isVisible = corpus.phonetic.isNotEmpty()
                 setOnClickListener {
                     listener.onPlay(corpus.audio)
                 }
@@ -70,12 +54,19 @@ class WordAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
-        holder.bind(item, position)
+        item?.let {
+            holder.bind(item, position)
+        }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<Corpus>() {
-        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean = oldItem == newItem
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Corpus>() {
+            override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+                oldItem.word == newItem.word
+
+            override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+                oldItem == newItem
+        }
     }
 
 }

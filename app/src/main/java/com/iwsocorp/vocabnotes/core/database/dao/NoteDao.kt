@@ -19,13 +19,16 @@ interface NoteDao {
     @Query("UPDATE notes SET updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateUpdatedAt(id: String, updatedAt: Long)
 
+    @Query("UPDATE notes SET contentSize = :contentSize WHERE id = :id")
+    suspend fun updateContentSize(id: String, contentSize: Int)
+
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNoteById(id: String)
 
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: String): NoteEntity
 
-    @Query("SELECT * FROM notes")
+    @Query("SELECT * FROM notes ORDER BY updatedAt DESC")
     fun getAllNotes(): Flow<List<NoteEntity>>
 
 }

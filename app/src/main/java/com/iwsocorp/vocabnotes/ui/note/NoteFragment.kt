@@ -5,10 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.asLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.map
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.model.Corpus
@@ -16,6 +18,10 @@ import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 const val ARG_NOTE_ID = "noteIdParam"
@@ -52,30 +58,24 @@ class NoteFragment() : Fragment() {
 
         noteId?.let {
             viewModel.updateNoteId(it)
+            viewModel.getNote(it) { note ->
+                Timber.d("note: $note")
+            }
         } ?: run {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
         viewModel.noteId.observe(viewLifecycleOwner) {
             it?.let { id ->
-//                viewModel.getNote(id) { note ->
-//                    Timber.d("note: $note")
-//
-//                    wordAdapter.appendData(note.content)
-//
-//                    binding.tvEmpty.visibility =
-//                        if (note.content.isEmpty()) View.VISIBLE else View.GONE
-//                }
+                lifecycleScope.launch {
+                    viewModel.getCorpusPagingDataFlow(id).collectLatest { corpusPagingData ->
+                        Timber.d("corpusPagingData: $corpusPagingData")
+                        wordAdapter.submitData(corpusPagingData)
 
-//                viewModel.getCorpusByNoteId(id)
-
-                viewModel.corpusListFlow(id).asLiveData().observe(viewLifecycleOwner) { corpusList ->
-                    Timber.d("corpusList: $corpusList")
-
-                    wordAdapter.appendData(corpusList)
-
-                    binding.tvEmpty.visibility =
-                        if (corpusList.isEmpty()) View.VISIBLE else View.GONE
+                        _binding?.let {
+                            binding.tvEmpty.isVisible = wordAdapter.snapshot().isEmpty()
+                        }
+                    }
                 }
             }
         }
@@ -117,14 +117,15 @@ class NoteFragment() : Fragment() {
                 title = "",
                 wordLang = worldLang,
                 meaningLang = meaningLang,
-                content = listOf(corpus),
+                contentSize = 1,
                 createdAt = now,
                 updatedAt = now
             )
             viewModel.createNewNote(note)
             viewModel.updateNoteId(noteIdNew)
         } else {
-            viewModel.updateUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
+            viewModel.updateNoteUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
+            viewModel.updateNoteContentSize(viewModel.noteId.value!!, wordAdapter.snapshot().size + 1)
         }
 
         binding.edWord.text?.clear()

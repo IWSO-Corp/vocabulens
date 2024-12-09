@@ -67,8 +67,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.currentactivefragment)
     implementation(libs.poi.ooxml)
+    implementation(libs.androidx.paging.runtime.ktx)
 
     implementation(libs.room.ktx)
+    implementation(libs.room.paging)
     ksp(libs.room.compiler)
 
     implementation(libs.hilt.android)

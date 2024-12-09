@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.iwsocorp.vocabnotes.core.common.Utils.isNetworkAvailable
@@ -63,8 +64,10 @@ class CorpusDetailFragment : Fragment() {
     private fun setupUI(corpus: Corpus) = with(binding) {
         tvWord.text = corpus.word
         tvMeaning.text = corpus.meaning
+        underline.isVisible = corpus.audio.isNotEmpty()
         tvPronun.apply {
             text = corpus.phonetic
+            isVisible = corpus.phonetic.isNotEmpty() || corpus.phonetic != "-"
             setOnClickListener {
                 if (corpus.audio.isNotEmpty()) playAudio(corpus.audio)
             }

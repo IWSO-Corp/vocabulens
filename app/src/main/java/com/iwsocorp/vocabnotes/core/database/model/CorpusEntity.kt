@@ -7,12 +7,7 @@ import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Meaning
 
-@Entity(
-    tableName = "corpus",
-    indices = [
-        Index(value = ["word"], unique = true)
-    ]
-)
+@Entity(tableName = "corpus",)
 data class CorpusEntity(
     @PrimaryKey val id: String,
     val noteId: String,
