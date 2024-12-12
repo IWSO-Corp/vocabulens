@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -79,10 +80,52 @@ class NoteFragment() : Fragment() {
                 }
             }
         }
+        lifecycleScope.launch {
+            wordAdapter.loadStateFlow.collectLatest {
+                val alphabetSet = extractAvailableLettersFromLoadedPages()
+                _binding?.let {
+                    populateAlphabetSidebar(alphabetSet)
+                }
+            }
+        }
 
         binding.rvCorpus.adapter = wordAdapter
         binding.btnAdd.setOnClickListener {
             onSubmit()
+        }
+    }
+
+    // Function to extract available letters from currently loaded pages
+    private fun extractAvailableLettersFromLoadedPages(): List<Char> {
+        val currentList = wordAdapter.snapshot().items
+        Timber.d("currentList size: ${currentList.size}")
+        return currentList.map {
+            it.word.first().uppercaseChar()
+        }.distinct().sorted()
+    }
+
+    // Populate the sidebar dynamically with the available letters
+    private fun populateAlphabetSidebar(alphabetSet: List<Char>) {
+        binding.alphabetSidebar.removeAllViews() // Clear previous views
+        alphabetSet.forEach { letter ->
+            val textView = TextView(requireContext()).apply {
+                text = letter.toString()
+                textSize = 20f
+                setOnClickListener {
+                    scrollToLetter(letter)
+                }
+            }
+            binding.alphabetSidebar.addView(textView)
+        }
+    }
+
+    // Scroll to the first item starting with the selected letter
+    private fun scrollToLetter(letter: Char) {
+        val position = wordAdapter.snapshot().items.indexOfFirst {
+            it.word.first().uppercaseChar() == letter
+        }
+        if (position != -1) {
+            binding.rvCorpus.scrollToPosition(position)
         }
     }
 

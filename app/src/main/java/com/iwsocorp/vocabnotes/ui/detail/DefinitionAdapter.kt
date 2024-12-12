@@ -29,11 +29,7 @@ class DefinitionAdapter(
         viewType: Int,
     ): ViewHolder {
         return ViewHolder(
-            ItemWordDefinitionBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
-            )
+            ItemWordDefinitionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         )
     }
 

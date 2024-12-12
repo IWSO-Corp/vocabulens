@@ -22,11 +22,14 @@
         tools:itemCount="3"
         tools:listitem="@layout/item_word_definition" />
 
+
     <LinearLayout
+        android:id="@+id/ll_synonyms"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -39,6 +42,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ex, amp, le" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_antonyms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -52,7 +64,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="ex, amp, le" />
-
     </LinearLayout>
+
 
 </LinearLayout>

@@ -60,7 +60,11 @@ class CorpusRepositoryImpl @Inject constructor(
 
     override fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>> {
         val pager: Pager<Int, CorpusEntity> = Pager(
-            config = PagingConfig(pageSize = 10, maxSize = 100),
+            config = PagingConfig(
+                pageSize = Int.MAX_VALUE,
+                initialLoadSize = Int.MAX_VALUE,
+                enablePlaceholders = false
+            ),
             pagingSourceFactory = {
                 corpusDao.getCorpusByNoteId(noteId)
             }
