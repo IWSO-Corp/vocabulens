@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +20,7 @@ import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ActivityMainBinding
+import com.iwsocorp.vocabnotes.ui.detail.CorpusDetailFragment
 import com.iwsocorp.vocabnotes.ui.home.HomeFragment
 import com.iwsocorp.vocabnotes.ui.note.NoteViewModel
 import com.wikosac.currentactivefragment.CurrentActiveFragment
@@ -62,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         currentActiveFragment.get(R.id.nav_host_fragment_content_main) {
             if (it is HomeFragment) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
+            binding.appBarMain.toolbar.visibility = if (it is CorpusDetailFragment) View.GONE else View.VISIBLE
         }
     }
 

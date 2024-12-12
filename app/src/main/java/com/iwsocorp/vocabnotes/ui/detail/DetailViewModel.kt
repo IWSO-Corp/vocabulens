@@ -1,5 +1,7 @@
 package com.iwsocorp.vocabnotes.ui.detail
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
@@ -21,6 +23,20 @@ class DetailViewModel @Inject constructor(
     private val exampleRepository: ExampleRepository,
     private val vocabularyRepository: VocabularyRepository,
 ) : ViewModel() {
+
+    private val _corpusWord = MutableLiveData<String>()
+    val corpusWord: LiveData<String> get() = _corpusWord
+
+    fun setCorpusWord(word: String) {
+        _corpusWord.value = word
+    }
+
+    private val _corpusPosition = MutableLiveData<Int>()
+    val corpusPosition: LiveData<Int> get() = _corpusPosition
+
+    fun setCorpusPosition(position: Int) {
+        _corpusPosition.value = position
+    }
 
     fun getNote(id: String, callback: (note: Note) -> Unit) = viewModelScope.launch {
         callback(noteRepository.getNoteById(id))

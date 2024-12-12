@@ -1,7 +1,6 @@
 package com.iwsocorp.vocabnotes.core.database.model
 
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.model.Corpus

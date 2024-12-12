@@ -92,7 +92,7 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="4dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tv_word">
+        app:layout_constraintTop_toTopOf="@+id/ll_word">
 
         <TextView
             android:id="@+id/tv_pos"

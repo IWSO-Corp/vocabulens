@@ -6,15 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.flatMap
-import androidx.paging.map
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,10 +21,10 @@ class NoteViewModel @Inject constructor(
     private val corpusRepository: CorpusRepository,
 ) : ViewModel() {
 
-    private val _noteId = MutableLiveData<String>()
-    val noteId: LiveData<String> get() = _noteId
+    private val _noteId = MutableLiveData<String?>()
+    val noteId: LiveData<String?> get() = _noteId
 
-    fun updateNoteId(newValue: String) {
+    fun updateNoteId(newValue: String?) {
         _noteId.value = newValue
     }
 
@@ -38,6 +35,13 @@ class NoteViewModel @Inject constructor(
 
     fun createNewNote(note: Note) = viewModelScope.launch {
         noteRepository.addNote(note)
+    }
+
+    private val _corpusList = MutableLiveData<List<Corpus>>()
+    val corpusList: LiveData<List<Corpus>> get() = _corpusList
+
+    fun setCorpusList(corpusList: List<Corpus>) {
+        _corpusList.value = corpusList
     }
 
     fun getCorpusPagingDataFlow(noteId: String): Flow<PagingData<Corpus>> =

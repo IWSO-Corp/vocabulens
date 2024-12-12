@@ -8,10 +8,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResultListener
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.paging.map
+import androidx.paging.LoadState
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.model.Corpus
@@ -26,6 +28,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 const val ARG_NOTE_ID = "noteIdParam"
+const val ARG_POSITION = "positionRecyclerView"
 
 @AndroidEntryPoint
 class NoteFragment() : Fragment() {
@@ -33,8 +36,9 @@ class NoteFragment() : Fragment() {
     private var mediaPlayer: MediaPlayer? = null
     private var _binding: FragmentNoteBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: NoteViewModel by viewModels()
-    private val noteId: String? by lazy {
+    private val viewModel: NoteViewModel by activityViewModels()
+    private val noteId = MutableLiveData<String>()
+    private val argNoteId: String? by lazy {
         arguments?.getString(ARG_NOTE_ID)
     }
     private val wordAdapter: WordAdapter by lazy {
@@ -44,6 +48,7 @@ class NoteFragment() : Fragment() {
                     R.id.action_noteFragment_to_corpusDetailFragment,
                     Bundle().apply {
                         putString(ARG_CORPUS_WORD, corpus.word)
+                        putInt(ARG_POSITION, wordAdapter.snapshot().items.indexOf(corpus))
                     }
                 )
             }
@@ -57,8 +62,15 @@ class NoteFragment() : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        noteId?.let {
-            viewModel.updateNoteId(it)
+        setFragmentResultListener("requestKey") { _, bundle ->
+            val position = bundle.getInt(ARG_POSITION)
+            binding.rvCorpus.scrollToPosition(
+                if (position <= 4) position else position - 4
+            )
+        }
+
+        argNoteId?.let {
+            noteId.value = it
             viewModel.getNote(it) { note ->
                 Timber.d("note: $note")
             }
@@ -66,26 +78,22 @@ class NoteFragment() : Fragment() {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
-        viewModel.noteId.observe(viewLifecycleOwner) {
+        noteId.observe(viewLifecycleOwner) {
             it?.let { id ->
-                lifecycleScope.launch {
-                    viewModel.getCorpusPagingDataFlow(id).collectLatest { corpusPagingData ->
-                        Timber.d("corpusPagingData: $corpusPagingData")
-                        wordAdapter.submitData(corpusPagingData)
-
-                        _binding?.let {
-                            binding.tvEmpty.isVisible = wordAdapter.snapshot().isEmpty()
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.getCorpusPagingDataFlow(id)
+                        .collectLatest { corpusPagingData ->
+                            Timber.d("corpusPagingData: $corpusPagingData")
+                            wordAdapter.submitData(corpusPagingData)
                         }
-                    }
                 }
             }
         }
+
         lifecycleScope.launch {
-            wordAdapter.loadStateFlow.collectLatest {
+            wordAdapter.loadStateFlow.collectLatest { loadStates ->
                 val alphabetSet = extractAvailableLettersFromLoadedPages()
-                _binding?.let {
-                    populateAlphabetSidebar(alphabetSet)
-                }
+                populateAlphabetSidebar(alphabetSet)
             }
         }
 
@@ -93,11 +101,23 @@ class NoteFragment() : Fragment() {
         binding.btnAdd.setOnClickListener {
             onSubmit()
         }
+        updateUI()
+    }
+
+    private fun updateUI() {
+        wordAdapter.addLoadStateListener {
+            val isLoading = it.source.refresh is LoadState.Loading
+            _binding?.let {
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+                binding.tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
+            }
+        }
     }
 
     // Function to extract available letters from currently loaded pages
     private fun extractAvailableLettersFromLoadedPages(): List<Char> {
         val currentList = wordAdapter.snapshot().items
+        viewModel.setCorpusList(currentList)
         Timber.d("currentList size: ${currentList.size}")
         return currentList.map {
             it.word.first().uppercaseChar()
@@ -106,16 +126,18 @@ class NoteFragment() : Fragment() {
 
     // Populate the sidebar dynamically with the available letters
     private fun populateAlphabetSidebar(alphabetSet: List<Char>) {
-        binding.alphabetSidebar.removeAllViews() // Clear previous views
-        alphabetSet.forEach { letter ->
-            val textView = TextView(requireContext()).apply {
-                text = letter.toString()
-                textSize = 20f
-                setOnClickListener {
-                    scrollToLetter(letter)
+        _binding?.let {
+            binding.alphabetSidebar.removeAllViews()
+            alphabetSet.forEach { letter ->
+                val textView = TextView(requireContext()).apply {
+                    text = letter.toString()
+                    textSize = 20f
+                    setOnClickListener {
+                        scrollToLetter(letter)
+                    }
                 }
+                binding.alphabetSidebar.addView(textView)
             }
-            binding.alphabetSidebar.addView(textView)
         }
     }
 
@@ -142,7 +164,7 @@ class NoteFragment() : Fragment() {
 
         val corpus = Corpus(
             id = id,
-            noteId = viewModel.noteId.value ?: noteIdNew,
+            noteId = noteId.value ?: noteIdNew,
             word = word,
             meaning = meaning,
             wordLang = worldLang,
@@ -153,7 +175,7 @@ class NoteFragment() : Fragment() {
 
         viewModel.insertCorpus(corpus)
 
-        if (viewModel.noteId.value == null) {
+        if (noteId.value == null) {
             val now = System.currentTimeMillis()
             val note = Note(
                 id = noteIdNew,
@@ -165,10 +187,13 @@ class NoteFragment() : Fragment() {
                 updatedAt = now
             )
             viewModel.createNewNote(note)
-            viewModel.updateNoteId(noteIdNew)
+            noteId.value = noteIdNew
         } else {
-            viewModel.updateNoteUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
-            viewModel.updateNoteContentSize(viewModel.noteId.value!!, wordAdapter.snapshot().size + 1)
+            viewModel.updateNoteUpdatedAt(noteId.value!!, System.currentTimeMillis())
+            viewModel.updateNoteContentSize(
+                noteId.value!!,
+                wordAdapter.snapshot().size + 1
+            )
         }
 
         binding.edWord.text?.clear()
@@ -217,5 +242,4 @@ class NoteFragment() : Fragment() {
         _binding = null
         resetMediaPlayer()
     }
-
 }
