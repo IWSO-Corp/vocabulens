@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes.ui.note
 
+import android.graphics.Typeface
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,21 +11,25 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
-import androidx.lifecycle.MutableLiveData
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
+import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_NOTE_ID = "noteIdParam"
@@ -36,8 +41,8 @@ class NoteFragment() : Fragment() {
     private var mediaPlayer: MediaPlayer? = null
     private var _binding: FragmentNoteBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: NoteViewModel by activityViewModels()
-    private val noteId = MutableLiveData<String>()
+    private val viewModel: NoteViewModel by viewModels()
+    private val detailViewModel: DetailViewModel by activityViewModels()
     private val argNoteId: String? by lazy {
         arguments?.getString(ARG_NOTE_ID)
     }
@@ -54,11 +59,14 @@ class NoteFragment() : Fragment() {
             }
 
             override fun onPlay(url: String) {
-                if (url.isNotEmpty()) playAudio(url)
+                lifecycleScope.launch(Dispatchers.IO) {
+                    if (url.isNotEmpty()) playAudio(url)
+                }
             }
         })
     }
 
+    @OptIn(FlowPreview::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -70,7 +78,7 @@ class NoteFragment() : Fragment() {
         }
 
         argNoteId?.let {
-            noteId.value = it
+            viewModel.updateNoteId(it)
             viewModel.getNote(it) { note ->
                 Timber.d("note: $note")
             }
@@ -78,13 +86,14 @@ class NoteFragment() : Fragment() {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
-        noteId.observe(viewLifecycleOwner) {
+        viewModel.noteId.observe(viewLifecycleOwner) {
             it?.let { id ->
-                CoroutineScope(Dispatchers.IO).launch {
+                lifecycleScope.launch(Dispatchers.IO) {
                     viewModel.getCorpusPagingDataFlow(id)
                         .collectLatest { corpusPagingData ->
-                            Timber.d("corpusPagingData: $corpusPagingData")
-                            wordAdapter.submitData(corpusPagingData)
+                            withContext(Dispatchers.Main) {
+                                wordAdapter.submitData(corpusPagingData)
+                            }
                         }
                 }
             }
@@ -94,6 +103,7 @@ class NoteFragment() : Fragment() {
             wordAdapter.loadStateFlow.collectLatest { loadStates ->
                 val alphabetSet = extractAvailableLettersFromLoadedPages()
                 populateAlphabetSidebar(alphabetSet)
+                updateUI()
             }
         }
 
@@ -101,7 +111,6 @@ class NoteFragment() : Fragment() {
         binding.btnAdd.setOnClickListener {
             onSubmit()
         }
-        updateUI()
     }
 
     private fun updateUI() {
@@ -110,6 +119,48 @@ class NoteFragment() : Fragment() {
             _binding?.let {
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
                 binding.tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
+                binding.rvCorpus.addOnScrollListener(scrollListener)
+            }
+        }
+    }
+
+    private val scrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+            val lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
+            val data = wordAdapter.snapshot().items
+
+            if (lastVisiblePosition != RecyclerView.NO_POSITION && lastVisiblePosition < data.size) {
+                val lastCorpus = data[lastVisiblePosition]
+                val firstLetter = lastCorpus.word.first().uppercaseChar()
+
+                highlightCurrentLetterInSidebar(firstLetter)
+            }
+        }
+    }
+
+    private fun highlightCurrentLetterInSidebar(currentLetter: Char) {
+        // Reset all letters to normal
+        for (i in 0 until binding.alphabetSidebar.childCount) {
+            val textView = binding.alphabetSidebar.getChildAt(i) as TextView
+            textView.apply {
+                setTextColor(resources.getColor(R.color.grey, null))
+                setTypeface(null, Typeface.NORMAL)
+            }
+        }
+
+        // Find the matching letter in the sidebar and make it bold
+        for (i in 0 until binding.alphabetSidebar.childCount) {
+            val textView = binding.alphabetSidebar.getChildAt(i) as TextView
+            if (textView.text.toString() == currentLetter.toString()) {
+                textView.apply {
+                    textSize = 20f
+                    setTextColor(resources.getColor(R.color.black, null))
+                    setTypeface(null, Typeface.BOLD)
+                }
+                break
             }
         }
     }
@@ -117,7 +168,7 @@ class NoteFragment() : Fragment() {
     // Function to extract available letters from currently loaded pages
     private fun extractAvailableLettersFromLoadedPages(): List<Char> {
         val currentList = wordAdapter.snapshot().items
-        viewModel.setCorpusList(currentList)
+        detailViewModel.setCorpusList(currentList.map { it.word })
         Timber.d("currentList size: ${currentList.size}")
         return currentList.map {
             it.word.first().uppercaseChar()
@@ -164,7 +215,7 @@ class NoteFragment() : Fragment() {
 
         val corpus = Corpus(
             id = id,
-            noteId = noteId.value ?: noteIdNew,
+            noteId = viewModel.noteId.value ?: noteIdNew,
             word = word,
             meaning = meaning,
             wordLang = worldLang,
@@ -175,7 +226,7 @@ class NoteFragment() : Fragment() {
 
         viewModel.insertCorpus(corpus)
 
-        if (noteId.value == null) {
+        if (viewModel.noteId.value == null) {
             val now = System.currentTimeMillis()
             val note = Note(
                 id = noteIdNew,
@@ -187,11 +238,11 @@ class NoteFragment() : Fragment() {
                 updatedAt = now
             )
             viewModel.createNewNote(note)
-            noteId.value = noteIdNew
+            viewModel.updateNoteId(noteIdNew)
         } else {
-            viewModel.updateNoteUpdatedAt(noteId.value!!, System.currentTimeMillis())
+            viewModel.updateNoteUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
             viewModel.updateNoteContentSize(
-                noteId.value!!,
+                viewModel.noteId.value!!,
                 wordAdapter.snapshot().size + 1
             )
         }
@@ -201,6 +252,7 @@ class NoteFragment() : Fragment() {
     }
 
     private fun playAudio(url: String) {
+        mediaPlayer?.release()
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(url)

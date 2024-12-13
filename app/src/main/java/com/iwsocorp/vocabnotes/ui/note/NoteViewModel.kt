@@ -11,6 +11,7 @@ import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,20 +29,13 @@ class NoteViewModel @Inject constructor(
         _noteId.value = newValue
     }
 
-    fun getNote(noteId: String, callback: (note: Note) -> Unit) = viewModelScope.launch {
+    fun getNote(noteId: String, callback: (note: Note) -> Unit) = viewModelScope.launch(Dispatchers.IO) {
         val note = noteRepository.getNoteById(noteId)
         callback(note)
     }
 
     fun createNewNote(note: Note) = viewModelScope.launch {
         noteRepository.addNote(note)
-    }
-
-    private val _corpusList = MutableLiveData<List<Corpus>>()
-    val corpusList: LiveData<List<Corpus>> get() = _corpusList
-
-    fun setCorpusList(corpusList: List<Corpus>) {
-        _corpusList.value = corpusList
     }
 
     fun getCorpusPagingDataFlow(noteId: String): Flow<PagingData<Corpus>> =

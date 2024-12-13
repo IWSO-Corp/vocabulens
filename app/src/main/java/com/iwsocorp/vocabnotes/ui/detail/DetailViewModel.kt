@@ -3,22 +3,23 @@ package com.iwsocorp.vocabnotes.ui.detail
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.ExampleRepository
-import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Example
-import com.iwsocorp.vocabnotes.core.model.Note
-import com.iwsocorp.vocabnotes.core.model.Vocabulary
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
     private val exampleRepository: ExampleRepository,
     private val vocabularyRepository: VocabularyRepository,
@@ -38,25 +39,60 @@ class DetailViewModel @Inject constructor(
         _corpusPosition.value = position
     }
 
-    fun getNote(id: String, callback: (note: Note) -> Unit) = viewModelScope.launch {
-        callback(noteRepository.getNoteById(id))
+    private val _wordList = MutableLiveData<List<String>>()
+    val wordList: LiveData<List<String>> get() = _wordList
+
+    fun setCorpusList(wordList: List<String>) {
+        _wordList.value = wordList
     }
 
-    fun updateNote(note: Note) = viewModelScope.launch {
-        noteRepository.updateNote(note)
+    val posAndWords: LiveData<Pair<Int, List<String>>> = corpusPosition.asFlow()
+        .combine(wordList.asFlow()) { pos, list ->
+            Pair(pos, list)
+        }.asLiveData()
+
+    private val _updatedCorpus = MutableLiveData<Corpus?>()
+    val updatedCorpus: LiveData<Corpus?> get() = _updatedCorpus
+
+    fun resetUpdatedCorpus() {
+        _updatedCorpus.value = null
     }
 
-    fun getVocabulary(word: String, callback: (vocabulary: Vocabulary) -> Unit) =
-        viewModelScope.launch {
-            callback(vocabularyRepository.getVocabulary(word))
+    fun updateCorpusDetail(
+        corpusWord: String,
+        isNetworkAvailable: Boolean,
+        showToast: () -> Unit,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        val corpus = corpusRepository.getCorpusByWord(corpusWord)
+        if (corpus.phonetic.isEmpty() && isNetworkAvailable) {
+            val vocab = vocabularyRepository.getVocabulary(corpusWord)
+            val newCorpus = Corpus(
+                id = corpus.id,
+                noteId = corpus.noteId,
+                word = corpus.word,
+                meaning = corpus.meaning,
+                wordLang = corpus.wordLang,
+                meaningLang = corpus.meaningLang,
+                phonetic = vocab.phonetic,
+                audio = vocab.audio,
+                meanings = vocab.meanings,
+                createdAt = corpus.createdAt,
+                updatedAt = System.currentTimeMillis()
+            )
+            withContext(Dispatchers.Main) {
+                _updatedCorpus.value = newCorpus
+            }
+            corpusRepository.updateCorpus(newCorpus)
+        } else if (!isNetworkAvailable) {
+            withContext(Dispatchers.Main) {
+                showToast()
+                _updatedCorpus.value = corpus
+            }
+        } else {
+            withContext(Dispatchers.Main) {
+                _updatedCorpus.value = corpus
+            }
         }
-
-    fun getCorpusByWord(word: String, callback: (corpus: Corpus) -> Unit) = viewModelScope.launch {
-        callback(corpusRepository.getCorpusByWord(word))
-    }
-
-    fun updateCorpus(corpus: Corpus) = viewModelScope.launch {
-        corpusRepository.updateCorpus(corpus)
     }
 
     fun insertExampleSentence(example: Example) = viewModelScope.launch {
