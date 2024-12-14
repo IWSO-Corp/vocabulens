@@ -28,10 +28,10 @@ interface CorpusDao {
     suspend fun getCorpusByWord(word: String): CorpusEntity
 
     @Query("SELECT * FROM corpus WHERE word LIKE '%' || :query || '%'")
-    fun searchCorpus(query: String): Flow<List<CorpusEntity>>
+    fun searchCorpus(query: String): PagingSource<Int, CorpusEntity>
 
     @Query("SELECT * FROM corpus ORDER BY word ASC")
-    fun getAllCorpus(): Flow<List<CorpusEntity>>
+    fun getAllCorpus(): PagingSource<Int, CorpusEntity>
 
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
     fun getLatestCorpus(noteId: String): Flow<List<CorpusEntity>>

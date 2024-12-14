@@ -61,4 +61,6 @@ class NoteViewModel @Inject constructor(
         noteRepository.updateContentSize(id, contentSize)
     }
 
+    fun getAllCorpus(): Flow<PagingData<Corpus>> = corpusRepository.getAllCorpus()
+
 }

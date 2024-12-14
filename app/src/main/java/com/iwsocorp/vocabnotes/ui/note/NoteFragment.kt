@@ -79,22 +79,33 @@ class NoteFragment() : Fragment() {
 
         argNoteId?.let {
             viewModel.updateNoteId(it)
-            viewModel.getNote(it) { note ->
-                Timber.d("note: $note")
+            if (it.isNotEmpty()) {
+                viewModel.getNote(it) { note ->
+                    Timber.d("note: $note")
+                }
             }
         } ?: run {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
         viewModel.noteId.observe(viewLifecycleOwner) {
-            it?.let { id ->
+            it?.let { noteId ->
                 lifecycleScope.launch(Dispatchers.IO) {
-                    viewModel.getCorpusPagingDataFlow(id)
-                        .collectLatest { corpusPagingData ->
-                            withContext(Dispatchers.Main) {
-                                wordAdapter.submitData(corpusPagingData)
+                    if (noteId.isNotEmpty()) {
+                        viewModel.getCorpusPagingDataFlow(noteId)
+                            .collectLatest { corpusPagingData ->
+                                withContext(Dispatchers.Main) {
+                                    wordAdapter.submitData(corpusPagingData)
+                                }
                             }
-                        }
+                    } else {
+                        viewModel.getAllCorpus()
+                            .collectLatest { corpusPagingData ->
+                                withContext(Dispatchers.Main) {
+                                    wordAdapter.submitData(corpusPagingData)
+                                }
+                            }
+                    }
                 }
             }
         }

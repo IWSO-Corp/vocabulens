@@ -1,11 +1,14 @@
 package com.iwsocorp.vocabnotes.core.data.repository
 
+import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
 import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -37,12 +40,26 @@ class NoteRepositoryImpl @Inject constructor(
         return noteDao.getNoteById(id).asExternalModel()
     }
 
-    override fun getNotes(): Flow<List<Note>> {
+    override suspend fun getNotes(): Flow<List<Note>> {
         val notes: Flow<List<NoteEntity>> = noteDao.getAllNotes()
+        val newList = mutableListOf(
+            Note(
+                id = "",
+                title = "All Vocabulary",
+                wordLang = "",
+                meaningLang = "",
+                contentSize = 0,
+                createdAt = 0L,
+                updatedAt = 0L
+            )
+        )
         return notes.map {
             it.map { entity ->
                 entity.asExternalModel()
+            }.forEach {
+                newList.add(it)
             }
+            newList.toList()
         }
     }
 
@@ -55,5 +72,5 @@ interface NoteRepository {
     suspend fun updateContentSize(id: String, contentSize: Int)
     suspend fun deleteNote(id: String)
     suspend fun getNoteById(id: String): Note
-    fun getNotes(): Flow<List<Note>>
+    suspend fun getNotes(): Flow<List<Note>>
 }

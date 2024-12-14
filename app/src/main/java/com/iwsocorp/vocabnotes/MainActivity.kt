@@ -6,6 +6,7 @@ import android.provider.OpenableColumns
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -75,7 +76,12 @@ class MainActivity : AppCompatActivity() {
             val inputStream = contentResolver.openInputStream(uri)
             inputStream?.let {
                 val data: List<Corpus> = readExcelFile(it)
-                Timber.d("data: ${data.take(5)}")
+                Timber.d("data size: ${data.size}")
+
+                if (data.isEmpty()) {
+                    Toast.makeText(this, "Invalid file data", Toast.LENGTH_SHORT).show()
+                    return@let
+                }
 
                 viewModel.insertCorpusList(data)
 

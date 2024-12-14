@@ -32,13 +32,16 @@ class NoteAdapter(
                 text = note.title
                 visibility = if (note.title.isEmpty()) View.GONE else View.VISIBLE
             }
+            tvDate.visibility = if (note.updatedAt == 0L) View.GONE else View.VISIBLE
             tvDate.text = note.updatedAt.asString()
+            tvWordCount.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
             tvWordCount.text = itemView.context.getString(R.string.word_amount, note.contentSize)
 
             itemView.setOnClickListener {
                 listener.onClick(note.id)
             }
 
+            rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
             val previewAdapter = PreviewAdapter(note.id) { listener.onClick(it) }
             rvPreview.adapter = previewAdapter
             viewModel.getCorpusByNoteId(note.id) {

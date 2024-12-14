@@ -64,8 +64,9 @@ class CorpusDetailFragment : Fragment() {
         val isMax = pos < list.size - 1
         binding.btnPrevious.isVisible = isMin
         binding.btnNext.isVisible = isMax
-        if (isMin) {
+        if (isMin && isMax) {
             val prevWord = list[pos - 1]
+            val nextWord = list[pos + 1]
             binding.btnPrevious.apply {
                 text = prevWord
                 setOnClickListener {
@@ -73,9 +74,6 @@ class CorpusDetailFragment : Fragment() {
                     viewModel.setCorpusWord(prevWord)
                 }
             }
-        }
-        if (isMax) {
-            val nextWord = list[pos + 1]
             binding.btnNext.apply {
                 text = nextWord
                 setOnClickListener {
