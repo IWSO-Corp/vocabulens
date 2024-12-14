@@ -21,9 +21,10 @@ import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ActivityMainBinding
-import com.iwsocorp.vocabnotes.ui.detail.CorpusDetailFragment
+import com.iwsocorp.vocabnotes.ui.gallery.GalleryFragment
 import com.iwsocorp.vocabnotes.ui.home.HomeFragment
 import com.iwsocorp.vocabnotes.ui.note.NoteViewModel
+import com.iwsocorp.vocabnotes.ui.slideshow.SlideshowFragment
 import com.wikosac.currentactivefragment.CurrentActiveFragment
 import dagger.hilt.android.AndroidEntryPoint
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -65,7 +66,14 @@ class MainActivity : AppCompatActivity() {
 
         currentActiveFragment.get(R.id.nav_host_fragment_content_main) {
             if (it is HomeFragment) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
-            binding.appBarMain.toolbar.visibility = if (it is CorpusDetailFragment) View.GONE else View.VISIBLE
+            val mainFragments = listOf(
+                HomeFragment::class.java,
+                GalleryFragment::class.java,
+                SlideshowFragment::class.java
+            )
+            val shouldShowToolbar = mainFragments.contains(it::class.java)
+            binding.appBarMain.toolbar.visibility =
+                if (shouldShowToolbar) View.VISIBLE else View.GONE
         }
     }
 
@@ -152,13 +160,18 @@ class MainActivity : AppCompatActivity() {
         return fileName
     }
 
-
     fun pickExcelFile() {
         openDocumentLauncher.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_search -> {
+                findNavController(R.id.nav_host_fragment_content_main)
+                    .navigate(R.id.action_nav_home_to_searchFragment)
+                return true
+            }
+
             R.id.action_settings -> {
                 return true
             }

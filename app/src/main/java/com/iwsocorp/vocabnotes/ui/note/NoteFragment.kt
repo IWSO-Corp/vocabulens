@@ -4,9 +4,11 @@ import android.graphics.Typeface
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -82,6 +84,9 @@ class NoteFragment() : Fragment() {
             if (it.isNotEmpty()) {
                 viewModel.getNote(it) { note ->
                     Timber.d("note: $note")
+                    binding.toolbarNote.title = note.title
+                    binding.tvWordLang.text = note.wordLang
+                    binding.tvMeaningLang.text = note.meaningLang
                 }
             }
         } ?: run {
@@ -122,6 +127,32 @@ class NoteFragment() : Fragment() {
         binding.btnAdd.setOnClickListener {
             onSubmit()
         }
+        binding.toolbarNote.apply {
+            setNavigationIcon(R.drawable.baseline_arrow_back_24)
+            setNavigationOnClickListener {
+                parentFragmentManager.popBackStack()
+            }
+            inflateMenu(R.menu.menu_note)
+            setOnMenuItemClickListener(menuListener)
+        }
+        binding.iconSwitch.setOnClickListener {
+            val worldLang = binding.tvWordLang.text.toString()
+            val meaningLang = binding.tvMeaningLang.text.toString()
+            binding.tvWordLang.text = meaningLang
+            binding.tvMeaningLang.text = worldLang
+        }
+    }
+
+    private val menuListener = object : Toolbar.OnMenuItemClickListener {
+        override fun onMenuItemClick(item: MenuItem?): Boolean {
+            when (item?.itemId) {
+                R.id.action_settings -> {
+
+                }
+            }
+            return true
+        }
+
     }
 
     private fun updateUI() {

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_nav_home_to_noteFragment"
             app:destination="@id/noteFragment" />
+        <action
+            android:id="@+id/action_nav_home_to_searchFragment"
+            app:destination="@id/searchFragment" />
     </fragment>
 
     <fragment
@@ -49,5 +52,10 @@
             android:name="word"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.iwsocorp.vocabnotes.ui.search.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" />
 
 </navigation>

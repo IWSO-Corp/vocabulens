@@ -11,7 +11,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.isNetworkAvailable
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentCorpusDetailBinding
@@ -21,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.getValue
+import com.iwsocorp.vocabnotes.R
 
 const val ARG_CORPUS_WORD = "corpusWordParam"
 
@@ -54,7 +54,7 @@ class CorpusDetailFragment : Fragment() {
             }
             posAndWords.observe(viewLifecycleOwner) { (pos, list) ->
                 setupNavigation(pos, list)
-                setupBack(pos)
+                setupToolbar(pos)
             }
         }
     }
@@ -64,9 +64,8 @@ class CorpusDetailFragment : Fragment() {
         val isMax = pos < list.size - 1
         binding.btnPrevious.isVisible = isMin
         binding.btnNext.isVisible = isMax
-        if (isMin && isMax) {
+        if (isMin) {
             val prevWord = list[pos - 1]
-            val nextWord = list[pos + 1]
             binding.btnPrevious.apply {
                 text = prevWord
                 setOnClickListener {
@@ -74,6 +73,9 @@ class CorpusDetailFragment : Fragment() {
                     viewModel.setCorpusWord(prevWord)
                 }
             }
+        }
+        if (isMax) {
+            val nextWord = list[pos + 1]
             binding.btnNext.apply {
                 text = nextWord
                 setOnClickListener {
@@ -84,7 +86,7 @@ class CorpusDetailFragment : Fragment() {
         }
     }
 
-    private fun setupBack(position: Int) {
+    private fun setupToolbar(position: Int) {
         binding.toolbarDetail.apply {
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             title = (position + 1).toString()

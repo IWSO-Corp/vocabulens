@@ -27,7 +27,7 @@ interface CorpusDao {
     @Query("SELECT * FROM corpus WHERE word = :word")
     suspend fun getCorpusByWord(word: String): CorpusEntity
 
-    @Query("SELECT * FROM corpus WHERE word LIKE '%' || :query || '%'")
+    @Query("SELECT * FROM corpus WHERE word LIKE :query || '%'")
     fun searchCorpus(query: String): PagingSource<Int, CorpusEntity>
 
     @Query("SELECT * FROM corpus ORDER BY word ASC")
