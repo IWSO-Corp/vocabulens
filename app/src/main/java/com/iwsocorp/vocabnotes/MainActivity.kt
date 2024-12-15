@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun readExcelFile(inputStream: InputStream): List<Corpus> {
+    private fun readExcelFile(inputStream: InputStream): List<Corpus> {
         val corpusList = mutableListOf<Corpus>()
         val rndNote = generateRandomString(10)
         val noteIdNew = "note-$rndNote"
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
         return corpusList
     }
 
-    fun getFileName(uri: Uri): String? {
+    private fun getFileName(uri: Uri): String? {
         var fileName: String? = null
         val cursor = contentResolver.query(uri, null, null, null, null)
         cursor?.use {
@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         return fileName
     }
 
-    fun pickExcelFile() {
+    private fun pickExcelFile() {
         openDocumentLauncher.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
     }
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,6 +49,7 @@ class DetailViewModel @Inject constructor(
 
     val posAndWords: LiveData<Pair<Int, List<String>>> = corpusPosition.asFlow()
         .combine(wordList.asFlow()) { pos, list ->
+            Timber.d("Position: $pos, List: $list")
             Pair(pos, list)
         }.asLiveData()
 

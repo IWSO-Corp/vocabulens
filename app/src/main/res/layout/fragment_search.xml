@@ -24,12 +24,7 @@
                 android:id="@+id/searchView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:focusedByDefault="true"
-                android:iconifiedByDefault="false"
                 android:imeOptions="actionSearch"
-                app:closeIcon="@drawable/baseline_close_24"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:queryHint="Search word" />

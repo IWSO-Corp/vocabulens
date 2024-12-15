@@ -63,7 +63,7 @@ class CorpusDetailFragment : Fragment() {
         val isMin = pos > 0
         val isMax = pos < list.size - 1
         binding.btnPrevious.isVisible = isMin
-        binding.btnNext.isVisible = isMax
+        binding.btnNext.isVisible = isMax && pos != -1
         if (isMin) {
             val prevWord = list[pos - 1]
             binding.btnPrevious.apply {
