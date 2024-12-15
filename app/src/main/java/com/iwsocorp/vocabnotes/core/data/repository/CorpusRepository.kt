@@ -50,6 +50,10 @@ class CorpusRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun allCorpusSize(): Flow<Int> {
+        return corpusDao.allCorpusSize()
+    }
+
     override fun getLatestCorpus(noteId: String): Flow<List<Corpus>> {
         return corpusDao.getLatestCorpus(noteId).map { list ->
             list.map { entity ->
@@ -94,6 +98,7 @@ interface CorpusRepository {
     suspend fun getCorpusByWord(word: String): Corpus
     fun searchCorpus(query: String): Flow<PagingData<Corpus>>
     fun getAllCorpus(): Flow<PagingData<Corpus>>
+    fun allCorpusSize(): Flow<Int>
     fun getLatestCorpus(noteId: String): Flow<List<Corpus>>
     fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>>
     suspend fun deleteCorpusByNoteId(noteId: String)

@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes.core.database.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -29,6 +30,6 @@ interface NoteDao {
     suspend fun getNoteById(id: String): NoteEntity
 
     @Query("SELECT * FROM notes ORDER BY updatedAt DESC")
-    fun getAllNotes(): Flow<List<NoteEntity>>
+    fun getAllNotes(): PagingSource<Int, NoteEntity>
 
 }

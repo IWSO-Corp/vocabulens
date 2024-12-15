@@ -3,6 +3,7 @@ package com.iwsocorp.vocabnotes.ui.home
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -12,6 +13,11 @@ import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
 import com.iwsocorp.vocabnotes.databinding.ItemWordPreviewBinding
 import com.iwsocorp.vocabnotes.ui.home.NoteAdapter.ClickListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -19,10 +25,30 @@ import java.util.Locale
 class NoteAdapter(
     private val viewModel: HomeViewModel,
     private val listener: ClickListener,
-) : ListAdapter<Note, NoteAdapter.ViewHolder>(DiffCallback()) {
+) : PagingDataAdapter<Note, NoteAdapter.ViewHolder>(DiffCallback()) {
+
+    private val selectionIds = mutableListOf<String>()
+
+    fun getSelectionIds(): List<String> = selectionIds
+
+    fun toggleSelection(pos: Int) {
+        getItem(pos)?.let {
+            if (selectionIds.contains(it.id)) {
+                selectionIds.remove(it.id)
+            } else {
+                selectionIds.add(it.id)
+            }
+        }
+    }
+
+    fun clearSelection() {
+        selectionIds.clear()
+        notifyDataSetChanged()
+    }
 
     interface ClickListener {
-        fun onClick(noteId: String)
+        fun onClick(pos: Int, noteId: String)
+        fun onLongClick(pos: Int, noteId: String)
     }
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -34,15 +60,38 @@ class NoteAdapter(
             }
             tvDate.visibility = if (note.updatedAt == 0L) View.GONE else View.VISIBLE
             tvDate.text = note.updatedAt.asString()
-            tvWordCount.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
-            tvWordCount.text = itemView.context.getString(R.string.word_amount, note.contentSize)
 
+            if (note.id.isNotEmpty()) {
+                tvWordCount.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
+                tvWordCount.text = itemView.context.getString(R.string.word_amount, note.contentSize)
+            } else {
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.allCorpusSize().collectLatest {
+                        withContext(Dispatchers.Main) {
+                            tvWordCount.visibility = if (it == 0) View.GONE else View.VISIBLE
+                            tvWordCount.text = itemView.context.getString(R.string.word_amount, it)
+                        }
+                    }
+                }
+            }
+
+            itemView.isSelected = selectionIds.contains(note.id)
             itemView.setOnClickListener {
-                listener.onClick(note.id)
+                listener.onClick(absoluteAdapterPosition, note.id)
+            }
+            if (note.id.isNotEmpty()) {
+                itemView.setOnLongClickListener {
+                    listener.onLongClick(absoluteAdapterPosition, note.id)
+                    true
+                }
             }
 
             rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
-            val previewAdapter = PreviewAdapter(note.id) { listener.onClick(it) }
+            val previewAdapter = PreviewAdapter(
+                noteId = note.id,
+                onClick = { listener.onClick(absoluteAdapterPosition, it) },
+                onLongClick = { listener.onLongClick(absoluteAdapterPosition, it) }
+            )
             rvPreview.adapter = previewAdapter
             viewModel.getCorpusByNoteId(note.id) {
                 previewAdapter.submitList(it)
@@ -67,8 +116,9 @@ class NoteAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        holder.bind(item)
+        getItem(position)?.let {
+            holder.bind(it)
+        }
     }
 
     class DiffCallback : DiffUtil.ItemCallback<Note>() {
@@ -83,6 +133,7 @@ class NoteAdapter(
 class PreviewAdapter(
     private val noteId: String,
     private val onClick: (noteId: String) -> Unit,
+    private val onLongClick: (noteId: String) -> Unit,
 ) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DiffCallback()) {
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
@@ -99,6 +150,10 @@ class PreviewAdapter(
             }
             itemView.setOnClickListener {
                 onClick(noteId)
+            }
+            itemView.setOnLongClickListener {
+                onLongClick(noteId)
+                true
             }
         }
     }

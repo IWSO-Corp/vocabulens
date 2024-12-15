@@ -33,6 +33,9 @@ interface CorpusDao {
     @Query("SELECT * FROM corpus ORDER BY word ASC")
     fun getAllCorpus(): PagingSource<Int, CorpusEntity>
 
+    @Query("SELECT COUNT(*) FROM corpus")
+    fun allCorpusSize(): Flow<Int>
+
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
     fun getLatestCorpus(noteId: String): Flow<List<CorpusEntity>>
 

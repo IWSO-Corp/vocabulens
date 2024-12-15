@@ -247,8 +247,8 @@ class NoteFragment() : Fragment() {
     private fun onSubmit() {
         val worldLang = binding.tvWordLang.text.toString()
         val meaningLang = binding.tvMeaningLang.text.toString()
-        val word = binding.edWord.text.toString()
-        val meaning = binding.edMeaning.text.toString()
+        val word = binding.edWord.text.toString().trim()
+        val meaning = binding.edMeaning.text.toString().trim()
         if (word.isEmpty() || meaning.isEmpty()) return
 
         val random = generateRandomString(10)

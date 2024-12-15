@@ -4,14 +4,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.LoadState
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.databinding.FragmentHomeBinding
 import com.iwsocorp.vocabnotes.ui.note.ARG_NOTE_ID
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -21,8 +27,12 @@ class HomeFragment : Fragment() {
     private val viewModel: HomeViewModel by activityViewModels()
     private val noteAdapter: NoteAdapter by lazy {
         NoteAdapter(viewModel, object : NoteAdapter.ClickListener {
-            override fun onClick(noteId: String) {
+            override fun onClick(pos: Int, noteId: String) {
                 navigate(noteId)
+            }
+
+            override fun onLongClick(pos: Int, noteId: String) {
+                noteAdapter.toggleSelection(pos)
             }
         })
     }
@@ -30,13 +40,22 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.getAllNotes()
-        viewModel.notes.observe(viewLifecycleOwner) {
-            Timber.d("notes: $it")
-
-            noteAdapter.submitList(it)
-
-            binding.tvEmpty.visibility = if (it.isEmpty()) View.VISIBLE else View.GONE
+        lifecycleScope.launch {
+            viewModel.getAllNotes().collectLatest {
+                withContext(Dispatchers.Main) {
+                    noteAdapter.submitData(it)
+                }
+            }
+        }
+        lifecycleScope.launch {
+            noteAdapter.loadStateFlow.collectLatest {
+                noteAdapter.addLoadStateListener {
+                    val isLoading = it.source.refresh is LoadState.Loading
+                    _binding?.let {
+                        binding.tvEmpty.isVisible = !isLoading && noteAdapter.snapshot().isEmpty()
+                    }
+                }
+            }
         }
 
         binding.rvNote.adapter = noteAdapter
