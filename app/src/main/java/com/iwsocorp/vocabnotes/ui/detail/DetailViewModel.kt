@@ -69,9 +69,8 @@ class DetailViewModel @Inject constructor(
         if (corpus.phonetic.isEmpty() && isNetworkAvailable) {
             val vocab = vocabularyRepository.getVocabulary(corpusWord)
             val newCorpus = Corpus(
-                id = corpus.id,
-                noteId = corpus.noteId,
                 word = corpus.word,
+                noteId = corpus.noteId,
                 meaning = corpus.meaning,
                 wordLang = corpus.wordLang,
                 meaningLang = corpus.meaningLang,

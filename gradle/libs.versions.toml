@@ -1,6 +1,5 @@
 [versions]
 agp = "8.7.2"
-currentactivefragment = "1.0.3"
 gsonVersion = "2.11.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
@@ -30,7 +29,6 @@ activity = "1.9.3"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
-currentactivefragment = { module = "com.github.wikosac:CurrentActiveFragment", version.ref = "currentactivefragment" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

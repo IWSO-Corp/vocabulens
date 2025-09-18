@@ -12,17 +12,24 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CorpusDao {
 
-    @Insert(onConflict = OnConflictStrategy.NONE)
-    suspend fun insertCorpus(corpus: CorpusEntity)
+    @Query("""
+        SELECT COUNT(*) 
+        FROM corpus 
+        WHERE word IN (:words)
+    """)
+    suspend fun countExisting(words: List<String>): Int
 
-    @Insert(onConflict = OnConflictStrategy.NONE)
-    suspend fun insertCorpusList(corpusList: List<CorpusEntity>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCorpus(corpus: CorpusEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCorpusList(corpusList: List<CorpusEntity>): List<Long>
 
     @Update
     suspend fun updateCorpus(corpus: CorpusEntity)
 
-    @Query("DELETE FROM corpus WHERE id = :id")
-    suspend fun deleteCorpusById(id: String)
+    @Query("DELETE FROM corpus WHERE word = :word")
+    suspend fun deleteCorpusById(word: String)
 
     @Query("SELECT * FROM corpus WHERE word = :word")
     suspend fun getCorpusByWord(word: String): CorpusEntity
@@ -46,3 +53,19 @@ interface CorpusDao {
     suspend fun deleteCorpusByNoteId(noteId: String)
 
 }
+
+// Extension / Helper function
+suspend fun CorpusDao.insertCorpusListWithResult(
+    corpusList: List<CorpusEntity>
+): InsertResult {
+    val resultIds = insertCorpusList(corpusList)
+    val successCount = resultIds.count { it != -1L }
+    val failedCount = resultIds.count { it == -1L }
+    return InsertResult(successCount, failedCount)
+}
+
+// Data class untuk menampung hasil
+data class InsertResult(
+    val successCount: Int,
+    val failedCount: Int
+)

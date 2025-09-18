@@ -4,9 +4,8 @@ import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
 
 data class Corpus(
-    val id: String,
-    val noteId: String,
     val word: String,
+    val noteId: String,
     val meaning: String,
     val wordLang: String,
     val meaningLang: String,
@@ -20,9 +19,8 @@ data class Corpus(
 fun Corpus.asEntity() : CorpusEntity {
     val meaningsJson = Gson().toJson(meanings)
     return CorpusEntity(
-        id = id,
-        noteId = noteId,
         word = word,
+        noteId = noteId,
         meaning = meaning,
         wordLang = wordLang,
         meaningLang = meaningLang,

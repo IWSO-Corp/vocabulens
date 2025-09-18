@@ -4,10 +4,11 @@ import android.graphics.Typeface
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -88,6 +89,8 @@ class NoteFragment() : Fragment() {
                     binding.tvWordLang.text = note.wordLang
                     binding.tvMeaningLang.text = note.meaningLang
                 }
+            } else {
+                binding.toolbarNote.title = "New Note"
             }
         } ?: run {
             binding.tvEmpty.visibility = View.VISIBLE
@@ -143,16 +146,23 @@ class NoteFragment() : Fragment() {
         }
     }
 
-    private val menuListener = object : Toolbar.OnMenuItemClickListener {
-        override fun onMenuItemClick(item: MenuItem?): Boolean {
-            when (item?.itemId) {
-                R.id.action_settings -> {
-
-                }
+    private val menuListener = Toolbar.OnMenuItemClickListener { item ->
+        when (item?.itemId) {
+            R.id.action_delete -> {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Delete Note")
+                    .setMessage("Are you sure you want to delete this note and all its contents?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        viewModel.noteId.observe(viewLifecycleOwner) {
+                            it?.let { noteId -> viewModel.deleteNote(noteId) }
+                        }
+                        parentFragmentManager.popBackStack()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
-            return true
         }
-
+        true
     }
 
     private fun updateUI() {
@@ -256,9 +266,8 @@ class NoteFragment() : Fragment() {
         val noteIdNew = "note-$random"
 
         val corpus = Corpus(
-            id = id,
-            noteId = viewModel.noteId.value ?: noteIdNew,
             word = word,
+            noteId = viewModel.noteId.value ?: noteIdNew,
             meaning = meaning,
             wordLang = worldLang,
             meaningLang = meaningLang,
@@ -266,27 +275,35 @@ class NoteFragment() : Fragment() {
             updatedAt = System.currentTimeMillis()
         )
 
-        viewModel.insertCorpus(corpus)
+        viewModel.insertCorpus(corpus) {
+            Toast.makeText(
+                requireContext(),
+                if (it == -1L) "Duplicate" else "Success",
+                Toast.LENGTH_SHORT
+            ).show()
 
-        if (viewModel.noteId.value == null) {
-            val now = System.currentTimeMillis()
-            val note = Note(
-                id = noteIdNew,
-                title = "",
-                wordLang = worldLang,
-                meaningLang = meaningLang,
-                contentSize = 1,
-                createdAt = now,
-                updatedAt = now
-            )
-            viewModel.createNewNote(note)
-            viewModel.updateNoteId(noteIdNew)
-        } else {
-            viewModel.updateNoteUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
-            viewModel.updateNoteContentSize(
-                viewModel.noteId.value!!,
-                wordAdapter.snapshot().size + 1
-            )
+            if (it == -1L) return@insertCorpus
+
+            if (viewModel.noteId.value == null) {
+                val now = System.currentTimeMillis()
+                val note = Note(
+                    id = noteIdNew,
+                    title = "",
+                    wordLang = worldLang,
+                    meaningLang = meaningLang,
+                    contentSize = 1,
+                    createdAt = now,
+                    updatedAt = now
+                )
+                viewModel.createNewNote(note)
+                viewModel.updateNoteId(noteIdNew)
+            } else {
+                viewModel.updateNoteUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
+                viewModel.updateNoteContentSize(
+                    viewModel.noteId.value!!,
+                    wordAdapter.snapshot().size + 1
+                )
+            }
         }
 
         binding.edWord.text?.clear()

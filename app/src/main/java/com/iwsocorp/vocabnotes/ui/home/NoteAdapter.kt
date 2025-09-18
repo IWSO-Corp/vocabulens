@@ -175,7 +175,7 @@ class PreviewAdapter(
 
     class DiffCallback : DiffUtil.ItemCallback<Corpus>() {
         override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
-            oldItem.id == newItem.id
+            oldItem.word == newItem.word
 
         override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
             oldItem == newItem

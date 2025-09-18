@@ -65,7 +65,6 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.kotlin.serialization)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.currentactivefragment)
     implementation(libs.poi.ooxml)
     implementation(libs.androidx.paging.runtime.ktx)
 

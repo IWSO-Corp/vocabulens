@@ -1,16 +1,30 @@
 package com.iwsocorp.vocabnotes.core.database.model
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Meaning
 
-@Entity(tableName = "corpus",)
+@Entity(
+    tableName = "corpus",
+    foreignKeys = [
+        ForeignKey(
+            entity = NoteEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["noteId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index("noteId")
+    ]
+)
 data class CorpusEntity(
-    @PrimaryKey val id: String,
+    @PrimaryKey val word: String,
     val noteId: String,
-    val word: String,
     val meaning: String,
     val wordLang: String,
     val meaningLang: String,
@@ -24,9 +38,8 @@ data class CorpusEntity(
 fun CorpusEntity.asExternalModel() : Corpus {
     val meanings = Gson().fromJson(meaningsJson, Array<Meaning>::class.java).toList()
     return Corpus(
-        id = id,
-        noteId = noteId,
         word = word,
+        noteId = noteId,
         meaning = meaning,
         wordLang = wordLang,
         meaningLang = meaningLang,
