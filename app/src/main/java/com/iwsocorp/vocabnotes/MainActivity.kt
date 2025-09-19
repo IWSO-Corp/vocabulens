@@ -72,14 +72,6 @@ class MainActivity : AppCompatActivity() {
                     supportActionBar?.hide()
                 }
             }
-//            val mainFragments = listOf(
-//                HomeFragment::class.java,
-//                GalleryFragment::class.java,
-//                SlideshowFragment::class.java
-//            )
-//            val shouldShowToolbar = mainFragments.contains(destination::class.java)
-//            binding.appBarMain.toolbar.visibility =
-//                if (shouldShowToolbar) View.VISIBLE else View.GONE
         }
     }
 
@@ -108,29 +100,6 @@ class MainActivity : AppCompatActivity() {
                         ).show()
                     }
                 }
-
-//                viewModel.insertCorpusList(data) {
-//                    Toast.makeText(
-//                        this,
-//                        "Imported ${it.successCount} items, duplicate ${it.failedCount}",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//
-//                    if (it.successCount > 0) {
-//                        val fileName = getFileName(uri)
-//                        val note = Note(
-//                            id = data.first().noteId,
-//                            title = fileName ?: "Imported Vocabulary",
-//                            wordLang = data.first().wordLang,
-//                            meaningLang = data.first().meaningLang,
-//                            contentSize = it.successCount,
-//                            createdAt = System.currentTimeMillis(),
-//                            updatedAt = System.currentTimeMillis()
-//                        )
-//
-//                        viewModel.createNewNote(note)
-//                    }
-//                }
             }
         }
     }

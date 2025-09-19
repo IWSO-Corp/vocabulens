@@ -65,7 +65,7 @@ class DetailViewModel @Inject constructor(
         isNetworkAvailable: Boolean,
         showToast: () -> Unit,
     ) = viewModelScope.launch(Dispatchers.IO) {
-        val corpus = corpusRepository.getCorpusByWord(corpusWord)
+        val corpus = corpusRepository.getCorpusByWord(corpusWord)!!
         if (corpus.phonetic.isEmpty() && isNetworkAvailable) {
             val vocab = vocabularyRepository.getVocabulary(corpusWord)
             val newCorpus = Corpus(

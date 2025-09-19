@@ -32,7 +32,7 @@ interface CorpusDao {
     suspend fun deleteCorpusById(word: String)
 
     @Query("SELECT * FROM corpus WHERE word = :word")
-    suspend fun getCorpusByWord(word: String): CorpusEntity
+    suspend fun getCorpusByWord(word: String): CorpusEntity?
 
     @Query("SELECT * FROM corpus WHERE word LIKE :query || '%'")
     fun searchCorpus(query: String): PagingSource<Int, CorpusEntity>

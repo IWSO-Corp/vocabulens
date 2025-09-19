@@ -46,9 +46,6 @@ class NoteFragment() : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: NoteViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
-    private val argNoteId: String? by lazy {
-        arguments?.getString(ARG_NOTE_ID)
-    }
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
@@ -80,7 +77,7 @@ class NoteFragment() : Fragment() {
             )
         }
 
-        argNoteId?.let {
+        arguments?.getString(ARG_NOTE_ID)?.let {
             viewModel.updateNoteId(it)
             if (it.isNotEmpty()) {
                 viewModel.getNote(it) { note ->
@@ -126,6 +123,7 @@ class NoteFragment() : Fragment() {
             }
         }
 
+        binding.csAdd.isVisible = (viewModel.noteId.value == null) || (viewModel.noteId.value != "")
         binding.rvCorpus.adapter = wordAdapter
         binding.btnAdd.setOnClickListener {
             onSubmit()
@@ -261,13 +259,9 @@ class NoteFragment() : Fragment() {
         val meaning = binding.edMeaning.text.toString().trim()
         if (word.isEmpty() || meaning.isEmpty()) return
 
-        val random = generateRandomString(10)
-        val id = "corpus-$random"
-        val noteIdNew = "note-$random"
-
         val corpus = Corpus(
             word = word,
-            noteId = viewModel.noteId.value ?: noteIdNew,
+            noteId = viewModel.noteId.value ?: "",
             meaning = meaning,
             wordLang = worldLang,
             meaningLang = meaningLang,
@@ -281,29 +275,6 @@ class NoteFragment() : Fragment() {
                 if (it == -1L) "Duplicate" else "Success",
                 Toast.LENGTH_SHORT
             ).show()
-
-            if (it == -1L) return@insertCorpus
-
-            if (viewModel.noteId.value == null) {
-                val now = System.currentTimeMillis()
-                val note = Note(
-                    id = noteIdNew,
-                    title = "",
-                    wordLang = worldLang,
-                    meaningLang = meaningLang,
-                    contentSize = 1,
-                    createdAt = now,
-                    updatedAt = now
-                )
-                viewModel.createNewNote(note)
-                viewModel.updateNoteId(noteIdNew)
-            } else {
-                viewModel.updateNoteUpdatedAt(viewModel.noteId.value!!, System.currentTimeMillis())
-                viewModel.updateNoteContentSize(
-                    viewModel.noteId.value!!,
-                    wordAdapter.snapshot().size + 1
-                )
-            }
         }
 
         binding.edWord.text?.clear()
