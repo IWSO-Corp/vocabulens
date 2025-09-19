@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 import kotlinx.coroutines.flow.Flow
@@ -17,12 +18,6 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: NoteEntity)
 
-    @Query("UPDATE notes SET updatedAt = :updatedAt WHERE id = :id")
-    suspend fun updateUpdatedAt(id: String, updatedAt: Long)
-
-    @Query("UPDATE notes SET contentSize = :contentSize WHERE id = :id")
-    suspend fun updateContentSize(id: String, contentSize: Int)
-
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNoteById(id: String)
 
@@ -32,4 +27,15 @@ interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY updatedAt DESC")
     fun getAllNotes(): PagingSource<Int, NoteEntity>
 
+    @Transaction
+    suspend fun incrementContentSizeAndUpdate(noteId: String) {
+        incrementContentSize(noteId)
+        updateTimestamp(noteId, System.currentTimeMillis())
+    }
+
+    @Query("UPDATE notes SET contentSize = contentSize + 1 WHERE id = :noteId")
+    suspend fun incrementContentSize(noteId: String)
+
+    @Query("UPDATE notes SET updatedAt = :time WHERE id = :noteId")
+    suspend fun updateTimestamp(noteId: String, time: Long)
 }

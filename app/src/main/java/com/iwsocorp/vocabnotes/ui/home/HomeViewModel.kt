@@ -34,6 +34,5 @@ class HomeViewModel @Inject constructor(
 
     fun deleteNote(noteId: String) = viewModelScope.launch {
         noteRepository.deleteNote(noteId)
-        corpusRepository.deleteCorpusByNoteId(noteId)
     }
 }

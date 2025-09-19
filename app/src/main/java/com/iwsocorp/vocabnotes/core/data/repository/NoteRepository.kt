@@ -11,9 +11,7 @@ import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 import javax.inject.Inject
 
 class NoteRepositoryImpl @Inject constructor(
@@ -28,12 +26,8 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.updateNote(note.asEntity())
     }
 
-    override suspend fun updateUpdatedAt(id: String, updatedAt: Long) {
-        noteDao.updateUpdatedAt(id, updatedAt)
-    }
-
-    override suspend fun updateContentSize(id: String, contentSize: Int) {
-        noteDao.updateContentSize(id, contentSize)
+    override suspend fun incrementContentSize(id: String) {
+        noteDao.incrementContentSizeAndUpdate(id)
     }
 
     override suspend fun deleteNote(id: String) {
@@ -67,14 +61,12 @@ class NoteRepositoryImpl @Inject constructor(
         }
     }
 
-
 }
 
 interface NoteRepository {
     suspend fun addNote(note: Note)
     suspend fun updateNote(note: Note)
-    suspend fun updateUpdatedAt(id: String, updatedAt: Long)
-    suspend fun updateContentSize(id: String, contentSize: Int)
+    suspend fun incrementContentSize(id: String)
     suspend fun deleteNote(id: String)
     suspend fun getNoteById(id: String): Note
     fun getNotes(): Flow<PagingData<Note>>

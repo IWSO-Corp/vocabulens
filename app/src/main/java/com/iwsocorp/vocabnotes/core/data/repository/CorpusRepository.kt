@@ -40,8 +40,8 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.deleteCorpusById(word)
     }
 
-    override suspend fun getCorpusByWord(word: String): Corpus {
-        return corpusDao.getCorpusByWord(word).asExternalModel()
+    override suspend fun getCorpusByWord(word: String): Corpus? {
+        return corpusDao.getCorpusByWord(word)?.asExternalModel()
     }
 
     override fun searchCorpus(query: String): Flow<PagingData<Corpus>> {
@@ -105,7 +105,7 @@ interface CorpusRepository {
     suspend fun insertCorpusList(corpusList: List<Corpus>): InsertResult
     suspend fun updateCorpus(corpus: Corpus)
     suspend fun deleteCorpus(word: String)
-    suspend fun getCorpusByWord(word: String): Corpus
+    suspend fun getCorpusByWord(word: String): Corpus?
     fun searchCorpus(query: String): Flow<PagingData<Corpus>>
     fun getAllCorpus(): Flow<PagingData<Corpus>>
     fun allCorpusSize(): Flow<Int>

@@ -34,12 +34,9 @@ class CorpusDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val argWord = arguments?.getString(ARG_CORPUS_WORD)
-        val argPosition = arguments?.getInt(ARG_POSITION)
-
         with(viewModel) {
-            setCorpusWord(argWord ?: "")
-            setCorpusPosition(argPosition ?: -1)
+            arguments?.getString(ARG_CORPUS_WORD)?.let { setCorpusWord(it) }
+            arguments?.getInt(ARG_POSITION)?.let { setCorpusPosition(it) }
 
             corpusWord.observe(viewLifecycleOwner) {
                 updateCorpusDetail(it, isNetworkAvailable(requireContext())) {

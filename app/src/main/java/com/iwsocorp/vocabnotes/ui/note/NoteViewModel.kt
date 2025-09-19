@@ -9,14 +9,13 @@ import androidx.paging.cachedIn
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
-import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
-import com.iwsocorp.vocabnotes.core.model.asEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 
@@ -33,30 +32,49 @@ class NoteViewModel @Inject constructor(
         _noteId.value = newValue
     }
 
-    fun getNote(noteId: String, callback: (note: Note) -> Unit) = viewModelScope.launch(Dispatchers.IO) {
-        val note = noteRepository.getNoteById(noteId)
-        callback(note)
-    }
-
-    fun createNewNote(note: Note) = viewModelScope.launch {
-        noteRepository.addNote(note)
-    }
+    fun getNote(noteId: String, callback: (note: Note) -> Unit) =
+        viewModelScope.launch(Dispatchers.IO) {
+            val note = noteRepository.getNoteById(noteId)
+            callback(note)
+        }
 
     fun getCorpusPagingDataFlow(noteId: String): Flow<PagingData<Corpus>> =
         corpusRepository.getCorpusByNoteId(noteId).cachedIn(viewModelScope)
 
     fun insertCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
-        callback(corpusRepository.addCorpus(corpus))
-    }
+        val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
+        Timber.d("existingCorpus: $existingCorpus")
+        if (existingCorpus != null) {
+            callback(-1L)
+            return@launch
+        } else {
+            Timber.d("noteId.value: ${noteId.value}")
+            if (noteId.value == null) {
+                val newNote = Note(
+                    id = UUID.randomUUID().toString(),
+                    title = "",
+                    wordLang = corpus.wordLang,
+                    meaningLang = corpus.meaningLang,
+                    contentSize = 1,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                noteRepository.addNote(newNote)
+                _noteId.value = newNote.id
 
-    fun insertCorpusList(corpusList: List<Corpus>, callback: (result: InsertResult) -> Unit) = viewModelScope.launch {
-        callback(corpusRepository.insertCorpusList(corpusList))
+                val corpusNew = corpus.copy(noteId = newNote.id)
+                callback(corpusRepository.addCorpus(corpusNew))
+            } else {
+                noteRepository.incrementContentSize(noteId.value!!)
+                callback(corpusRepository.addCorpus(corpus))
+            }
+        }
     }
 
     suspend fun importCorpusBatch(
         corpusBatch: List<Corpus>,
         existingCount: (existingCount: Int) -> Unit,
-        insertResult: (result: InsertResult) -> Unit
+        insertResult: (result: InsertResult) -> Unit,
     ) {
         if (corpusBatch.isEmpty()) return
 
@@ -88,14 +106,6 @@ class NoteViewModel @Inject constructor(
 
     fun updateNote(note: Note) = viewModelScope.launch {
         noteRepository.updateNote(note)
-    }
-
-    fun updateNoteUpdatedAt(id: String, updatedAt: Long) = viewModelScope.launch {
-        noteRepository.updateUpdatedAt(id, updatedAt)
-    }
-
-    fun updateNoteContentSize(id: String, contentSize: Int) = viewModelScope.launch {
-        noteRepository.updateContentSize(id, contentSize)
     }
 
     fun getAllCorpus(): Flow<PagingData<Corpus>> = corpusRepository.getAllCorpus()
