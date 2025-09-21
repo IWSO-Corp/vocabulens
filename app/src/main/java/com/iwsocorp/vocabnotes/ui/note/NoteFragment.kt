@@ -6,8 +6,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
@@ -21,9 +23,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
-import com.iwsocorp.vocabnotes.core.common.Utils.generateRandomString
 import com.iwsocorp.vocabnotes.core.model.Corpus
-import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
@@ -63,6 +63,14 @@ class NoteFragment() : Fragment() {
                     if (url.isNotEmpty()) playAudio(url)
                 }
             }
+
+            override fun onSelectionChanged(size: Int) {
+                if (size > 0) {
+                    setSelectionToolbar(size)
+                } else {
+                    setNormalToolbar()
+                }
+            }
         })
     }
 
@@ -77,19 +85,22 @@ class NoteFragment() : Fragment() {
             )
         }
 
-        arguments?.getString(ARG_NOTE_ID)?.let {
+        val argNoteId = arguments?.getString(ARG_NOTE_ID)
+        argNoteId?.let {
             viewModel.updateNoteId(it)
             if (it.isNotEmpty()) {
-                viewModel.getNote(it) { note ->
+                viewModel.getNote(it)
+                viewModel.note.observe(viewLifecycleOwner) { note ->
                     Timber.d("note: $note")
-                    binding.toolbarNote.title = note.title
+                    binding.tvToolbarTitle.text = note.title.ifEmpty { "Untitled" }
                     binding.tvWordLang.text = note.wordLang
                     binding.tvMeaningLang.text = note.meaningLang
                 }
             } else {
-                binding.toolbarNote.title = "New Note"
+                binding.tvToolbarTitle.text = "All Words"
             }
         } ?: run {
+            binding.tvToolbarTitle.text = "Untitled"
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
@@ -123,30 +134,110 @@ class NoteFragment() : Fragment() {
             }
         }
 
-        binding.csAdd.isVisible = (viewModel.noteId.value == null) || (viewModel.noteId.value != "")
-        binding.rvCorpus.adapter = wordAdapter
-        binding.btnAdd.setOnClickListener {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (wordAdapter.getSelectedItems().isNotEmpty()) {
+                wordAdapter.clearSelection()
+            } else {
+                isEnabled = false
+                requireActivity().onBackPressed()
+            }
+        }
+
+        setupUI(argNoteId)
+    }
+
+    private fun setupUI(argNoteId: String?) = with(binding) {
+        setNormalToolbar()
+
+        etToolbarTitle.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                saveToolbarTitle()
+                true
+            } else {
+                false
+            }
+        }
+        etToolbarTitle.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) saveToolbarTitle()
+        }
+        csAdd.isVisible = (viewModel.noteId.value == null) || (viewModel.noteId.value != "")
+        rvCorpus.adapter = wordAdapter
+        btnAdd.setOnClickListener {
             onSubmit()
         }
-        binding.toolbarNote.apply {
+        iconSwitch.isVisible = argNoteId == null
+        iconSwitch.setOnClickListener {
+            val worldLang = tvWordLang.text.toString()
+            val meaningLang = tvMeaningLang.text.toString()
+            tvWordLang.text = meaningLang
+            tvMeaningLang.text = worldLang
+        }
+    }
+
+    private fun setNormalToolbar() = with(binding) {
+        tvToolbarTitle.setOnClickListener {
+            tvToolbarTitle.visibility = View.GONE
+            etToolbarTitle.visibility = View.VISIBLE
+            etToolbarTitle.setText(tvToolbarTitle.text)
+            etToolbarTitle.requestFocus()
+        }
+        toolbarNote.apply {
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
                 parentFragmentManager.popBackStack()
             }
+            menu.clear()
             inflateMenu(R.menu.menu_note)
             setOnMenuItemClickListener(menuListener)
         }
-        binding.iconSwitch.setOnClickListener {
-            val worldLang = binding.tvWordLang.text.toString()
-            val meaningLang = binding.tvMeaningLang.text.toString()
-            binding.tvWordLang.text = meaningLang
-            binding.tvMeaningLang.text = worldLang
+    }
+
+    private fun setSelectionToolbar(size: Int) = with(binding) {
+        tvToolbarTitle.apply {
+            text = "$size selected"
+            setOnClickListener(null)
+        }
+        toolbarNote.apply {
+            setNavigationIcon(R.drawable.baseline_close_24)
+            setNavigationOnClickListener {
+                wordAdapter.clearSelection()
+                setNormalToolbar()
+            }
+            menu.clear()
+            inflateMenu(R.menu.menu_note_selection)
+            setOnMenuItemClickListener(menuListener)
+        }
+    }
+
+    private fun saveToolbarTitle() = with(binding) {
+        tvToolbarTitle.text = etToolbarTitle.text.ifEmpty { "Untitled" }
+        etToolbarTitle.visibility = View.GONE
+        tvToolbarTitle.visibility = View.VISIBLE
+        val noteTitle = tvToolbarTitle.text.toString()
+        if (viewModel.note.value != null && viewModel.note.value!!.title != noteTitle) {
+            viewModel.updateNote(viewModel.note.value!!.copy(title = noteTitle))
         }
     }
 
     private val menuListener = Toolbar.OnMenuItemClickListener { item ->
         when (item?.itemId) {
+            R.id.action_move -> {
+                Toast.makeText(requireContext(), "Move", Toast.LENGTH_SHORT).show()
+            }
+
+            R.id.action_mark -> {
+                Toast.makeText(requireContext(), "Mark", Toast.LENGTH_SHORT).show()
+            }
+
+            R.id.action_share -> {
+                Toast.makeText(requireContext(), "Share", Toast.LENGTH_SHORT).show()
+            }
+
             R.id.action_delete -> {
+                Toast.makeText(requireContext(), "Delete", Toast.LENGTH_SHORT).show()
+            }
+
+            R.id.action_delete_note -> {
                 AlertDialog.Builder(requireContext())
                     .setTitle("Delete Note")
                     .setMessage("Are you sure you want to delete this note and all its contents?")
@@ -179,12 +270,12 @@ class NoteFragment() : Fragment() {
             super.onScrolled(recyclerView, dx, dy)
 
             val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            val lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
+            val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
             val data = wordAdapter.snapshot().items
 
-            if (lastVisiblePosition != RecyclerView.NO_POSITION && lastVisiblePosition < data.size) {
-                val lastCorpus = data[lastVisiblePosition]
-                val firstLetter = lastCorpus.word.first().uppercaseChar()
+            if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
+                val firstCorpus = data[firstVisiblePosition]
+                val firstLetter = firstCorpus.word.first().uppercaseChar()
 
                 highlightCurrentLetterInSidebar(firstLetter)
             }
@@ -248,11 +339,13 @@ class NoteFragment() : Fragment() {
             it.word.first().uppercaseChar() == letter
         }
         if (position != -1) {
-            binding.rvCorpus.scrollToPosition(position)
+            val layoutManager = binding.rvCorpus.layoutManager as LinearLayoutManager
+            layoutManager.scrollToPositionWithOffset(position, 0)
         }
     }
 
     private fun onSubmit() {
+        viewModel.updateNoteTitle(binding.tvToolbarTitle.text.toString())
         val worldLang = binding.tvWordLang.text.toString()
         val meaningLang = binding.tvMeaningLang.text.toString()
         val word = binding.edWord.text.toString().trim()
@@ -272,7 +365,7 @@ class NoteFragment() : Fragment() {
         viewModel.insertCorpus(corpus) {
             Toast.makeText(
                 requireContext(),
-                if (it == -1L) "Duplicate" else "Success",
+                if (it == -1L) "The word already exists in all vocabulary" else "Added",
                 Toast.LENGTH_SHORT
             ).show()
         }

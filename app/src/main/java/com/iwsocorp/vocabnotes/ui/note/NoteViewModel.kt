@@ -12,7 +12,6 @@ import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -25,18 +24,24 @@ class NoteViewModel @Inject constructor(
     private val corpusRepository: CorpusRepository,
 ) : ViewModel() {
 
+    private val _note = MutableLiveData<Note>()
+    val note: LiveData<Note> get() = _note
     private val _noteId = MutableLiveData<String?>()
     val noteId: LiveData<String?> get() = _noteId
+    private val _noteTitle = MutableLiveData<String>()
+    val noteTitle: LiveData<String> get() = _noteTitle
 
     fun updateNoteId(newValue: String?) {
         _noteId.value = newValue
     }
 
-    fun getNote(noteId: String, callback: (note: Note) -> Unit) =
-        viewModelScope.launch(Dispatchers.IO) {
-            val note = noteRepository.getNoteById(noteId)
-            callback(note)
-        }
+    fun updateNoteTitle(newValue: String) {
+        _noteTitle.value = newValue
+    }
+
+    fun getNote(noteId: String) = viewModelScope.launch {
+        _note.value = noteRepository.getNoteById(noteId)
+    }
 
     fun getCorpusPagingDataFlow(noteId: String): Flow<PagingData<Corpus>> =
         corpusRepository.getCorpusByNoteId(noteId).cachedIn(viewModelScope)
@@ -52,7 +57,7 @@ class NoteViewModel @Inject constructor(
             if (noteId.value == null) {
                 val newNote = Note(
                     id = UUID.randomUUID().toString(),
-                    title = "",
+                    title = noteTitle.value ?: "Untitled",
                     wordLang = corpus.wordLang,
                     meaningLang = corpus.meaningLang,
                     contentSize = 1,
@@ -72,6 +77,7 @@ class NoteViewModel @Inject constructor(
     }
 
     suspend fun importCorpusBatch(
+        fileName: String?,
         corpusBatch: List<Corpus>,
         existingCount: (existingCount: Int) -> Unit,
         insertResult: (result: InsertResult) -> Unit,
@@ -90,7 +96,7 @@ class NoteViewModel @Inject constructor(
         // Buat Note baru
         val note = Note(
             id = UUID.randomUUID().toString(),
-            title = "$wordLang-$meaningLang",
+            title = fileName ?: "$wordLang-$meaningLang",
             wordLang = wordLang,
             meaningLang = meaningLang,
             contentSize = corpusBatch.size,

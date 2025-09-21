@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes.ui.note
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
@@ -17,7 +18,11 @@ class WordAdapter(
     interface ClickListener {
         fun onClick(corpus: Corpus)
         fun onPlay(url: String)
+        fun onSelectionChanged(size: Int)
     }
+
+    private val selectedIds = mutableSetOf<String>()
+    private var isSelectionMode = false
 
     inner class ViewHolder(val binding: ItemWordBinding) : RecyclerView.ViewHolder(binding.root) {
 
@@ -36,11 +41,47 @@ class WordAdapter(
                 }
             }
 
+            val isSelected = selectedIds.contains(corpus.word)
+
+            itemView.setBackgroundColor(
+                if (isSelected) Color.LTGRAY else Color.TRANSPARENT
+            )
             itemView.setOnClickListener {
-                listener.onClick(corpus)
+                if (isSelectionMode) {
+                    toggleSelection(corpus.word)
+                } else {
+                    listener.onClick(corpus)
+                }
+            }
+            itemView.setOnLongClickListener {
+                if (!isSelectionMode) isSelectionMode = true
+                toggleSelection(corpus.word)
+                true
             }
         }
     }
+
+    private fun toggleSelection(id: String) {
+        if (selectedIds.contains(id)) {
+            selectedIds.remove(id)
+        } else {
+            selectedIds.add(id)
+        }
+        if (selectedIds.isEmpty()) {
+            isSelectionMode = false
+        }
+        listener.onSelectionChanged(selectedIds.size)
+        notifyDataSetChanged()
+    }
+
+    fun clearSelection() {
+        selectedIds.clear()
+        isSelectionMode = false
+        notifyDataSetChanged()
+        listener.onSelectionChanged(0)
+    }
+
+    fun getSelectedItems(): List<String> = selectedIds.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
@@ -53,9 +94,8 @@ class WordAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        item?.let {
-            holder.bind(item, position)
+        getItem(position)?.let {
+            holder.bind(it, position)
         }
     }
 

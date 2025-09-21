@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 lifecycleScope.launch {
-                    viewModel.importCorpusBatch(data, existingCount = {
+                    viewModel.importCorpusBatch(getFileName(uri), data, existingCount = {
                         Toast.makeText(this@MainActivity, "Existing $it", Toast.LENGTH_SHORT).show()
                     }) {
                         Toast.makeText(
