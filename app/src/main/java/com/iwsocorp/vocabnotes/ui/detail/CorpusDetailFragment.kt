@@ -5,12 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
+import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.isNetworkAvailable
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentCorpusDetailBinding
@@ -19,8 +20,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.getValue
-import com.iwsocorp.vocabnotes.R
 
 const val ARG_CORPUS_WORD = "corpusWordParam"
 
@@ -30,29 +29,42 @@ class CorpusDetailFragment : Fragment() {
     private var _binding: FragmentCorpusDetailBinding? = null
     private val binding get() = _binding!!
     private val viewModel: DetailViewModel by activityViewModels()
+    private val corpusWord: String by lazy {
+        arguments?.getString(ARG_CORPUS_WORD)!!
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel.setCorpusWord(corpusWord)
+        viewModel.setCorpusPosition(arguments?.getInt(ARG_POSITION)!!)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(viewModel) {
-            arguments?.getString(ARG_CORPUS_WORD)?.let { setCorpusWord(it) }
-            arguments?.getInt(ARG_POSITION)?.let { setCorpusPosition(it) }
-
-            corpusWord.observe(viewLifecycleOwner) {
-                updateCorpusDetail(it, isNetworkAvailable(requireContext())) {
-                    Toast.makeText(requireContext(), "No internet connection", Toast.LENGTH_SHORT)
-                        .show()
+        viewModel.corpusWord.observe(viewLifecycleOwner) {
+            viewModel.getCorpus(it)
+        }
+        viewModel.corpus.observe(viewLifecycleOwner) { corpus ->
+            corpus?.let {
+                Timber.d(it.toString())
+                if (it.phonetic.isEmpty() && isNetworkAvailable(requireContext())) {
+                    viewModel.updateCorpusDetail(corpusWord)
+                } else if (it.phonetic.isEmpty() && !isNetworkAvailable(requireContext())) {
+                    Snackbar.make(
+                        binding.btnNext,
+                        "No internet connection",
+                        Snackbar.LENGTH_INDEFINITE
+                    )
+                        .setAction("Close") {}.show()
                 }
+                setupUI(it)
             }
-            updatedCorpus.observe(viewLifecycleOwner) {
-                it?.let { corpus ->
-                    setupUI(corpus)
-                }
-            }
-            posAndWords.observe(viewLifecycleOwner) { (pos, list) ->
-                setupNavigation(pos, list)
-                setupToolbar(pos)
-            }
+        }
+        viewModel.posAndWords.observe(viewLifecycleOwner) { (pos, list) ->
+            setupNavigation(pos, list)
+            setupToolbar(pos)
         }
     }
 
@@ -85,13 +97,14 @@ class CorpusDetailFragment : Fragment() {
 
     private fun setupToolbar(position: Int) {
         binding.toolbarDetail.apply {
-            setNavigationIcon(R.drawable.baseline_arrow_back_24)
             title = (position + 1).toString()
+            setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
                 onBackPressed(position)
             }
         }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     onBackPressed(position)
@@ -170,6 +183,6 @@ class CorpusDetailFragment : Fragment() {
         super.onDestroyView()
         _binding = null
         resetMediaPlayer()
-        viewModel.resetUpdatedCorpus()
+        viewModel.resetCorpus()
     }
 }

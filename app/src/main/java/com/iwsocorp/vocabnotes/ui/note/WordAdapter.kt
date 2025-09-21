@@ -12,6 +12,7 @@ import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
 import java.util.Locale
 
 class WordAdapter(
+    private val isNote: Boolean,
     private val listener: ClickListener,
 ) : PagingDataAdapter<Corpus, WordAdapter.ViewHolder>(DIFF_CALLBACK) {
 
@@ -53,10 +54,12 @@ class WordAdapter(
                     listener.onClick(corpus)
                 }
             }
-            itemView.setOnLongClickListener {
-                if (!isSelectionMode) isSelectionMode = true
-                toggleSelection(corpus.word)
-                true
+            if (isNote) {
+                itemView.setOnLongClickListener {
+                    if (!isSelectionMode) isSelectionMode = true
+                    toggleSelection(corpus.word)
+                    true
+                }
             }
         }
     }

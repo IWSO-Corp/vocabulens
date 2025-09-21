@@ -36,7 +36,7 @@ class SearchFragment : Fragment() {
     private val viewModel: SearchViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
-        WordAdapter(object : WordAdapter.ClickListener {
+        WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
                 findNavController().navigate(
                     R.id.action_searchFragment_to_corpusDetailFragment,
@@ -51,6 +51,8 @@ class SearchFragment : Fragment() {
                     if (url.isNotEmpty()) playAudio(url)
                 }
             }
+
+            override fun onSelectionChanged(size: Int) {}
         })
     }
 

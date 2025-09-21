@@ -47,7 +47,7 @@ class NoteFragment() : Fragment() {
     private val viewModel: NoteViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
-        WordAdapter(object : WordAdapter.ClickListener {
+        WordAdapter(true, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
                 findNavController().navigate(
                     R.id.action_noteFragment_to_corpusDetailFragment,
@@ -95,6 +95,7 @@ class NoteFragment() : Fragment() {
                     binding.tvToolbarTitle.text = note.title.ifEmpty { "Untitled" }
                     binding.tvWordLang.text = note.wordLang
                     binding.tvMeaningLang.text = note.meaningLang
+                    viewModel.updateNoteTitle(note.title)
                 }
             } else {
                 binding.tvToolbarTitle.text = "All Words"
@@ -175,11 +176,12 @@ class NoteFragment() : Fragment() {
     }
 
     private fun setNormalToolbar() = with(binding) {
+        tvToolbarTitle.text = viewModel.noteTitle.value
+            ?: (if (viewModel.noteId.value == null) "Untitled" else "All Vocabulary")
         tvToolbarTitle.setOnClickListener {
             tvToolbarTitle.visibility = View.GONE
             etToolbarTitle.visibility = View.VISIBLE
             etToolbarTitle.setText(tvToolbarTitle.text)
-            etToolbarTitle.requestFocus()
         }
         toolbarNote.apply {
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
@@ -210,7 +212,7 @@ class NoteFragment() : Fragment() {
     }
 
     private fun saveToolbarTitle() = with(binding) {
-        tvToolbarTitle.text = etToolbarTitle.text.ifEmpty { "Untitled" }
+        tvToolbarTitle.text = etToolbarTitle.text.toString().ifEmpty { "Untitled" }
         etToolbarTitle.visibility = View.GONE
         tvToolbarTitle.visibility = View.VISIBLE
         val noteTitle = tvToolbarTitle.text.toString()

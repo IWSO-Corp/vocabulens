@@ -28,24 +28,28 @@
                 android:textSize="18sp"
                 tools:text="Untitled Note" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_toolbar_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@null"
                 android:ellipsize="end"
-                android:inputType="textCapSentences|text"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:imeOptions="actionDone"
+                android:inputType="textCapSentences|text"
                 android:maxLines="1"
                 android:singleLine="true"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 android:visibility="gone" />
+
         </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rootLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">

@@ -53,47 +53,36 @@ class DetailViewModel @Inject constructor(
             Pair(pos, list)
         }.asLiveData()
 
-    private val _updatedCorpus = MutableLiveData<Corpus?>()
-    val updatedCorpus: LiveData<Corpus?> get() = _updatedCorpus
+    private val _corpus = MutableLiveData<Corpus?>()
+    val corpus: LiveData<Corpus?> get() = _corpus
 
-    fun resetUpdatedCorpus() {
-        _updatedCorpus.value = null
+    fun getCorpus(word: String) = viewModelScope.launch {
+        _corpus.value = corpusRepository.getCorpusByWord(word)
     }
 
-    fun updateCorpusDetail(
-        corpusWord: String,
-        isNetworkAvailable: Boolean,
-        showToast: () -> Unit,
-    ) = viewModelScope.launch(Dispatchers.IO) {
-        val corpus = corpusRepository.getCorpusByWord(corpusWord)!!
-        if (corpus.phonetic.isEmpty() && isNetworkAvailable) {
-            val vocab = vocabularyRepository.getVocabulary(corpusWord)
-            val newCorpus = Corpus(
-                word = corpus.word,
-                noteId = corpus.noteId,
-                meaning = corpus.meaning,
-                wordLang = corpus.wordLang,
-                meaningLang = corpus.meaningLang,
-                phonetic = vocab.phonetic,
-                audio = vocab.audio,
-                meanings = vocab.meanings,
-                createdAt = corpus.createdAt,
-                updatedAt = System.currentTimeMillis()
-            )
-            withContext(Dispatchers.Main) {
-                _updatedCorpus.value = newCorpus
-            }
-            corpusRepository.updateCorpus(newCorpus)
-        } else if (!isNetworkAvailable) {
-            withContext(Dispatchers.Main) {
-                showToast()
-                _updatedCorpus.value = corpus
-            }
-        } else {
-            withContext(Dispatchers.Main) {
-                _updatedCorpus.value = corpus
-            }
+    fun resetCorpus() {
+        _corpus.value = null
+    }
+
+    fun updateCorpusDetail(word: String) = viewModelScope.launch(Dispatchers.IO) {
+        val corpus = _corpus.value ?: return@launch
+        val vocab = vocabularyRepository.getVocabulary(word)
+        val newCorpus = Corpus(
+            word = corpus.word,
+            noteId = corpus.noteId,
+            meaning = corpus.meaning,
+            wordLang = corpus.wordLang,
+            meaningLang = corpus.meaningLang,
+            phonetic = vocab.phonetic,
+            audio = vocab.audio,
+            meanings = vocab.meanings,
+            createdAt = corpus.createdAt,
+            updatedAt = System.currentTimeMillis()
+        )
+        withContext(Dispatchers.Main) {
+            _corpus.value = newCorpus
         }
+        corpusRepository.updateCorpus(newCorpus)
     }
 
     fun insertExampleSentence(example: Example) = viewModelScope.launch {
