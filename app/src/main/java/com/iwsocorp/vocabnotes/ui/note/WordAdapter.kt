@@ -7,6 +7,7 @@ import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.daimajia.swipe.SwipeLayout
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
 import java.util.Locale
@@ -26,6 +27,9 @@ class WordAdapter(
     private var isSelectionMode = false
 
     inner class ViewHolder(val binding: ItemWordBinding) : RecyclerView.ViewHolder(binding.root) {
+
+        private var isDragging = false
+        private var openedSwipe: SwipeLayout? = null
 
         fun bind(corpus: Corpus, position: Int) = with(binding) {
             tvNumber.text = String.format(Locale.US, "%d", position + 1)
@@ -47,20 +51,72 @@ class WordAdapter(
             itemView.setBackgroundColor(
                 if (isSelected) Color.LTGRAY else Color.TRANSPARENT
             )
-            itemView.setOnClickListener {
-                if (isSelectionMode) {
-                    toggleSelection(corpus.word)
+
+            swipeLayout.surfaceView.setOnClickListener {
+                if (!isDragging) {
+                    if (isSelectionMode) {
+                        toggleSelection(corpus.word)
+                    } else {
+                        listener.onClick(corpus)
+                    }
                 } else {
-                    listener.onClick(corpus)
+                    swipeLayout.close()
                 }
             }
-            if (isNote) {
-                itemView.setOnLongClickListener {
+            swipeLayout.surfaceView.setOnLongClickListener {
+                if (!isDragging && isNote) {
                     if (!isSelectionMode) isSelectionMode = true
                     toggleSelection(corpus.word)
                     true
+                } else {
+                    false
                 }
             }
+
+            btnFav.setOnClickListener {
+                swipeLayout.close()
+            }
+
+            swipeLayout.isSwipeEnabled = !isSelectionMode
+            swipeLayout.showMode = SwipeLayout.ShowMode.PullOut
+            swipeLayout.addDrag(
+                SwipeLayout.DragEdge.Right,
+                layoutHidden
+            )
+            swipeLayout.addDrag(
+                SwipeLayout.DragEdge.Left,
+                layoutHidden
+            )
+
+            swipeLayout.addSwipeListener(object : SwipeLayout.SwipeListener {
+                override fun onStartOpen(layout: SwipeLayout) {
+                    isDragging = true
+                    // Tutup swipe sebelumnya kalau ada
+                    if (openedSwipe != null && openedSwipe != layout) {
+                        openedSwipe?.close()
+                    }
+                    openedSwipe = layout
+                }
+
+                override fun onOpen(layout: SwipeLayout) {
+                    isDragging = true
+                    openedSwipe = layout
+                }
+
+                override fun onStartClose(layout: SwipeLayout) {
+                    isDragging = true
+                }
+
+                override fun onClose(layout: SwipeLayout) {
+                    isDragging = false
+                    if (openedSwipe == layout) {
+                        openedSwipe = null
+                    }
+                }
+
+                override fun onUpdate(layout: SwipeLayout, leftOffset: Int, topOffset: Int) {}
+                override fun onHandRelease(layout: SwipeLayout, xvel: Float, yvel: Float) {}
+            })
         }
     }
 
@@ -100,6 +156,11 @@ class WordAdapter(
         getItem(position)?.let {
             holder.bind(it, position)
         }
+    }
+
+    override fun onViewRecycled(holder: ViewHolder) {
+        super.onViewRecycled(holder)
+        holder.binding.swipeLayout.close()
     }
 
     companion object {
