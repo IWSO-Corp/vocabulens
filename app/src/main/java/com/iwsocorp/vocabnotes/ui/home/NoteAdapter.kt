@@ -12,7 +12,6 @@ import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
 import com.iwsocorp.vocabnotes.databinding.ItemWordPreviewBinding
-import com.iwsocorp.vocabnotes.ui.home.NoteAdapter.ClickListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest

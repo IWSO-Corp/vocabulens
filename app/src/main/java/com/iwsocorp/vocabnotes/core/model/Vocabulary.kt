@@ -18,3 +18,16 @@ data class Definition(
     val definition: String,
     val example: String?,
 )
+
+fun Vocabulary.toCorpus(): Corpus = Corpus(
+    word = word,
+    phonetic = phonetic,
+    audio = audio,
+    meanings = meanings,
+    wordLang = "en",
+    meaningLang = "en",
+    noteId = "",
+    meaning = "",
+    createdAt = System.currentTimeMillis(),
+    updatedAt = System.currentTimeMillis(),
+)

@@ -10,13 +10,11 @@ import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
 import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
 import com.iwsocorp.vocabnotes.core.database.dao.insertCorpusListWithResult
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
-import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.UUID
 import javax.inject.Inject
 
 class CorpusRepositoryImpl @Inject constructor(

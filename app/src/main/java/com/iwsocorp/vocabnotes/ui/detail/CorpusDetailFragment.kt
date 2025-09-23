@@ -66,6 +66,23 @@ class CorpusDetailFragment : Fragment() {
             setupNavigation(pos, list)
             setupToolbar(pos)
         }
+
+        val adapter = ExampleAdapter()
+        binding.itemDetail.rvExample.adapter = adapter
+        lifecycleScope.launch {
+            adapter.submitList(
+                listOf(
+                    "obnoxious",
+                    "serendipity",
+                    "ephemeral",
+                    "eloquent",
+                    "cihuyyy"
+                ).shuffled().take(3)
+            )
+        }
+        binding.itemDetail.tvExample.setOnClickListener {
+
+        }
     }
 
     private fun setupNavigation(pos: Int, list: List<String>) {
@@ -123,7 +140,7 @@ class CorpusDetailFragment : Fragment() {
         }
     }
 
-    private fun setupUI(corpus: Corpus) = with(binding) {
+    private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
         tvWord.text = corpus.word
         tvMeaning.text = corpus.meaning
         underline.isVisible = corpus.audio.isNotEmpty()
@@ -137,6 +154,7 @@ class CorpusDetailFragment : Fragment() {
             }
         }
         rvMeanings.adapter = MeaningAdapter(corpus.meanings)
+        tvEmpty.isVisible = corpus.meanings.isEmpty()
     }
 
     private var mediaPlayer: MediaPlayer? = null

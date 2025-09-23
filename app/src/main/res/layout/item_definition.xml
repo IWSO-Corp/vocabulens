@@ -14,6 +14,7 @@
         android:text="Adverb"
         android:textColor="@color/teal_700" />
 
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_definitions"
         android:layout_width="match_parent"
@@ -21,7 +22,6 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:itemCount="3"
         tools:listitem="@layout/item_word_definition" />
-
 
     <LinearLayout
         android:id="@+id/ll_synonyms"

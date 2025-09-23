@@ -11,6 +11,7 @@ import com.iwsocorp.vocabnotes.core.data.repository.ExampleRepository
 import com.iwsocorp.vocabnotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Example
+import com.iwsocorp.vocabnotes.core.model.toCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -62,6 +63,10 @@ class DetailViewModel @Inject constructor(
 
     fun resetCorpus() {
         _corpus.value = null
+    }
+
+    fun searchWordDefinition(word: String) = viewModelScope.launch {
+        _corpus.value = vocabularyRepository.getVocabulary(word).toCorpus()
     }
 
     fun updateCorpusDetail(word: String) = viewModelScope.launch(Dispatchers.IO) {

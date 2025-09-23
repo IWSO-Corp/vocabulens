@@ -13,6 +13,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
@@ -21,12 +22,12 @@ import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
+import com.iwsocorp.vocabnotes.ui.detail.MeaningAdapter
 import com.iwsocorp.vocabnotes.ui.note.WordAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.getValue
 
 @AndroidEntryPoint
 class SearchFragment : Fragment() {
@@ -55,6 +56,7 @@ class SearchFragment : Fragment() {
             override fun onSelectionChanged(size: Int) {}
         })
     }
+    private val searchWord = MutableLiveData<String>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -68,8 +70,23 @@ class SearchFragment : Fragment() {
         }
         lifecycleScope.launch {
             wordAdapter.loadStateFlow.collect {
-                binding.tvEmpty.visibility =
-                    if (wordAdapter.itemCount == 0) View.VISIBLE else View.GONE
+                binding.btnSearch.isVisible =
+                    (wordAdapter.itemCount == 0 && searchWord.value?.isNotEmpty() == true)
+            }
+        }
+        searchWord.observe(viewLifecycleOwner) { word ->
+            binding.btnSearch.text = word.trim()
+            binding.btnSearch.setOnClickListener {
+                detailViewModel.searchWordDefinition(word.trim())
+
+                binding.btnSearch.visibility = View.GONE
+                binding.itemDetail.contentDetail.visibility = View.VISIBLE
+            }
+        }
+        detailViewModel.corpus.observe(viewLifecycleOwner) {
+            Timber.d("Corpus: $it")
+            it?.let { corpus ->
+                setupUI(corpus)
             }
         }
 
@@ -84,6 +101,9 @@ class SearchFragment : Fragment() {
             setOnCloseListener {
                 wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
                 setQuery("", false)
+
+                binding.itemDetail.contentDetail.visibility = View.GONE
+
                 true
             }
             setOnQueryTextListener(queryListener)
@@ -94,6 +114,25 @@ class SearchFragment : Fragment() {
                 parentFragmentManager.popBackStack()
             }
         }
+    }
+
+    private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
+        tvWord.text = corpus.word
+        tvMeaning.visibility = View.GONE
+        tvExample.visibility = View.GONE
+        rvExample.visibility = View.GONE
+        underline.isVisible = corpus.audio.isNotEmpty()
+        tvPronun.apply {
+            text = corpus.phonetic
+            isVisible = corpus.phonetic.isNotEmpty()
+            setOnClickListener {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    if (corpus.audio.isNotEmpty()) playAudio(corpus.audio)
+                }
+            }
+        }
+        rvMeanings.adapter = MeaningAdapter(corpus.meanings)
+        tvEmpty.isVisible = corpus.meanings.isEmpty()
     }
 
     private val queryListener = object : SearchView.OnQueryTextListener {
@@ -111,6 +150,9 @@ class SearchFragment : Fragment() {
                 } else {
                     wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
                 }
+
+                binding.itemDetail.contentDetail.visibility = View.GONE
+                searchWord.value = it
             }
             return true
         }
@@ -152,7 +194,8 @@ class SearchFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
@@ -167,6 +210,7 @@ class SearchFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        detailViewModel.resetCorpus()
     }
 
 }
