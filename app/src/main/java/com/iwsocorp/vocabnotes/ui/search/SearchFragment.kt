@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
@@ -28,6 +29,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+const val ARG_SEARCH_WORD = "searchWordParam"
 
 @AndroidEntryPoint
 class SearchFragment : Fragment() {
@@ -61,7 +64,13 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        detailViewModel.setCorpusList(emptyList())
+        val args = arguments?.getString(ARG_SEARCH_WORD)
+        args?.let {
+            onSearch(it)
+        } ?: run {
+            binding.searchView.requestFocus()
+            detailViewModel.setCorpusList(emptyList())
+        }
 
         viewModel.searchResults.observe(viewLifecycleOwner) {
             lifecycleScope.launch {
@@ -77,10 +86,7 @@ class SearchFragment : Fragment() {
         searchWord.observe(viewLifecycleOwner) { word ->
             binding.btnSearch.text = word.trim()
             binding.btnSearch.setOnClickListener {
-                detailViewModel.searchWordDefinition(word.trim())
-
-                binding.btnSearch.visibility = View.GONE
-                binding.itemDetail.contentDetail.visibility = View.VISIBLE
+                onSearch(word)
             }
         }
         detailViewModel.corpus.observe(viewLifecycleOwner) {
@@ -116,6 +122,13 @@ class SearchFragment : Fragment() {
         }
     }
 
+    private fun onSearch(word: String) {
+        detailViewModel.searchWordDefinition(word.trim())
+
+        binding.btnSearch.visibility = View.GONE
+        binding.itemDetail.contentDetail.visibility = View.VISIBLE
+    }
+
     private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
         tvWord.text = corpus.word
         tvMeaning.visibility = View.GONE
@@ -131,8 +144,13 @@ class SearchFragment : Fragment() {
                 }
             }
         }
-        rvMeanings.adapter = MeaningAdapter(corpus.meanings)
         tvEmpty.isVisible = corpus.meanings.isEmpty()
+
+        val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word) {
+            binding.searchView.setQuery("", false)
+            onSearch(it)
+        }
+        rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
     }
 
     private val queryListener = object : SearchView.OnQueryTextListener {

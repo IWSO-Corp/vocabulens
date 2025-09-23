@@ -51,6 +51,9 @@
         <argument
             android:name="word"
             app:argType="string" />
+        <action
+            android:id="@+id/action_corpusDetailFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"

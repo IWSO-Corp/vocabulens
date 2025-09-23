@@ -10,12 +10,15 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vocabnotes.core.common.Utils.isNetworkAvailable
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentCorpusDetailBinding
 import com.iwsocorp.vocabnotes.ui.note.ARG_POSITION
+import com.iwsocorp.vocabnotes.ui.search.ARG_SEARCH_WORD
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -153,8 +156,19 @@ class CorpusDetailFragment : Fragment() {
                 }
             }
         }
-        rvMeanings.adapter = MeaningAdapter(corpus.meanings)
         tvEmpty.isVisible = corpus.meanings.isEmpty()
+
+        val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word) {
+            lifecycleScope.launch {
+                findNavController().navigate(
+                    R.id.action_corpusDetailFragment_to_searchFragment,
+                    Bundle().apply {
+                        putString(ARG_SEARCH_WORD, it)
+                    }
+                )
+            }
+        }
+        rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
     }
 
     private var mediaPlayer: MediaPlayer? = null

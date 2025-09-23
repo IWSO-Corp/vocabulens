@@ -10,7 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:paddingHorizontal="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="36dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cs_word"
@@ -78,8 +80,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginTop="16dp"
-            android:drawablePadding="4dp"
-            android:drawableEnd="@drawable/baseline_add_24"
             android:text="Examples"
             android:textColor="@color/black"
             android:textSize="16sp" />
