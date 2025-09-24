@@ -9,6 +9,7 @@ import androidx.paging.cachedIn
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,13 @@ class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
 ) : ViewModel() {
+
+    private val _notes = MutableLiveData<List<Note>>()
+    val notes: LiveData<List<Note>> get() = _notes
+
+    fun getNotes() = viewModelScope.launch {
+        _notes.value = noteRepository.getNoteList()
+    }
 
     private val _note = MutableLiveData<Note>()
     val note: LiveData<Note> get() = _note
@@ -70,7 +78,7 @@ class NoteViewModel @Inject constructor(
                 val corpusNew = corpus.copy(noteId = newNote.id)
                 callback(corpusRepository.addCorpus(corpusNew))
             } else {
-                noteRepository.incrementContentSize(noteId.value!!)
+                noteRepository.incrementContentSize(noteId.value!!, 1)
                 callback(corpusRepository.addCorpus(corpus))
             }
         }
@@ -119,4 +127,24 @@ class NoteViewModel @Inject constructor(
     fun deleteNote(noteId: String) = viewModelScope.launch {
         noteRepository.deleteNote(noteId)
     }
+
+    fun deleteCorpusBatch(words: List<String>) = viewModelScope.launch {
+        corpusRepository.deleteBatch(words)
+        noteRepository.decrementContentSize(noteId.value!!, words.size)
+    }
+
+    fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String) = viewModelScope.launch {
+        corpusRepository.moveCorpusToNote(corpusWords, newNoteId)
+        noteRepository.decrementContentSize(noteId.value!!, corpusWords.size)
+        noteRepository.incrementContentSize(newNoteId, corpusWords.size)
+    }
+
+    fun updateCorpusMark(corpusWords: List<String>, newMark: Mark) = viewModelScope.launch {
+        corpusRepository.updateCorpusMark(corpusWords, newMark)
+    }
+
+    init {
+        getNotes()
+    }
+
 }

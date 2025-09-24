@@ -10,7 +10,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -23,6 +22,8 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
@@ -150,6 +151,7 @@ class NoteFragment() : Fragment() {
     private fun setupUI(argNoteId: String?) = with(binding) {
         setNormalToolbar()
 
+        toolbarNote.setOnMenuItemClickListener(menuListener)
         etToolbarTitle.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 saveToolbarTitle()
@@ -190,7 +192,6 @@ class NoteFragment() : Fragment() {
             }
             menu.clear()
             inflateMenu(R.menu.menu_note)
-            setOnMenuItemClickListener(menuListener)
         }
     }
 
@@ -207,7 +208,6 @@ class NoteFragment() : Fragment() {
             }
             menu.clear()
             inflateMenu(R.menu.menu_note_selection)
-            setOnMenuItemClickListener(menuListener)
         }
     }
 
@@ -222,37 +222,66 @@ class NoteFragment() : Fragment() {
     }
 
     private val menuListener = Toolbar.OnMenuItemClickListener { item ->
-        when (item?.itemId) {
+        val selectedItems = wordAdapter.getSelectedItems()
+
+        when (item.itemId) {
             R.id.action_move -> {
-                Toast.makeText(requireContext(), "Move", Toast.LENGTH_SHORT).show()
+                viewModel.notes.observe(viewLifecycleOwner) { list ->
+                    val bottomSheet = NoteBottomSheet(list.filter {
+                        it.id != viewModel.noteId.value
+                    }) {
+                        viewModel.moveCorpusToNote(selectedItems, it)
+                        setNormalToolbar()
+                    }
+                    bottomSheet.show(childFragmentManager, null)
+                }
             }
 
             R.id.action_mark -> {
-                Toast.makeText(requireContext(), "Mark", Toast.LENGTH_SHORT).show()
+                showAlertDialog(
+                    requireContext(),
+                    "Mark ${selectedItems.size} Words",
+                    null,
+                    "Mark",
+                    "Cancel"
+                ) {
+                    viewModel.updateCorpusMark(selectedItems, Mark.FAMILIAR)
+                }
+            }
+
+            R.id.action_delete -> {
+                showAlertDialog(
+                    requireContext(),
+                    "Delete ${selectedItems.size} Words",
+                    null,
+                    "Delete",
+                    "Cancel"
+                ) {
+                    viewModel.deleteCorpusBatch(selectedItems)
+                    setNormalToolbar()
+                }
             }
 
             R.id.action_share -> {
                 Toast.makeText(requireContext(), "Share", Toast.LENGTH_SHORT).show()
             }
 
-            R.id.action_delete -> {
-                Toast.makeText(requireContext(), "Delete", Toast.LENGTH_SHORT).show()
-            }
-
             R.id.action_delete_note -> {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Delete Note")
-                    .setMessage("Are you sure you want to delete this note and all its contents?")
-                    .setPositiveButton("Delete") { _, _ ->
-                        viewModel.noteId.observe(viewLifecycleOwner) {
-                            it?.let { noteId -> viewModel.deleteNote(noteId) }
-                        }
-                        parentFragmentManager.popBackStack()
+                showAlertDialog(
+                    requireContext(),
+                    "Delete Note",
+                    "Are you sure you want to delete this note and all its contents?",
+                    "Delete",
+                    "Cancel"
+                ) {
+                    viewModel.noteId.observe(viewLifecycleOwner) {
+                        it?.let { noteId -> viewModel.deleteNote(noteId) }
                     }
-                    .setNegativeButton("Cancel", null)
-                    .show()
+                    parentFragmentManager.popBackStack()
+                }
             }
         }
+
         true
     }
 

@@ -7,9 +7,9 @@ import androidx.paging.PagingSource
 import androidx.paging.map
 import com.iwsocorp.vocabnotes.core.database.dao.CorpusDao
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
-import com.iwsocorp.vocabnotes.core.database.dao.NoteDao
 import com.iwsocorp.vocabnotes.core.database.dao.insertCorpusListWithResult
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.asEntity
@@ -18,8 +18,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class CorpusRepositoryImpl @Inject constructor(
-    private val corpusDao: CorpusDao,
-    private val noteDao: NoteDao
+    private val corpusDao: CorpusDao
 ) : CorpusRepository {
 
     override suspend fun addCorpus(corpus: Corpus): Long {
@@ -34,8 +33,8 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.updateCorpus(corpus.asEntity())
     }
 
-    override suspend fun deleteCorpus(word: String) {
-        corpusDao.deleteCorpusById(word)
+    override suspend fun deleteBatch(words: List<String>) {
+        corpusDao.deleteBatch(words)
     }
 
     override suspend fun getCorpusByWord(word: String): Corpus? {
@@ -80,6 +79,20 @@ class CorpusRepositoryImpl @Inject constructor(
         return corpusDao.countExisting(words)
     }
 
+    override suspend fun moveCorpusToNote(
+        corpusWords: List<String>,
+        newNoteId: String,
+    ) {
+        corpusDao.moveCorpusToNote(corpusWords, newNoteId)
+    }
+
+    override suspend fun updateCorpusMark(
+        corpusWords: List<String>,
+        newMark: Mark,
+    ) {
+        corpusDao.updateCorpusMark(corpusWords, newMark)
+    }
+
     private fun createPager(
         factory: () -> PagingSource<Int, CorpusEntity>,
     ): Flow<PagingData<Corpus>> {
@@ -102,7 +115,7 @@ interface CorpusRepository {
     suspend fun addCorpus(corpus: Corpus): Long
     suspend fun insertCorpusList(corpusList: List<Corpus>): InsertResult
     suspend fun updateCorpus(corpus: Corpus)
-    suspend fun deleteCorpus(word: String)
+    suspend fun deleteBatch(words: List<String>)
     suspend fun getCorpusByWord(word: String): Corpus?
     fun searchCorpus(query: String): Flow<PagingData<Corpus>>
     fun getAllCorpus(): Flow<PagingData<Corpus>>
@@ -111,4 +124,6 @@ interface CorpusRepository {
     fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>>
     suspend fun deleteCorpusByNoteId(noteId: String)
     suspend fun countExisting(words: List<String>): Int
+    suspend fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String)
+    suspend fun updateCorpusMark(corpusWords: List<String>, newMark: Mark)
 }

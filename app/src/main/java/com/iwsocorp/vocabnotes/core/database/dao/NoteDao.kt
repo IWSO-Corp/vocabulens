@@ -26,14 +26,20 @@ interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY updatedAt DESC")
     fun getAllNotes(): PagingSource<Int, NoteEntity>
 
+    @Query("SELECT * FROM notes ORDER BY updatedAt DESC")
+    suspend fun getNoteList(): List<NoteEntity>
+
     @Transaction
-    suspend fun incrementContentSizeAndUpdate(noteId: String) {
-        incrementContentSize(noteId)
+    suspend fun incrementContentSizeAndUpdate(noteId: String, count: Int) {
+        incrementContentSize(noteId, count)
         updateTimestamp(noteId, System.currentTimeMillis())
     }
 
-    @Query("UPDATE notes SET contentSize = contentSize + 1 WHERE id = :noteId")
-    suspend fun incrementContentSize(noteId: String)
+    @Query("UPDATE notes SET contentSize = contentSize + :count WHERE id = :noteId")
+    suspend fun incrementContentSize(noteId: String, count: Int)
+
+    @Query("UPDATE notes SET contentSize = contentSize - :count WHERE id = :noteId")
+    suspend fun decrementContentSize(noteId: String, count: Int)
 
     @Query("UPDATE notes SET updatedAt = :time WHERE id = :noteId")
     suspend fun updateTimestamp(noteId: String, time: Long)

@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.Utils.asString
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
@@ -17,9 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class NoteAdapter(
     private val viewModel: HomeViewModel,
@@ -95,12 +93,6 @@ class NoteAdapter(
             viewModel.getCorpusByNoteId(note.id) {
                 previewAdapter.submitList(it)
             }
-        }
-
-        private fun Long.asString(): String {
-            val date = Date(this)
-            val format = SimpleDateFormat("MMM dd", Locale.US)
-            return format.format(date)
         }
     }
 

@@ -19,7 +19,7 @@ import com.iwsocorp.vocabnotes.core.model.Meaning
         )
     ],
     indices = [
-        Index("noteId")
+        Index(value = ["word", "wordLang", "meaningLang"], unique = true)
     ]
 )
 data class CorpusEntity(
@@ -31,11 +31,18 @@ data class CorpusEntity(
     val phonetic: String,
     val audio: String,
     val meaningsJson: String,
+    val mark: Mark = Mark.UNMARKED,
     val createdAt: Long,
     val updatedAt: Long,
 )
 
-fun CorpusEntity.asExternalModel() : Corpus {
+enum class Mark {
+    UNMARKED,
+    FAMILIAR,
+    UNFAMILIAR
+}
+
+fun CorpusEntity.asExternalModel(): Corpus {
     val meanings = Gson().fromJson(meaningsJson, Array<Meaning>::class.java).toList()
     return Corpus(
         word = word,

@@ -5,9 +5,18 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.random.Random
 
 object Utils {
+
+    fun Long.asString(): String {
+        val date = Date(this)
+        val format = SimpleDateFormat("MMM dd", Locale.US)
+        return format.format(date)
+    }
 
     fun generateRandomString(length: Int): String {
         val charset = ('A'..'Z') + ('a'..'z') + ('0'..'9')
@@ -31,9 +40,9 @@ object Utils {
     }
 
     fun showAlertDialog(
-        title: String,
-        description: String,
         context: Context,
+        title: String,
+        description: String?,
         positiveButton: String = "Ok",
         negativeButton: String = "Cancel",
         action: () -> Unit,

@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes.ui.note
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -23,7 +24,7 @@ class WordAdapter(
         fun onSelectionChanged(size: Int)
     }
 
-    private val selectedIds = mutableSetOf<String>()
+    private val selectedWords = mutableSetOf<String>()
     private var isSelectionMode = false
 
     inner class ViewHolder(val binding: ItemWordBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -46,7 +47,7 @@ class WordAdapter(
                 }
             }
 
-            val isSelected = selectedIds.contains(corpus.word)
+            val isSelected = selectedWords.contains(corpus.word)
 
             itemView.setBackgroundColor(
                 if (isSelected) Color.LTGRAY else Color.TRANSPARENT
@@ -120,27 +121,28 @@ class WordAdapter(
         }
     }
 
-    private fun toggleSelection(id: String) {
-        if (selectedIds.contains(id)) {
-            selectedIds.remove(id)
+    private fun toggleSelection(word: String) {
+        if (selectedWords.contains(word)) {
+            selectedWords.remove(word)
         } else {
-            selectedIds.add(id)
+            selectedWords.add(word)
         }
-        if (selectedIds.isEmpty()) {
+        if (selectedWords.isEmpty()) {
             isSelectionMode = false
         }
-        listener.onSelectionChanged(selectedIds.size)
+        listener.onSelectionChanged(selectedWords.size)
         notifyDataSetChanged()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clearSelection() {
-        selectedIds.clear()
+        selectedWords.clear()
         isSelectionMode = false
         notifyDataSetChanged()
         listener.onSelectionChanged(0)
     }
 
-    fun getSelectedItems(): List<String> = selectedIds.toList()
+    fun getSelectedItems(): List<String> = selectedWords.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(

@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,8 +29,8 @@ interface CorpusDao {
     @Update
     suspend fun updateCorpus(corpus: CorpusEntity)
 
-    @Query("DELETE FROM corpus WHERE word = :word")
-    suspend fun deleteCorpusById(word: String)
+    @Query("DELETE FROM corpus WHERE word IN (:words)")
+    suspend fun deleteBatch(words: List<String>)
 
     @Query("SELECT * FROM corpus WHERE word = :word")
     suspend fun getCorpusByWord(word: String): CorpusEntity?
@@ -51,6 +52,12 @@ interface CorpusDao {
 
     @Query("DELETE FROM corpus WHERE noteId = :noteId")
     suspend fun deleteCorpusByNoteId(noteId: String)
+
+    @Query("UPDATE corpus SET noteId = :newNoteId WHERE word IN (:corpusWords)")
+    suspend fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String)
+
+    @Query("UPDATE corpus SET mark = :newMark WHERE word IN (:corpusWords)")
+    suspend fun updateCorpusMark(corpusWords: List<String>, newMark: Mark)
 
 }
 
