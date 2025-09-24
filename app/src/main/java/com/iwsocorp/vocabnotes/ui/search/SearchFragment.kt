@@ -19,6 +19,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
@@ -57,19 +58,34 @@ class SearchFragment : Fragment() {
             }
 
             override fun onSelectionChanged(size: Int) {}
+
+            override fun onMark(
+                word: String,
+                mark: Mark,
+            ) {
+                viewModel.updateCorpusMark(
+                    listOf(word),
+                    when (mark) {
+                        Mark.UNMARKED -> Mark.FAMILIAR
+                        Mark.FAMILIAR -> Mark.UNFAMILIAR
+                        Mark.UNFAMILIAR -> Mark.UNMARKED
+                    }
+                )
+            }
         })
     }
     private val searchWord = MutableLiveData<String>()
+    private val args by lazy {
+        arguments?.getString(ARG_SEARCH_WORD)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val args = arguments?.getString(ARG_SEARCH_WORD)
         args?.let {
             onSearch(it)
         } ?: run {
             binding.searchView.requestFocus()
-            detailViewModel.setCorpusList(emptyList())
         }
 
         viewModel.searchResults.observe(viewLifecycleOwner) {
@@ -130,7 +146,7 @@ class SearchFragment : Fragment() {
     }
 
     private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
-        tvWord.text = corpus.word
+        tvWord.text = corpus.word.ifEmpty { args }
         tvMeaning.visibility = View.GONE
         tvExample.visibility = View.GONE
         rvExample.visibility = View.GONE

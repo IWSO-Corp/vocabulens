@@ -6,10 +6,12 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,4 +35,9 @@ class HomeViewModel @Inject constructor(
     fun deleteNote(noteId: String) = viewModelScope.launch {
         noteRepository.deleteNote(noteId)
     }
+
+    fun countMark(noteId: String, mark: Mark): Flow<Int> = flow {
+        emit(corpusRepository.countMark(noteId, mark))
+    }
+
 }

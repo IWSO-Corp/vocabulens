@@ -12,7 +12,7 @@
     <item
         android:id="@+id/action_mark"
         android:title="Mark"
-        android:icon="@drawable/baseline_bookmark_border_24"
+        android:icon="@drawable/outline_star_border_24"
         app:showAsAction="ifRoom" />
 
     <item

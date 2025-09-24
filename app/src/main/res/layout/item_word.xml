@@ -117,9 +117,11 @@
             android:layout_height="wrap_content"
             app:cardCornerRadius="4dp"
             app:cardPreventCornerOverlap="true"
+            android:layout_marginEnd="8dp"
             app:cardUseCompatPadding="true"
+            android:layout_marginTop="-4dp"
             app:contentPadding="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/icon_mark"
             app:layout_constraintTop_toTopOf="@+id/ll_word">
 
             <TextView
@@ -131,6 +133,15 @@
                 tools:text="adjective" />
 
         </androidx.cardview.widget.CardView>
+
+        <ImageView
+            android:id="@+id/icon_mark"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="Mark"
+            android:src="@drawable/outline_star_border_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ll_word"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

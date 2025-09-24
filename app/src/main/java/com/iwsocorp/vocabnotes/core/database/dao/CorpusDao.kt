@@ -59,6 +59,9 @@ interface CorpusDao {
     @Query("UPDATE corpus SET mark = :newMark WHERE word IN (:corpusWords)")
     suspend fun updateCorpusMark(corpusWords: List<String>, newMark: Mark)
 
+    @Query("SELECT COUNT(*) FROM corpus WHERE noteId = :noteId AND mark = :mark")
+    suspend fun countMark(noteId: String, mark: Mark): Int
+
 }
 
 // Extension / Helper function

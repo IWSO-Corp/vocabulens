@@ -93,6 +93,13 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.updateCorpusMark(corpusWords, newMark)
     }
 
+    override suspend fun countMark(
+        noteId: String,
+        mark: Mark,
+    ): Int {
+        return corpusDao.countMark(noteId, mark)
+    }
+
     private fun createPager(
         factory: () -> PagingSource<Int, CorpusEntity>,
     ): Flow<PagingData<Corpus>> {
@@ -126,4 +133,5 @@ interface CorpusRepository {
     suspend fun countExisting(words: List<String>): Int
     suspend fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String)
     suspend fun updateCorpusMark(corpusWords: List<String>, newMark: Mark)
+    suspend fun countMark(noteId: String, mark: Mark): Int
 }

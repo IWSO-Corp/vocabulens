@@ -48,10 +48,30 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            tools:text="@string/word_amount"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rv_preview" />
+            app:layout_constraintTop_toBottomOf="@+id/rv_preview"
+            tools:text="@string/word_amount" />
+
+        <TextView
+            android:id="@+id/tv_familiar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:drawablePadding="4dp"
+            app:layout_constraintStart_toEndOf="@id/tv_word_count"
+            app:layout_constraintTop_toTopOf="@id/tv_word_count"
+            tools:text="12" />
+
+        <TextView
+            android:id="@+id/tv_unfamiliar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:drawablePadding="4dp"
+            app:layout_constraintStart_toEndOf="@id/tv_familiar"
+            app:layout_constraintTop_toTopOf="@id/tv_word_count"
+            tools:text="12" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

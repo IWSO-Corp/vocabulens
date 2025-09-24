@@ -54,6 +54,7 @@ fun CorpusEntity.asExternalModel(): Corpus {
         audio = audio,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        meanings = meanings
+        meanings = meanings,
+        mark = mark,
     )
 }

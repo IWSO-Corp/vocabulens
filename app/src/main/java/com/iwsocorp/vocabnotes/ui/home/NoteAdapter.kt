@@ -3,12 +3,14 @@ package com.iwsocorp.vocabnotes.ui.home
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.asString
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
@@ -60,7 +62,10 @@ class NoteAdapter(
 
             if (note.id.isNotEmpty()) {
                 tvWordCount.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
-                tvWordCount.text = itemView.context.getString(R.string.word_amount, note.contentSize)
+                tvWordCount.text =
+                    itemView.context.getString(R.string.word_amount, note.contentSize)
+
+                if (note.contentSize > 0) setupMark(note)
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
                     viewModel.allCorpusSize().collectLatest {
@@ -92,6 +97,43 @@ class NoteAdapter(
             rvPreview.adapter = previewAdapter
             viewModel.getCorpusByNoteId(note.id) {
                 previewAdapter.submitList(it)
+            }
+        }
+
+        private fun ItemNoteBinding.setupMark(note: Note) {
+            val iconFam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
+            iconFam?.setBounds(0, 0, 48, 48) // width x height dalam px
+            iconFam?.setTint(itemView.context.resources.getColor(R.color.blue, itemView.context.theme))
+            val iconUnfam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
+            iconUnfam?.setBounds(0, 0, 48, 48) // width x height dalam px
+            iconUnfam?.setTint(itemView.context.resources.getColor(R.color.red, itemView.context.theme))
+
+            tvFamiliar.setCompoundDrawables(iconFam, null, null, null)
+            tvUnfamiliar.setCompoundDrawables(iconUnfam, null, null, null)
+
+            CoroutineScope(Dispatchers.IO).launch {
+                viewModel.countMark(note.id, Mark.FAMILIAR).collectLatest {
+                    withContext(Dispatchers.Main) {
+                        tvFamiliar.text = it.toString()
+                        tvFamiliar.setTextColor(
+                            itemView.context.resources.getColor(
+                                R.color.blue,
+                                itemView.context.theme
+                            )
+                        )
+                    }
+                }
+                viewModel.countMark(note.id, Mark.UNFAMILIAR).collectLatest {
+                    withContext(Dispatchers.Main) {
+                        tvUnfamiliar.text = it.toString()
+                        tvUnfamiliar.setTextColor(
+                            itemView.context.resources.getColor(
+                                R.color.red,
+                                itemView.context.theme
+                            )
+                        )
+                    }
+                }
             }
         }
     }

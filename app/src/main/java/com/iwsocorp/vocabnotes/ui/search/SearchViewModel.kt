@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -23,6 +24,10 @@ class SearchViewModel @Inject constructor(
         corpusRepository.searchCorpus(word).collect {
             _searchResults.value = it
         }
+    }
+
+    fun updateCorpusMark(corpusWords: List<String>, newMark: Mark) = viewModelScope.launch {
+        corpusRepository.updateCorpusMark(corpusWords, newMark)
     }
 
 }

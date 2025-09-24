@@ -4,13 +4,17 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.daimajia.swipe.SwipeLayout
+import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
+import timber.log.Timber
 import java.util.Locale
 
 class WordAdapter(
@@ -22,6 +26,7 @@ class WordAdapter(
         fun onClick(corpus: Corpus)
         fun onPlay(url: String)
         fun onSelectionChanged(size: Int)
+        fun onMark(word: String, mark: Mark)
     }
 
     private val selectedWords = mutableSetOf<String>()
@@ -46,11 +51,70 @@ class WordAdapter(
                     listener.onPlay(corpus.audio)
                 }
             }
+            iconMark.setOnClickListener {
+                listener.onMark(corpus.word, corpus.mark)
+            }
+
+            Timber.d("corpus: $corpus")
+
+            when (corpus.mark) {
+                Mark.FAMILIAR -> {
+                    iconMark.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            itemView.context.resources,
+                            R.drawable.baseline_star_24,
+                            itemView.context.theme
+                        )
+                    )
+                    iconMark.setColorFilter(
+                        itemView.context.resources.getColor(
+                            R.color.blue,
+                            itemView.context.theme
+                        )
+                    )
+                }
+
+                Mark.UNFAMILIAR,
+                    -> {
+                    iconMark.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            itemView.context.resources,
+                            R.drawable.baseline_star_24,
+                            itemView.context.theme
+                        )
+                    )
+                    iconMark.setColorFilter(
+                        itemView.context.resources.getColor(
+                            R.color.red,
+                            itemView.context.theme
+                        )
+                    )
+                }
+
+                Mark.UNMARKED -> {
+                    iconMark.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            itemView.context.resources,
+                            R.drawable.outline_star_border_24,
+                            itemView.context.theme
+                        )
+                    )
+                    iconMark.setColorFilter(
+                        itemView.context.resources.getColor(
+                            R.color.grey,
+                            itemView.context.theme
+                        )
+                    )
+                }
+            }
 
             val isSelected = selectedWords.contains(corpus.word)
 
             itemView.setBackgroundColor(
-                if (isSelected) Color.LTGRAY else Color.TRANSPARENT
+                if (isSelected) itemView.context.resources.getColor(
+                    R.color.light_grey,
+                    itemView.context.theme
+                ) else Color.TRANSPARENT
             )
 
             swipeLayout.surfaceView.setOnClickListener {

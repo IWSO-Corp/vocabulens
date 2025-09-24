@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vocabnotes.core.common.Utils.showPopupMenu
 import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
@@ -71,6 +72,20 @@ class NoteFragment() : Fragment() {
                 } else {
                     setNormalToolbar()
                 }
+            }
+
+            override fun onMark(
+                word: String,
+                mark: Mark,
+            ) {
+                viewModel.updateCorpusMark(
+                    listOf(word),
+                    when (mark) {
+                        Mark.UNMARKED -> Mark.FAMILIAR
+                        Mark.FAMILIAR -> Mark.UNFAMILIAR
+                        Mark.UNFAMILIAR -> Mark.UNMARKED
+                    }
+                )
             }
         })
     }
@@ -238,15 +253,26 @@ class NoteFragment() : Fragment() {
             }
 
             R.id.action_mark -> {
-                showAlertDialog(
+                fun markWords(mark: Mark) = showAlertDialog(
                     requireContext(),
-                    "Mark ${selectedItems.size} Words",
+                    "Mark ${selectedItems.size} Words as $mark",
                     null,
                     "Mark",
                     "Cancel"
                 ) {
-                    viewModel.updateCorpusMark(selectedItems, Mark.FAMILIAR)
+                    viewModel.updateCorpusMark(selectedItems, mark)
+                    setNormalToolbar()
                 }
+
+                showPopupMenu(
+                    requireContext(),
+                    binding.toolbarNote.findViewById<View>(R.id.action_mark),
+                    listOf(
+                        "Familiar" to { markWords(Mark.FAMILIAR) },
+                        "Unfamiliar" to { markWords(Mark.UNFAMILIAR) },
+                        "Unmarked" to { markWords(Mark.UNMARKED) }
+                    )
+                )
             }
 
             R.id.action_delete -> {
