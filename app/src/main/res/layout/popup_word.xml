@@ -10,13 +10,21 @@
     android:paddingEnd="10dp">
 
     <TextView
-        android:id="@+id/tvPopupWord"
+        android:id="@+id/tv_search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/baseline_search_24"
         android:drawablePadding="2dp"
         android:textColor="@color/white"
         android:textSize="16sp"
-        android:textStyle="bold"
         tools:text="abrupt" />
+
+    <TextView
+        android:id="@+id/tv_translate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:drawablePadding="2dp"
+        android:text="Translate"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
 </LinearLayout>

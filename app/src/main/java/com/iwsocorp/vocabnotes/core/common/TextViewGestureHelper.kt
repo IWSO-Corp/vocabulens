@@ -2,22 +2,28 @@ package com.iwsocorp.vocabnotes.core.common
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Rect
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.BackgroundColorSpan
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.text.clearSpans
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.databinding.PopupWordBinding
+import timber.log.Timber
 
 class TextViewGestureHelper(
-    private val context: Context,
+    context: Context,
     private val currentWord: String,
+    private val isExample: Boolean = false,
     private val onClickListener: (String) -> Unit,
 ) {
 
@@ -25,18 +31,19 @@ class TextViewGestureHelper(
     private val gestureDetector: GestureDetector =
         GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
-                onClick(e)
+                onSelect(e)
                 return true
             }
 
             override fun onLongPress(e: MotionEvent) {
                 super.onLongPress(e)
-                onClick(e)
+                onSelect(e)
             }
         })
 
     @SuppressLint("ClickableViewAccessibility")
     fun attachTo(textView: TextView) {
+        textView.setTextIsSelectable(true)
         textView.setOnTouchListener { v, event ->
             currentTextView = textView
             gestureDetector.onTouchEvent(event)
@@ -44,7 +51,7 @@ class TextViewGestureHelper(
         }
     }
 
-    private fun onClick(e: MotionEvent) = currentTextView?.let { textView ->
+    private fun onSelect(e: MotionEvent) = currentTextView?.let { textView ->
         val result = getWordAndPosition(textView, e)
         result?.let { (word, rect) ->
             if (currentWord != word) showWordPopup(textView, word, rect)
@@ -84,7 +91,6 @@ class TextViewGestureHelper(
             endX,
             baseline
         )
-
         // Offset relatif ke layar
         val location = IntArray(2)
         textView.getLocationOnScreen(location)
@@ -94,10 +100,10 @@ class TextViewGestureHelper(
     }
 
     @SuppressLint("InflateParams")
-    private fun showWordPopup(view: View, word: String, rect: Rect) {
-        val popupView = LayoutInflater.from(view.context).inflate(R.layout.popup_word, null)
+    private fun showWordPopup(textView: TextView, word: String, rect: Rect) {
+        val popupView = LayoutInflater.from(textView.context).inflate(R.layout.popup_word, null)
         val binding = PopupWordBinding.bind(popupView)
-        binding.tvPopupWord.text = word
+        binding.tvSearch.text = word.uppercase()
 
         val popupWindow = PopupWindow(
             popupView,
@@ -105,26 +111,53 @@ class TextViewGestureHelper(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             true
         )
+        popupWindow.animationStyle = android.R.style.Animation_Dialog
 
         popupWindow.elevation = 10f
         popupWindow.isOutsideTouchable = true
-
-        // Tampilkan tepat di atas kata
         popupWindow.showAtLocation(
-            view,
+            textView,
             Gravity.NO_GRAVITY,
             rect.left,
-            rect.top - popupView.measuredHeight - 100 // sedikit spasi
+            rect.top - 200
         )
 
+        val span = highlightWord(textView, word)
+        popupWindow.setOnDismissListener {
+            span.clearSpans()
+            textView.text = span
+        }
+
         // Bisa kasih aksi tambahan
-        binding.tvPopupWord.setOnClickListener {
+        binding.tvSearch.setOnClickListener {
             onClickListener(word)
             popupWindow.dismiss()
         }
 
-        val drawable = ContextCompat.getDrawable(view.context, R.drawable.baseline_search_24)
-        drawable?.setBounds(0, 0, 48, 48) // width x height dalam px
-        binding.tvPopupWord.setCompoundDrawables(drawable, null, null, null)
+        val iconSearch = ContextCompat.getDrawable(textView.context, R.drawable.baseline_search_24)
+        iconSearch?.setBounds(0, 0, 48, 48)
+        binding.tvSearch.setCompoundDrawables(iconSearch, null, null, null)
+        val iconTranslate = ContextCompat.getDrawable(textView.context, R.drawable.baseline_translate_24)
+        iconTranslate?.setBounds(0, 0, 48, 48)
+        binding.tvTranslate.setCompoundDrawables(iconTranslate, null, null, null)
+    }
+
+    private fun highlightWord(textView: TextView, word: String): SpannableString {
+        val fullText = textView.text.toString()
+        val spannable = SpannableString(fullText)
+
+        val start = fullText.indexOf(word)
+        if (start >= 0) {
+            val end = start + word.length
+            spannable.setSpan(
+                BackgroundColorSpan(Color.YELLOW), // warna highlight custom
+                start,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        textView.text = spannable
+        return spannable
     }
 }

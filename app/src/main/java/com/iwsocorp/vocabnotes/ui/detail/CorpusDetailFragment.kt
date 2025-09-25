@@ -2,9 +2,13 @@ package com.iwsocorp.vocabnotes.ui.detail
 
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.view.ActionMode
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
@@ -57,7 +61,7 @@ class CorpusDetailFragment : Fragment() {
         viewModel.corpusWord.observe(viewLifecycleOwner) { keyword ->
             viewModel.getCorpus(keyword)
             viewModel.getExamplesByWord(keyword) { list ->
-                adapter.submitList(
+                if (::adapter.isInitialized) adapter.submitList(
                     list.map { it.example }.shuffled().take(3)
                 )
             }
@@ -179,6 +183,7 @@ class CorpusDetailFragment : Fragment() {
             }
         }
         rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
+        rvMeanings.setHasFixedSize(true)
         adapter = ExampleAdapter(gestureHelper)
         binding.itemDetail.rvExample.adapter = adapter
     }

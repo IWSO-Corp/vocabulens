@@ -12,7 +12,7 @@
         android:orientation="vertical"
         android:paddingHorizontal="8dp"
         android:paddingTop="8dp"
-        android:paddingBottom="36dp">
+        android:paddingBottom="52dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cs_word"
@@ -26,6 +26,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black"
+                android:textIsSelectable="true"
                 android:textSize="24sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -64,6 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:textColor="@color/teal_700"
+            android:textIsSelectable="true"
             android:textSize="18sp"
             tools:text="serentak" />
 
@@ -142,6 +144,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:itemCount="1"
                     tools:listitem="@layout/item_definition" />
