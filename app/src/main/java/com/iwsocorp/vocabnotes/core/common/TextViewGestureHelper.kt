@@ -39,12 +39,8 @@ class TextViewGestureHelper(
     fun attachTo(textView: TextView) {
         textView.setOnTouchListener { v, event ->
             currentTextView = textView
-            if (gestureDetector.onTouchEvent(event)) {
-                true
-            } else {
-                if (event.action == MotionEvent.ACTION_UP) v.performClick()
-                false
-            }
+            gestureDetector.onTouchEvent(event)
+            true
         }
     }
 

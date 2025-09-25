@@ -7,9 +7,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vocabnotes.databinding.ItemExampleBinding
 
-class ExampleAdapter : ListAdapter<String, ExampleAdapter.ViewHolder>(DIFF_CALLBACK) {
+class ExampleAdapter(
+    private val gestureHelper: TextViewGestureHelper
+) : ListAdapter<String, ExampleAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -34,6 +37,8 @@ class ExampleAdapter : ListAdapter<String, ExampleAdapter.ViewHolder>(DIFF_CALLB
         fun bind(example: String, position: Int) = with(binding) {
             tvNumber.text = (position + 1).toString()
             tvExample.text = example
+
+            gestureHelper.attachTo(tvExample)
         }
     }
 

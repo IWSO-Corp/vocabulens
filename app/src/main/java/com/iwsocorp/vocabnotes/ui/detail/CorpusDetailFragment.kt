@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -16,6 +17,7 @@ import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vocabnotes.core.common.Utils.isNetworkAvailable
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Example
 import com.iwsocorp.vocabnotes.databinding.FragmentCorpusDetailBinding
 import com.iwsocorp.vocabnotes.ui.note.ARG_POSITION
 import com.iwsocorp.vocabnotes.ui.search.ARG_SEARCH_WORD
@@ -23,8 +25,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.UUID
 
 const val ARG_CORPUS_WORD = "corpusWordParam"
+const val ARG_FROM = "fromParam"
 
 @AndroidEntryPoint
 class CorpusDetailFragment : Fragment() {
@@ -35,6 +39,7 @@ class CorpusDetailFragment : Fragment() {
     private val corpusWord: String by lazy {
         arguments?.getString(ARG_CORPUS_WORD)!!
     }
+    private lateinit var adapter: ExampleAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +51,16 @@ class CorpusDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.corpusWord.observe(viewLifecycleOwner) {
-            viewModel.getCorpus(it)
+        val args = arguments?.getString(ARG_FROM)
+        if (args != null) setupToolbar(0)
+
+        viewModel.corpusWord.observe(viewLifecycleOwner) { keyword ->
+            viewModel.getCorpus(keyword)
+            viewModel.getExamplesByWord(keyword) { list ->
+                adapter.submitList(
+                    list.map { it.example }.shuffled().take(3)
+                )
+            }
         }
         viewModel.corpus.observe(viewLifecycleOwner) { corpus ->
             corpus?.let {
@@ -70,21 +83,18 @@ class CorpusDetailFragment : Fragment() {
             setupToolbar(pos)
         }
 
-        val adapter = ExampleAdapter()
-        binding.itemDetail.rvExample.adapter = adapter
-        lifecycleScope.launch {
-            adapter.submitList(
-                listOf(
-                    "obnoxious",
-                    "serendipity",
-                    "ephemeral",
-                    "eloquent",
-                    "cihuyyy"
-                ).shuffled().take(3)
-            )
-        }
-        binding.itemDetail.tvExample.setOnClickListener {
-
+        binding.itemDetail.iconAddExample.setOnClickListener {
+            ExampleBottomSheet {
+                viewModel.insertExampleSentence(
+                    Example(
+                        UUID.randomUUID().toString(),
+                        it,
+                        System.currentTimeMillis(),
+                        System.currentTimeMillis()
+                    )
+                )
+                Toast.makeText(requireContext(), "Example added", Toast.LENGTH_SHORT).show()
+            }.show(childFragmentManager, null)
         }
     }
 
@@ -169,6 +179,8 @@ class CorpusDetailFragment : Fragment() {
             }
         }
         rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
+        adapter = ExampleAdapter(gestureHelper)
+        binding.itemDetail.rvExample.adapter = adapter
     }
 
     private var mediaPlayer: MediaPlayer? = null

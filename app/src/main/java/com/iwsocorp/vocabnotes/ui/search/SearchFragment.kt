@@ -23,6 +23,7 @@ import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
+import com.iwsocorp.vocabnotes.ui.detail.ARG_FROM
 import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
 import com.iwsocorp.vocabnotes.ui.detail.MeaningAdapter
 import com.iwsocorp.vocabnotes.ui.note.WordAdapter
@@ -47,6 +48,7 @@ class SearchFragment : Fragment() {
                     R.id.action_searchFragment_to_corpusDetailFragment,
                     Bundle().apply {
                         putString(ARG_CORPUS_WORD, corpus.word)
+                        putString(ARG_FROM, "searchFragment")
                     }
                 )
             }
@@ -148,7 +150,7 @@ class SearchFragment : Fragment() {
     private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
         tvWord.text = corpus.word.ifEmpty { args }
         tvMeaning.visibility = View.GONE
-        tvExample.visibility = View.GONE
+        csExample.visibility = View.GONE
         rvExample.visibility = View.GONE
         underline.isVisible = corpus.audio.isNotEmpty()
         tvPronun.apply {
