@@ -22,6 +22,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.Utils.setIconColor
 import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vocabnotes.core.common.Utils.showPopupMenu
 import com.iwsocorp.vocabnotes.core.database.model.Mark
@@ -201,6 +202,7 @@ class NoteFragment() : Fragment() {
             etToolbarTitle.setText(tvToolbarTitle.text)
         }
         toolbarNote.apply {
+            setIconColor(requireContext())
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
                 parentFragmentManager.popBackStack()
@@ -270,7 +272,7 @@ class NoteFragment() : Fragment() {
                     listOf(
                         "Familiar" to { markWords(Mark.FAMILIAR) },
                         "Unfamiliar" to { markWords(Mark.UNFAMILIAR) },
-                        "Unmarked" to { markWords(Mark.UNMARKED) }
+                        "Unmark" to { markWords(Mark.UNMARKED) }
                     )
                 )
             }

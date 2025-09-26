@@ -13,8 +13,8 @@
         android:id="@+id/tv_search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:drawablePadding="2dp"
-        android:textColor="@color/white"
+        android:drawablePadding="4dp"
+        android:textColor="@color/black"
         android:textSize="16sp"
         tools:text="abrupt" />
 
@@ -23,8 +23,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:drawablePadding="2dp"
+        android:drawablePadding="4dp"
         android:text="Translate"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="16sp" />
 </LinearLayout>

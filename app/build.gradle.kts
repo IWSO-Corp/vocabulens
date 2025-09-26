@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.poi.ooxml)
     implementation(libs.library)
+    implementation(libs.vbpd)
 
     implementation(libs.room.ktx)
     implementation(libs.room.paging)

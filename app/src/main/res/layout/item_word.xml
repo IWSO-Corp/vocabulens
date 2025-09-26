@@ -14,7 +14,7 @@
         android:id="@+id/layout_hidden"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#EFE400"
+        android:background="@color/yellow"
         android:gravity="end"
         android:orientation="horizontal">
 

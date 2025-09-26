@@ -9,7 +9,10 @@ import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -33,6 +36,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private val viewModel: NoteViewModel by viewModels()
+    lateinit var drawerLayout: DrawerLayout
+        private set
+    lateinit var toolbar: Toolbar
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,13 +47,33 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.appBarMain.toolbar)
+        drawerLayout = binding.drawerLayout
+        toolbar = binding.appBarMain.toolbar
+
+        toolbar.title = getString(R.string.app_name)
+        toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.black))
 
         binding.appBarMain.fab.setOnClickListener { view ->
             findNavController(R.id.nav_host_fragment_content_main)
                 .navigate(R.id.action_nav_home_to_noteFragment)
         }
-        val drawerLayout: DrawerLayout = binding.drawerLayout
+
+        setSupportActionBar(toolbar)
+        setupNavigation()
+    }
+
+    private fun setupDrawer() {
+        val drawerLayout = drawerLayout
+        val drawerToggle = ActionBarDrawerToggle(
+            this, drawerLayout, toolbar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.black)
+        drawerLayout.addDrawerListener(drawerToggle)
+        drawerToggle.syncState()
+    }
+
+    private fun setupNavigation() {
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
@@ -56,7 +83,6 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-
         navController.addOnDestinationChangedListener { _, destination, _ ->
             if (destination.id == R.id.nav_home) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
             when (destination.id) {
@@ -65,6 +91,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_slideshow,
                     -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+                    setupDrawer()
                     supportActionBar?.show()
                 }
 
@@ -163,7 +190,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
-            R.id.action_settings -> {
+            R.id.action_sort -> {
                 return true
             }
 

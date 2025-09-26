@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Vocab Notes</string>
+    <string name="app_name">Voby Notes</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -19,4 +19,10 @@
     <string name="action_delete">Delete</string>
     <string name="action_share">Share</string>
     <string name="action_delete_note">Delete Note</string>
+    <string name="delete">Delete</string>
+    <string name="mark">Mark</string>
+    <string name="move">Move</string>
+    <string name="edit">Edit</string>
+    <string name="delete_word">Delete word</string>
+    <string name="action_sort">Sort</string>
 </resources>

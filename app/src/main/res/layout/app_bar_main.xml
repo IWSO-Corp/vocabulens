@@ -9,14 +9,16 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.VocabNotes.AppBarOverlay">
+        android:theme="@style/Theme.VocabNotes.AppBarOverlay"
+        app:elevation="0dp">
 
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay" />
+            android:background="@color/white"
+            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay"
+            app:titleTextColor="@color/black" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -29,6 +31,8 @@
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="16dp"
-        app:srcCompat="@drawable/baseline_add_24" />
+        android:contentDescription="New note"
+        app:srcCompat="@drawable/baseline_add_24"
+        tools:ignore="HardcodedText" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

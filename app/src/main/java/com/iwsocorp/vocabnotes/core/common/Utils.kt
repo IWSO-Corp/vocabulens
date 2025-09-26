@@ -5,6 +5,9 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import com.iwsocorp.vocabnotes.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -72,4 +75,7 @@ object Utils {
         }
         popupMenu.show()
     }
+
+    fun Toolbar.setIconColor(context: Context) =
+        this.overflowIcon?.setTint(ContextCompat.getColor(context, R.color.black))
 }
