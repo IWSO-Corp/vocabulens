@@ -86,12 +86,18 @@ class DetailViewModel @Inject constructor(
 
     suspend fun getCorpusByWord(word: String): Corpus? = corpusRepository.getCorpusByWord(word)
 
-    fun updateCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
+    fun updateCorpus(currentWord: String, corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
         Timber.d("Updating corpus: $corpus")
-        val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
-        if (existingCorpus != null) {
-            callback(-1L)
-            return@launch
+        if (currentWord != corpus.word) {
+            val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
+            if (existingCorpus != null) {
+                callback(-1L)
+                return@launch
+            } else {
+                corpusRepository.updateCorpus(corpus)
+                _corpus.value = corpus
+                callback(1L)
+            }
         } else {
             corpusRepository.updateCorpus(corpus)
             _corpus.value = corpus

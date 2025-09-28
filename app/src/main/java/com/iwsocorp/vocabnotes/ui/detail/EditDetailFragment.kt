@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.iwsocorp.vocabnotes.R
+import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.FragmentEditDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,8 +34,21 @@ class EditDetailFragment : Fragment() {
         detailViewModel.corpus.observe(viewLifecycleOwner) { corpus ->
             Timber.d("Corpus: $corpus")
             corpus?.let {
+                binding.ilWord.hint = it.wordLang
+                binding.ilMeaning.hint = it.meaningLang
                 binding.etWord.setText(it.word)
                 binding.etMeaning.setText(it.meaning)
+                binding.toolbarEdit.setNavigationOnClickListener {
+                    onBack(corpus)
+                }
+                requireActivity().onBackPressedDispatcher.addCallback(
+                    viewLifecycleOwner,
+                    object : OnBackPressedCallback(true) {
+                        override fun handleOnBackPressed() {
+                            onBack(corpus)
+                        }
+                    }
+                )
             }
         }
 
@@ -43,19 +57,29 @@ class EditDetailFragment : Fragment() {
             inflateMenu(R.menu.menu_edit)
             setOnMenuItemClickListener(menuListener)
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
-            setNavigationOnClickListener {
+            title = "Edit"
+        }
+    }
+
+    private fun onBack(corpus: Corpus) {
+        if (corpus.isDataChanged()) {
+            showAlertDialog(
+                requireContext(),
+                title = "Discard changes?",
+                description = "Are you sure you want to discard changes?",
+                positiveButton = "Discard",
+            ) {
                 findNavController().navigateUp()
             }
+        } else {
+            findNavController().navigateUp()
         }
+    }
 
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    Toast.makeText(requireContext(), "oi", Toast.LENGTH_SHORT).show()
-                }
-            }
-        )
+    private fun Corpus.isDataChanged(): Boolean {
+        val word = binding.etWord.text.toString().lowercase().trim()
+        val meaning = binding.etMeaning.text.toString().lowercase().trim()
+        return this.word != word || this.meaning != meaning
     }
 
     private fun onSave(corpus: Corpus) {
@@ -77,7 +101,7 @@ class EditDetailFragment : Fragment() {
             meanings = emptyList(),
             updatedAt = System.currentTimeMillis()
         )
-        detailViewModel.updateCorpus(updatedCorpus) {
+        detailViewModel.updateCorpus(corpus.word, updatedCorpus) {
             if (it == -1L) {
                 Toast.makeText(requireContext(), "Word already exists", Toast.LENGTH_SHORT).show()
                 return@updateCorpus

@@ -41,7 +41,7 @@ class WordAdapter(
         fun bind(corpus: Corpus, position: Int) = with(binding) {
             tvNumber.text = String.format(Locale.US, "%d", position + 1)
             tvWord.text = corpus.word
-            tvMeaning.text = corpus.meaning
+            tvMeaning.text = corpus.meaning.ifEmpty { "-" }
             tvPos.text = corpus.meanings.takeIf { it.isNotEmpty() }?.first()?.partOfSpeech
             cardPos.isVisible = tvPos.text.isNotEmpty()
             underline.isVisible = corpus.audio.isNotEmpty()

@@ -155,7 +155,7 @@ class CorpusDetailFragment : Fragment() {
 
     private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
         tvWord.text = corpus.word
-        tvMeaning.text = corpus.meaning
+        tvMeaning.text = corpus.meaning.ifEmpty { "-" }
         underline.isVisible = corpus.audio.isNotEmpty()
         tvPronun.apply {
             text = corpus.phonetic

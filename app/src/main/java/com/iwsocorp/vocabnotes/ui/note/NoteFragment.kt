@@ -151,6 +151,7 @@ class NoteFragment() : Fragment() {
                     }
                 }
             }
+            binding.iconSwitch.isVisible = it == null
         }
 
         lifecycleScope.launch {

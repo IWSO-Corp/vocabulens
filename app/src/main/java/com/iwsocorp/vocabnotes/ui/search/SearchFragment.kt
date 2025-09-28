@@ -160,7 +160,7 @@ class SearchFragment : Fragment() {
                     ) {
                         Toast.makeText(
                             requireContext(),
-                            "Word saved",
+                            "Word saved to ${note.title}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
