@@ -11,7 +11,7 @@ import com.iwsocorp.vocabnotes.databinding.BottomSheetListBinding
 
 class NoteBottomSheet(
     private val notes: List<Note>,
-    private val onItemClick: (String) -> Unit,
+    private val onItemClick: (Note) -> Unit,
 ) : BottomSheetDialogFragment() {
 
     override fun onCreateView(

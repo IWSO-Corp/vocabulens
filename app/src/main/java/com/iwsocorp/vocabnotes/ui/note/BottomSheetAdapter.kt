@@ -11,7 +11,7 @@ import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
 
 class BottomSheetAdapter(
     private val notes: List<Note>,
-    private val onClick: (String) -> Unit,
+    private val onClick: (Note) -> Unit,
 ) : RecyclerView.Adapter<BottomSheetAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -23,7 +23,7 @@ class BottomSheetAdapter(
             tvWordCount.text = itemView.context.getString(R.string.word_amount, note.contentSize)
 
             itemView.setOnClickListener {
-                onClick(note.id)
+                onClick(note)
             }
         }
     }

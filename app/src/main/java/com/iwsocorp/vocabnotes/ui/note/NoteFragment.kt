@@ -256,8 +256,16 @@ class NoteFragment() : Fragment() {
                     val bottomSheet = NoteBottomSheet(list.filter {
                         it.id != viewModel.noteId.value
                     }) {
-                        viewModel.moveCorpusToNote(selectedItems, it)
-                        setNormalToolbar()
+                        showAlertDialog(
+                            requireContext(),
+                            "Move ${selectedItems.size} Words to ${it.title}",
+                            null,
+                            "Move",
+                            "Cancel"
+                        ) {
+                            viewModel.moveCorpusToNote(selectedItems, it.id)
+                            setNormalToolbar()
+                        }
                     }
                     bottomSheet.show(childFragmentManager, null)
                 }

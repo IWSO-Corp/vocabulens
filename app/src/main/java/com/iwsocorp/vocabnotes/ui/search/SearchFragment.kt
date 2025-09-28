@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -26,6 +27,8 @@ import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import com.iwsocorp.vocabnotes.ui.detail.ARG_FROM
 import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
 import com.iwsocorp.vocabnotes.ui.detail.MeaningAdapter
+import com.iwsocorp.vocabnotes.ui.note.NoteBottomSheet
+import com.iwsocorp.vocabnotes.ui.note.NoteViewModel
 import com.iwsocorp.vocabnotes.ui.note.WordAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +44,7 @@ class SearchFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: SearchViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
+    private val noteViewModel: NoteViewModel by viewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
@@ -147,6 +151,24 @@ class SearchFragment : Fragment() {
                 parentFragmentManager.popBackStack()
             }
         }
+        binding.btnSave.setOnClickListener {
+            noteViewModel.notes.observe(viewLifecycleOwner) { list ->
+                NoteBottomSheet(list) { note ->
+                    noteViewModel.updateNoteId(note.id)
+                    noteViewModel.insertCorpus(
+                        detailViewModel.corpus.value!!.copy(noteId = note.id)
+                    ) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Word saved",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    binding.btnSave.visibility = View.GONE
+                    binding.btnSearch.visibility = View.GONE
+                }.show(childFragmentManager, null)
+            }
+        }
     }
 
     private fun onSearch(word: String) {
@@ -154,6 +176,11 @@ class SearchFragment : Fragment() {
 
         binding.btnSearch.visibility = View.GONE
         binding.itemDetail.contentDetail.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            val existingCorpus = detailViewModel.getCorpusByWord(word)
+            binding.btnSave.isVisible = existingCorpus == null
+        }
     }
 
     private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
@@ -196,6 +223,7 @@ class SearchFragment : Fragment() {
                     wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
                 }
 
+                binding.btnSave.visibility = View.GONE
                 binding.itemDetail.contentDetail.visibility = View.GONE
                 searchWord.value = it
             }
