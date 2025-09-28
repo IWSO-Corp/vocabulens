@@ -8,19 +8,19 @@ import com.iwsocorp.vocabnotes.core.model.Example
 @Entity(
     tableName = "examples",
     indices = [
-        Index(value = ["example"], unique = true)
+        Index(value = ["sentence"], unique = true)
     ]
 )
 class ExampleEntity(
     @PrimaryKey val id: String,
-    val example: String,
+    val sentence: String,
     val createdAt: Long,
     val updatedAt: Long,
 )
 
 fun ExampleEntity.asExternalModel() = Example(
     id = id,
-    example = example,
+    sentence = sentence,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

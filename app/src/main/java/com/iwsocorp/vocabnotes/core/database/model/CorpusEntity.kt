@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Meaning
 
 @Entity(
@@ -23,28 +24,24 @@ import com.iwsocorp.vocabnotes.core.model.Meaning
     ]
 )
 data class CorpusEntity(
-    @PrimaryKey val word: String,
+    @PrimaryKey val id: String,
     val noteId: String,
+    val word: String,
     val meaning: String,
     val wordLang: String,
     val meaningLang: String,
     val phonetic: String,
     val audio: String,
     val meaningsJson: String,
-    val mark: Mark = Mark.UNMARKED,
+    val mark: Mark,
     val createdAt: Long,
     val updatedAt: Long,
 )
 
-enum class Mark {
-    UNMARKED,
-    FAMILIAR,
-    UNFAMILIAR
-}
-
 fun CorpusEntity.asExternalModel(): Corpus {
     val meanings = Gson().fromJson(meaningsJson, Array<Meaning>::class.java).toList()
     return Corpus(
+        id = id,
         word = word,
         noteId = noteId,
         meaning = meaning,

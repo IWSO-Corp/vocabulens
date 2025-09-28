@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

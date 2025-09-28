@@ -25,4 +25,5 @@
     <string name="edit">Edit</string>
     <string name="delete_word">Delete word</string>
     <string name="action_sort">Sort</string>
+    <string name="save">Save</string>
 </resources>

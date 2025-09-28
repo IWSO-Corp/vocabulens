@@ -2,25 +2,27 @@ package com.iwsocorp.vocabnotes.core.model
 
 import com.google.gson.Gson
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
-import com.iwsocorp.vocabnotes.core.database.model.Mark
+import java.util.UUID
 
 data class Corpus(
-    val word: String,
     val noteId: String,
+    val word: String,
     val meaning: String,
     val wordLang: String,
     val meaningLang: String,
+    val id: String = UUID.randomUUID().toString(),
     val phonetic: String = "",
     val audio: String = "",
     val meanings: List<Meaning> = emptyList(),
     val mark: Mark = Mark.UNMARKED,
-    val createdAt: Long,
-    val updatedAt: Long
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
 )
 
-fun Corpus.asEntity() : CorpusEntity {
+fun Corpus.asEntity(): CorpusEntity {
     val meaningsJson = Gson().toJson(meanings)
     return CorpusEntity(
+        id = id,
         word = word,
         noteId = noteId,
         meaning = meaning,
@@ -33,4 +35,10 @@ fun Corpus.asEntity() : CorpusEntity {
         createdAt = createdAt,
         updatedAt = updatedAt
     )
+}
+
+enum class Mark {
+    UNMARKED,
+    FAMILIAR,
+    UNFAMILIAR
 }

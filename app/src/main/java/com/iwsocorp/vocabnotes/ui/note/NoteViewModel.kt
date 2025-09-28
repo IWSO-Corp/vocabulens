@@ -9,14 +9,13 @@ import androidx.paging.cachedIn
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -64,13 +63,10 @@ class NoteViewModel @Inject constructor(
             Timber.d("noteId.value: ${noteId.value}")
             if (noteId.value == null) {
                 val newNote = Note(
-                    id = UUID.randomUUID().toString(),
                     title = noteTitle.value ?: "Untitled",
                     wordLang = corpus.wordLang,
                     meaningLang = corpus.meaningLang,
                     contentSize = 1,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
                 )
                 noteRepository.addNote(newNote)
                 _noteId.value = newNote.id
@@ -103,13 +99,10 @@ class NoteViewModel @Inject constructor(
 
         // Buat Note baru
         val note = Note(
-            id = UUID.randomUUID().toString(),
             title = fileName ?: "$wordLang-$meaningLang",
             wordLang = wordLang,
             meaningLang = meaningLang,
             contentSize = corpusBatch.size,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
         )
         noteRepository.addNote(note)
 

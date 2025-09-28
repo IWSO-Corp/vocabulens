@@ -14,16 +14,15 @@ import android.view.MotionEvent
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.text.clearSpans
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.databinding.PopupWordBinding
-import timber.log.Timber
 
 class TextViewGestureHelper(
     context: Context,
     private val currentWord: String,
-    private val isExample: Boolean = false,
     private val onClickListener: (String) -> Unit,
 ) {
 
@@ -131,6 +130,10 @@ class TextViewGestureHelper(
         // Bisa kasih aksi tambahan
         binding.tvSearch.setOnClickListener {
             onClickListener(word)
+            popupWindow.dismiss()
+        }
+        binding.tvTranslate.setOnClickListener {
+            Toast.makeText(textView.context, "Coming soon :)", Toast.LENGTH_SHORT).show()
             popupWindow.dismiss()
         }
 

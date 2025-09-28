@@ -30,10 +30,6 @@ class HomeFragment : Fragment() {
             override fun onClick(pos: Int, noteId: String) {
                 navigate(noteId)
             }
-
-            override fun onLongClick(pos: Int, noteId: String) {
-                noteAdapter.toggleSelection(pos)
-            }
         })
     }
 

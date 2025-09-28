@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.asString
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Note
 import com.iwsocorp.vocabnotes.databinding.ItemNoteBinding
 import com.iwsocorp.vocabnotes.databinding.ItemWordPreviewBinding
@@ -26,28 +26,8 @@ class NoteAdapter(
     private val listener: ClickListener,
 ) : PagingDataAdapter<Note, NoteAdapter.ViewHolder>(DiffCallback()) {
 
-    private val selectionIds = mutableListOf<String>()
-
-    fun getSelectionIds(): List<String> = selectionIds
-
-    fun toggleSelection(pos: Int) {
-        getItem(pos)?.let {
-            if (selectionIds.contains(it.id)) {
-                selectionIds.remove(it.id)
-            } else {
-                selectionIds.add(it.id)
-            }
-        }
-    }
-
-    fun clearSelection() {
-        selectionIds.clear()
-        notifyDataSetChanged()
-    }
-
     interface ClickListener {
         fun onClick(pos: Int, noteId: String)
-        fun onLongClick(pos: Int, noteId: String)
     }
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -77,22 +57,14 @@ class NoteAdapter(
                 }
             }
 
-            itemView.isSelected = selectionIds.contains(note.id)
             itemView.setOnClickListener {
                 listener.onClick(absoluteAdapterPosition, note.id)
-            }
-            if (note.id.isNotEmpty()) {
-                itemView.setOnLongClickListener {
-                    listener.onLongClick(absoluteAdapterPosition, note.id)
-                    true
-                }
             }
 
             rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
             val previewAdapter = PreviewAdapter(
                 noteId = note.id,
                 onClick = { listener.onClick(absoluteAdapterPosition, it) },
-                onLongClick = { listener.onLongClick(absoluteAdapterPosition, it) }
             )
             rvPreview.adapter = previewAdapter
             viewModel.getCorpusByNoteId(note.id) {
@@ -103,10 +75,20 @@ class NoteAdapter(
         private fun ItemNoteBinding.setupMark(note: Note) {
             val iconFam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
             iconFam?.setBounds(0, 0, 48, 48) // width x height dalam px
-            iconFam?.setTint(itemView.context.resources.getColor(R.color.blue, itemView.context.theme))
+            iconFam?.setTint(
+                itemView.context.resources.getColor(
+                    R.color.blue,
+                    itemView.context.theme
+                )
+            )
             val iconUnfam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
             iconUnfam?.setBounds(0, 0, 48, 48) // width x height dalam px
-            iconUnfam?.setTint(itemView.context.resources.getColor(R.color.red, itemView.context.theme))
+            iconUnfam?.setTint(
+                itemView.context.resources.getColor(
+                    R.color.red,
+                    itemView.context.theme
+                )
+            )
 
             tvFamiliar.setCompoundDrawables(iconFam, null, null, null)
             tvUnfamiliar.setCompoundDrawables(iconUnfam, null, null, null)
@@ -166,7 +148,6 @@ class NoteAdapter(
 class PreviewAdapter(
     private val noteId: String,
     private val onClick: (noteId: String) -> Unit,
-    private val onLongClick: (noteId: String) -> Unit,
 ) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DiffCallback()) {
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
@@ -183,10 +164,6 @@ class PreviewAdapter(
             }
             itemView.setOnClickListener {
                 onClick(noteId)
-            }
-            itemView.setOnLongClickListener {
-                onLongClick(noteId)
-                true
             }
         }
     }

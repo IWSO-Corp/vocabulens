@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ExampleDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExampleSentence(exampleEntity: ExampleEntity)
 
-    @Query("SELECT * FROM examples WHERE LOWER(example) LIKE LOWER('%' || :word || '%')")
+    @Query("SELECT * FROM examples WHERE LOWER(sentence) LIKE LOWER('%' || :word || '%')")
     fun getExamplesByWord(word: String): Flow<List<ExampleEntity>>
 
 }

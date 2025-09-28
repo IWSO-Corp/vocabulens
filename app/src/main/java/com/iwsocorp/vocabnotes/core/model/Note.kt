@@ -1,15 +1,16 @@
 package com.iwsocorp.vocabnotes.core.model
 
 import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
+import java.util.UUID
 
 data class Note(
-    val id: String,
+    val id: String = UUID.randomUUID().toString(),
     val title: String,
     val wordLang: String,
     val meaningLang: String,
     val contentSize: Int,
-    val createdAt: Long,
-    val updatedAt: Long
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
 )
 
 fun Note.asEntity() : NoteEntity {

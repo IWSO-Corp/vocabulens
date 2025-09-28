@@ -19,13 +19,12 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/btnFav"
+            android:id="@+id/btn_edit"
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:contentDescription="Fav"
             android:padding="16dp"
-            android:src="@drawable/outline_star_border_24"
-            app:tint="@android:color/white" />
+            android:src="@drawable/baseline_edit_24" />
     </LinearLayout>
 
     <!-- Konten utama -->
@@ -140,8 +139,9 @@
             android:layout_height="24dp"
             android:contentDescription="Mark"
             android:src="@drawable/outline_star_border_24"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_meaning"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/ll_word"/>
+            app:layout_constraintTop_toTopOf="@id/ll_word" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -7,17 +7,19 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
-import com.iwsocorp.vocabnotes.core.database.model.Mark
+import com.iwsocorp.vocabnotes.core.model.Mark
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CorpusDao {
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) 
         FROM corpus 
         WHERE word IN (:words)
-    """)
+    """
+    )
     suspend fun countExisting(words: List<String>): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -66,7 +68,7 @@ interface CorpusDao {
 
 // Extension / Helper function
 suspend fun CorpusDao.insertCorpusListWithResult(
-    corpusList: List<CorpusEntity>
+    corpusList: List<CorpusEntity>,
 ): InsertResult {
     val resultIds = insertCorpusList(corpusList)
     val successCount = resultIds.count { it != -1L }
@@ -77,5 +79,5 @@ suspend fun CorpusDao.insertCorpusListWithResult(
 // Data class untuk menampung hasil
 data class InsertResult(
     val successCount: Int,
-    val failedCount: Int
+    val failedCount: Int,
 )

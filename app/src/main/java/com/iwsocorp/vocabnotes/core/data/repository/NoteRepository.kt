@@ -27,7 +27,7 @@ class NoteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun incrementContentSize(id: String, count: Int) {
-        noteDao.incrementContentSizeAndUpdate(id, count)
+        noteDao.incrementContentSize(id, count)
     }
 
     override suspend fun decrementContentSize(id: String, count: Int) {

@@ -9,16 +9,16 @@ import com.iwsocorp.vocabnotes.core.database.dao.CorpusDao
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
 import com.iwsocorp.vocabnotes.core.database.dao.insertCorpusListWithResult
 import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class CorpusRepositoryImpl @Inject constructor(
-    private val corpusDao: CorpusDao
+    private val corpusDao: CorpusDao,
 ) : CorpusRepository {
 
     override suspend fun addCorpus(corpus: Corpus): Long {

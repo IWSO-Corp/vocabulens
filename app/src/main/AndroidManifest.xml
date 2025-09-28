@@ -20,12 +20,8 @@
         android:theme="@style/Theme.VocabNotes"
         tools:targetApi="31">
         <activity
-            android:name=".ui.detail.DetailActivity"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.VocabNotes.NoActionBar"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

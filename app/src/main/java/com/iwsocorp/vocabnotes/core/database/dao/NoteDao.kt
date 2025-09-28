@@ -4,7 +4,6 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import com.iwsocorp.vocabnotes.core.database.model.NoteEntity
 
@@ -29,14 +28,8 @@ interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY updatedAt DESC")
     suspend fun getNoteList(): List<NoteEntity>
 
-    @Transaction
-    suspend fun incrementContentSizeAndUpdate(noteId: String, count: Int) {
-        incrementContentSize(noteId, count)
-        updateTimestamp(noteId, System.currentTimeMillis())
-    }
-
-    @Query("UPDATE notes SET contentSize = contentSize + :count WHERE id = :noteId")
-    suspend fun incrementContentSize(noteId: String, count: Int)
+    @Query("UPDATE notes SET contentSize = contentSize + :count, updatedAt = :time WHERE id = :noteId")
+    suspend fun incrementContentSize(noteId: String, count: Int, time: Long = System.currentTimeMillis())
 
     @Query("UPDATE notes SET contentSize = contentSize - :count WHERE id = :noteId")
     suspend fun decrementContentSize(noteId: String, count: Int)
