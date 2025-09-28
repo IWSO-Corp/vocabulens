@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.daimajia.swipe.SwipeLayout
 import com.iwsocorp.vocabnotes.R
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.databinding.ItemWordBinding
 import timber.log.Timber
 import java.util.Locale
@@ -27,6 +27,7 @@ class WordAdapter(
         fun onPlay(url: String)
         fun onSelectionChanged(size: Int)
         fun onMark(word: String, mark: Mark)
+        fun onEdit(corpusWord: String)
     }
 
     private val selectedWords = mutableSetOf<String>()
@@ -138,7 +139,8 @@ class WordAdapter(
                 }
             }
 
-            btnFav.setOnClickListener {
+            btnEdit.setOnClickListener {
+                listener.onEdit(corpus.word)
                 swipeLayout.close()
             }
 
@@ -185,6 +187,7 @@ class WordAdapter(
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun toggleSelection(word: String) {
         if (selectedWords.contains(word)) {
             selectedWords.remove(word)

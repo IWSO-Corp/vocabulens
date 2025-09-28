@@ -72,22 +72,29 @@ class DetailViewModel @Inject constructor(
     fun updateCorpusDetail(word: String) = viewModelScope.launch(Dispatchers.IO) {
         val corpus = _corpus.value ?: return@launch
         val vocab = vocabularyRepository.getVocabulary(word)
-        val newCorpus = Corpus(
-            word = corpus.word,
-            noteId = corpus.noteId,
-            meaning = corpus.meaning,
-            wordLang = corpus.wordLang,
-            meaningLang = corpus.meaningLang,
+        val newCorpus = corpus.copy(
             phonetic = vocab.phonetic,
             audio = vocab.audio,
             meanings = vocab.meanings,
-            createdAt = corpus.createdAt,
             updatedAt = System.currentTimeMillis()
         )
         withContext(Dispatchers.Main) {
             _corpus.value = newCorpus
         }
         corpusRepository.updateCorpus(newCorpus)
+    }
+
+    fun updateCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
+        Timber.d("Updating corpus: $corpus")
+        val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
+        if (existingCorpus != null) {
+            callback(-1L)
+            return@launch
+        } else {
+            corpusRepository.updateCorpus(corpus)
+            _corpus.value = corpus
+            callback(1L)
+        }
     }
 
     fun insertExampleSentence(example: Example) = viewModelScope.launch {

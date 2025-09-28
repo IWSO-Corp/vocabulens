@@ -19,8 +19,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import com.iwsocorp.vocabnotes.ui.detail.ARG_FROM
@@ -71,6 +71,15 @@ class SearchFragment : Fragment() {
                         Mark.UNMARKED -> Mark.FAMILIAR
                         Mark.FAMILIAR -> Mark.UNFAMILIAR
                         Mark.UNFAMILIAR -> Mark.UNMARKED
+                    }
+                )
+            }
+
+            override fun onEdit(corpusWord: String) {
+                findNavController().navigate(
+                    R.id.action_searchFragment_to_editDetailFragment,
+                    Bundle().apply {
+                        putString(ARG_CORPUS_WORD, corpusWord)
                     }
                 )
             }

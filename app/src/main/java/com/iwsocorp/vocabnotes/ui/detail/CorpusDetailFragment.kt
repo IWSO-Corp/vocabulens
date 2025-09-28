@@ -2,15 +2,12 @@ package com.iwsocorp.vocabnotes.ui.detail
 
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.view.ActionMode
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -20,6 +17,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vocabnotes.core.common.Utils.isNetworkAvailable
+import com.iwsocorp.vocabnotes.core.common.Utils.setIconColor
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Example
 import com.iwsocorp.vocabnotes.databinding.FragmentCorpusDetailBinding
@@ -29,7 +27,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.UUID
 
 const val ARG_CORPUS_WORD = "corpusWordParam"
 const val ARG_FROM = "fromParam"
@@ -62,7 +59,7 @@ class CorpusDetailFragment : Fragment() {
             viewModel.getCorpus(keyword)
             viewModel.getExamplesByWord(keyword) { list ->
                 if (::adapter.isInitialized) adapter.submitList(
-                    list.map { it.example }.shuffled().take(3)
+                    list.map { it.sentence }.shuffled().take(3)
                 )
             }
         }
@@ -70,7 +67,7 @@ class CorpusDetailFragment : Fragment() {
             corpus?.let {
                 Timber.d(it.toString())
                 if (it.phonetic.isEmpty() && isNetworkAvailable(requireContext())) {
-                    viewModel.updateCorpusDetail(corpusWord)
+                    viewModel.updateCorpusDetail(it.word)
                 } else if (it.phonetic.isEmpty() && !isNetworkAvailable(requireContext())) {
                     Snackbar.make(
                         binding.btnNext,
@@ -90,12 +87,7 @@ class CorpusDetailFragment : Fragment() {
         binding.itemDetail.iconAddExample.setOnClickListener {
             ExampleBottomSheet {
                 viewModel.insertExampleSentence(
-                    Example(
-                        UUID.randomUUID().toString(),
-                        it,
-                        System.currentTimeMillis(),
-                        System.currentTimeMillis()
-                    )
+                    Example(it)
                 )
                 Toast.makeText(requireContext(), "Example added", Toast.LENGTH_SHORT).show()
             }.show(childFragmentManager, null)
@@ -136,6 +128,10 @@ class CorpusDetailFragment : Fragment() {
             setNavigationOnClickListener {
                 onBackPressed(position)
             }
+            setIconColor(requireContext())
+            menu.clear()
+            inflateMenu(R.menu.menu_detail)
+            setOnMenuItemClickListener(menuListener)
         }
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
@@ -173,6 +169,7 @@ class CorpusDetailFragment : Fragment() {
         tvEmpty.isVisible = corpus.meanings.isEmpty()
 
         val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word) {
+            viewModel.resetCorpus()
             lifecycleScope.launch {
                 findNavController().navigate(
                     R.id.action_corpusDetailFragment_to_searchFragment,
@@ -186,6 +183,28 @@ class CorpusDetailFragment : Fragment() {
         rvMeanings.setHasFixedSize(true)
         adapter = ExampleAdapter(gestureHelper)
         binding.itemDetail.rvExample.adapter = adapter
+    }
+
+    private val menuListener = Toolbar.OnMenuItemClickListener { item ->
+        when (item.itemId) {
+            R.id.action_mark -> {
+
+            }
+
+            R.id.action_edit -> {
+                findNavController().navigate(
+                    R.id.action_corpusDetailFragment_to_editDetailFragment,
+                    Bundle().apply {
+                        putString(ARG_CORPUS_WORD, viewModel.corpusWord.value)
+                    }
+                )
+            }
+
+            R.id.action_delete_word -> {
+
+            }
+        }
+        true
     }
 
     private var mediaPlayer: MediaPlayer? = null

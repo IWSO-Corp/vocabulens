@@ -25,8 +25,8 @@ import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.Utils.setIconColor
 import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vocabnotes.core.common.Utils.showPopupMenu
-import com.iwsocorp.vocabnotes.core.database.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Corpus
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
@@ -85,6 +85,15 @@ class NoteFragment() : Fragment() {
                         Mark.UNMARKED -> Mark.FAMILIAR
                         Mark.FAMILIAR -> Mark.UNFAMILIAR
                         Mark.UNFAMILIAR -> Mark.UNMARKED
+                    }
+                )
+            }
+
+            override fun onEdit(corpusWord: String) {
+                findNavController().navigate(
+                    R.id.action_noteFragment_to_editDetailFragment,
+                    Bundle().apply {
+                        putString(ARG_CORPUS_WORD, corpusWord)
                     }
                 )
             }
@@ -407,8 +416,8 @@ class NoteFragment() : Fragment() {
         viewModel.updateNoteTitle(binding.tvToolbarTitle.text.toString())
         val worldLang = binding.tvWordLang.text.toString()
         val meaningLang = binding.tvMeaningLang.text.toString()
-        val word = binding.edWord.text.toString().trim()
-        val meaning = binding.edMeaning.text.toString().trim()
+        val word = binding.edWord.text.toString().lowercase().trim()
+        val meaning = binding.edMeaning.text.toString().lowercase().trim()
         if (word.isEmpty() || meaning.isEmpty()) return
 
         val corpus = Corpus(
