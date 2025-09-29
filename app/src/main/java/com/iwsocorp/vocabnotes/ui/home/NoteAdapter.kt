@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class NoteAdapter(
     private val viewModel: HomeViewModel,
@@ -50,8 +51,9 @@ class NoteAdapter(
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
                     viewModel.allCorpus.collectLatest {
+                        Timber.d("All corpus: ${it.size}")
                         withContext(Dispatchers.Main) {
-                            tvWordCount.isVisible = it.isEmpty()
+                            tvWordCount.isVisible = it.isNotEmpty()
                             tvWordCount.text =
                                 itemView.context.getString(R.string.word_amount, it.size)
                         }

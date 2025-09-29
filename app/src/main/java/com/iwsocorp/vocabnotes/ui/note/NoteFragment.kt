@@ -11,11 +11,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
@@ -48,7 +49,7 @@ class NoteFragment() : Fragment() {
     private var mediaPlayer: MediaPlayer? = null
     private var _binding: FragmentNoteBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: NoteViewModel by viewModels()
+    private val viewModel: NoteViewModel by activityViewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(true, object : WordAdapter.ClickListener {
@@ -132,6 +133,8 @@ class NoteFragment() : Fragment() {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
+        setupUI(argNoteId)
+
         lifecycleScope.launch {
             viewModel.pagedCorpus.collectLatest { corpusPagingData ->
                 wordAdapter.submitData(corpusPagingData)
@@ -139,7 +142,14 @@ class NoteFragment() : Fragment() {
         }
         viewModel.noteId.observe(viewLifecycleOwner) { id ->
             id?.let {
-                viewModel.setMark(it, null)
+                val savedState =
+                    viewModel.savedStateHandle.get<CorpusQueryState>(NoteViewModel.QUERY_KEY)
+                viewModel.setMark(it, savedState?.mark)
+                viewModel.setSort(
+                    it,
+                    savedState?.sortBy ?: SortBy.WORD,
+                    savedState?.sortOrder ?: SortOrder.ASC
+                )
             }
             binding.iconSwitch.isVisible = id == null
         }
@@ -161,7 +171,6 @@ class NoteFragment() : Fragment() {
             }
         }
 
-        setupUI(argNoteId)
     }
 
     private fun setupUI(argNoteId: String?) = with(binding) {
@@ -364,8 +373,31 @@ class NoteFragment() : Fragment() {
             if (loadStates.refresh is LoadState.NotLoading) binding.rvCorpus.scrollToPosition(0)
         }
         lifecycleScope.launch {
-            viewModel.queryState.collect {
-                binding.svAlphabet.isVisible = it.sortBy == SortBy.WORD
+            viewModel.queryState.collect { state ->
+                binding.svAlphabet.isVisible = state.sortBy == SortBy.WORD
+
+                val menuFilter = binding.toolbarNote.menu.findItem(R.id.action_filter)
+                menuFilter.setIcon(
+                    if (state.mark == Mark.FAMILIAR || state.mark == Mark.UNFAMILIAR) {
+                        R.drawable.baseline_filter_alt_24
+                    } else {
+                        R.drawable.outline_filter_alt_24
+                    }
+                )
+                val drawable = menuFilter.icon
+                drawable?.let {
+                    DrawableCompat.setTint(
+                        it,
+                        ContextCompat.getColor(
+                            requireContext(),
+                            when (state.mark) {
+                                Mark.FAMILIAR -> R.color.blue
+                                Mark.UNFAMILIAR -> R.color.red
+                                else -> R.color.black
+                            }
+                        )
+                    )
+                }
             }
         }
     }

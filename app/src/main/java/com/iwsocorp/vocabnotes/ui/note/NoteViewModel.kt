@@ -1,7 +1,9 @@
 package com.iwsocorp.vocabnotes.ui.note
 
+import android.os.Parcelable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -18,12 +20,11 @@ import com.iwsocorp.vocabnotes.core.model.SortOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -31,9 +32,10 @@ import javax.inject.Inject
 class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
+    val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _queryState = MutableStateFlow(CorpusQueryState())
+    private val _queryState = savedStateHandle.getStateFlow(QUERY_KEY, CorpusQueryState())
     val queryState: StateFlow<CorpusQueryState> = _queryState
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -52,12 +54,17 @@ class NoteViewModel @Inject constructor(
         }
     }.cachedIn(viewModelScope)
 
-    fun setMark(noteId: String, mark: Mark?) = _queryState.update {
-        it.copy(noteId = noteId, mark = mark)
+    fun setMark(noteId: String, mark: Mark?) {
+        savedStateHandle[QUERY_KEY] = _queryState.value.copy(noteId = noteId, mark = mark)
     }
 
-    fun setSort(noteId: String, sortBy: SortBy, sortOrder: SortOrder) = _queryState.update {
-        it.copy(noteId = noteId, sortBy = sortBy, sortOrder = sortOrder)
+    fun setSort(noteId: String, sortBy: SortBy, sortOrder: SortOrder) {
+        savedStateHandle[QUERY_KEY] =
+            _queryState.value.copy(noteId = noteId, sortBy = sortBy, sortOrder = sortOrder)
+    }
+
+    private fun saveState() {
+        savedStateHandle[QUERY_KEY] = _queryState.value
     }
 
     private val _notes = MutableLiveData<List<Note>>()
@@ -167,15 +174,20 @@ class NoteViewModel @Inject constructor(
         corpusRepository.updateCorpusMark(corpusWords, newMark)
     }
 
+    companion object {
+        const val QUERY_KEY = "query_state"
+    }
+
     init {
         getNotes()
     }
 
 }
 
+@Parcelize
 data class CorpusQueryState(
     val noteId: String = "-",
     val mark: Mark? = null,
     val sortBy: SortBy = SortBy.WORD,
     val sortOrder: SortOrder = SortOrder.ASC,
-)
+) : Parcelable

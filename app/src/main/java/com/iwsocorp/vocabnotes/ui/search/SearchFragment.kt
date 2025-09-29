@@ -45,7 +45,7 @@ class SearchFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: SearchViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
-    private val noteViewModel: NoteViewModel by viewModels()
+    private val noteViewModel: NoteViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
