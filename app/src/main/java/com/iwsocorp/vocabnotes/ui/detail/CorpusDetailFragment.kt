@@ -21,11 +21,14 @@ import com.iwsocorp.vocabnotes.core.common.Utils.setIconColor
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Example
 import com.iwsocorp.vocabnotes.databinding.FragmentCorpusDetailBinding
+import com.iwsocorp.vocabnotes.ui.home.HomeViewModel
 import com.iwsocorp.vocabnotes.ui.note.ARG_POSITION
 import com.iwsocorp.vocabnotes.ui.search.ARG_SEARCH_WORD
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_CORPUS_WORD = "corpusWordParam"
@@ -37,6 +40,7 @@ class CorpusDetailFragment : Fragment() {
     private var _binding: FragmentCorpusDetailBinding? = null
     private val binding get() = _binding!!
     private val viewModel: DetailViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private val corpusWord: String by lazy {
         arguments?.getString(ARG_CORPUS_WORD)!!
     }
@@ -58,9 +62,31 @@ class CorpusDetailFragment : Fragment() {
         viewModel.corpusWord.observe(viewLifecycleOwner) { keyword ->
             viewModel.getCorpus(keyword)
             viewModel.getExamplesByWord(keyword) { list ->
-                if (::adapter.isInitialized) adapter.submitList(
+                if (::adapter.isInitialized) adapter.addItems(
                     list.map { it.sentence }.shuffled().take(3)
                 )
+            }
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                homeViewModel.allCorpus.collectLatest { list ->
+                    val examples = mutableListOf<String>()
+                    list.map { corpus ->
+                        corpus.meanings.map { meaning ->
+                            meaning.definitions.map { definition ->
+                                definition.example?.let { sentence ->
+                                    if (sentence.isNotEmpty()) examples.add(sentence)
+                                }
+                            }
+                        }
+                    }
+                    Timber.d("Examples: $examples")
+                    val filteredExamples = examples.toList().filter {
+                        containsWordRegex(it, keyword)
+                    }.shuffled().take(3)
+                    withContext(Dispatchers.Main) {
+                        if (::adapter.isInitialized) adapter.addItems(filteredExamples)
+                    }
+                }
             }
         }
         viewModel.corpus.observe(viewLifecycleOwner) { corpus ->
@@ -92,6 +118,11 @@ class CorpusDetailFragment : Fragment() {
                 Toast.makeText(requireContext(), "Example added", Toast.LENGTH_SHORT).show()
             }.show(childFragmentManager, null)
         }
+    }
+
+    fun containsWordRegex(sentence: String, word: String): Boolean {
+        val pattern = "\\b${Regex.escape(word)}\\b".toRegex(RegexOption.IGNORE_CASE)
+        return pattern.containsMatchIn(sentence)
     }
 
     private fun setupNavigation(pos: Int, list: List<String>) {
@@ -181,7 +212,7 @@ class CorpusDetailFragment : Fragment() {
         }
         rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
         rvMeanings.setHasFixedSize(true)
-        adapter = ExampleAdapter(gestureHelper)
+        adapter = ExampleAdapter(corpus.word, gestureHelper)
         binding.itemDetail.rvExample.adapter = adapter
     }
 
@@ -210,27 +241,23 @@ class CorpusDetailFragment : Fragment() {
     private var mediaPlayer: MediaPlayer? = null
 
     private fun playAudio(url: String) {
-        mediaPlayer?.release()
-        if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(url)
-                prepareAsync()
-                setOnPreparedListener {
-                    start()
-                    Timber.d("Audio started playing")
-                }
-                setOnCompletionListener {
-                    resetMediaPlayer()
-                    Timber.d("Audio finished playing")
-                }
-                setOnErrorListener { _, what, extra ->
-                    resetMediaPlayer()
-                    Timber.e("Error occurred while playing audio: what=$what, extra=$extra")
-                    true
-                }
+        resetMediaPlayer()
+        mediaPlayer = MediaPlayer().apply {
+            setDataSource(url)
+            prepareAsync()
+            setOnPreparedListener {
+                start()
+                Timber.d("Audio started playing")
             }
-        } else {
-            mediaPlayer?.start()
+            setOnCompletionListener {
+                resetMediaPlayer()
+                Timber.d("Audio finished playing")
+            }
+            setOnErrorListener { _, what, extra ->
+                resetMediaPlayer()
+                Timber.e("Error occurred while playing audio: what=$what, extra=$extra")
+                true
+            }
         }
     }
 

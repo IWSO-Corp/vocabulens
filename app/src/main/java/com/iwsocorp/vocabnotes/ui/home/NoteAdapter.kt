@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -48,10 +49,11 @@ class NoteAdapter(
                 if (note.contentSize > 0) setupMark(note)
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
-                    viewModel.allCorpusSize().collectLatest {
+                    viewModel.allCorpus.collectLatest {
                         withContext(Dispatchers.Main) {
-                            tvWordCount.visibility = if (it == 0) View.GONE else View.VISIBLE
-                            tvWordCount.text = itemView.context.getString(R.string.word_amount, it)
+                            tvWordCount.isVisible = it.isEmpty()
+                            tvWordCount.text =
+                                itemView.context.getString(R.string.word_amount, it.size)
                         }
                     }
                 }

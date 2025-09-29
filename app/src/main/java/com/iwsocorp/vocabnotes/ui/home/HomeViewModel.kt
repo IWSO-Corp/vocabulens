@@ -10,9 +10,12 @@ import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,7 +26,16 @@ class HomeViewModel @Inject constructor(
 
     fun getAllNotes(): Flow<PagingData<Note>> = noteRepository.getNotes().cachedIn(viewModelScope)
 
-    fun allCorpusSize(): Flow<Int> = corpusRepository.allCorpusSize()
+    private val _allCorpus = MutableStateFlow<List<Corpus>>(emptyList())
+    val allCorpus = _allCorpus
+
+    fun allCorpus() = viewModelScope.launch(Dispatchers.IO) {
+        corpusRepository.allCorpus().collect {
+            withContext(Dispatchers.Main) {
+                _allCorpus.value = it
+            }
+        }
+    }
 
     fun getCorpusByNoteId(noteId: String, callback: (List<Corpus>) -> Unit) =
         viewModelScope.launch {
@@ -40,4 +52,7 @@ class HomeViewModel @Inject constructor(
         emit(corpusRepository.countMark(noteId, mark))
     }
 
+    init {
+        allCorpus()
+    }
 }

@@ -1,5 +1,9 @@
 package com.iwsocorp.vocabnotes.ui.detail
 
+import android.graphics.Typeface
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +15,7 @@ import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vocabnotes.databinding.ItemExampleBinding
 
 class ExampleAdapter(
+    private val corpusWord: String,
     private val gestureHelper: TextViewGestureHelper
 ) : ListAdapter<String, ExampleAdapter.ViewHolder>(DIFF_CALLBACK) {
 
@@ -36,11 +41,35 @@ class ExampleAdapter(
 
         fun bind(example: String, position: Int) = with(binding) {
             tvNumber.text = (position + 1).toString()
-            tvExample.text = example
+            tvExample.text = boldWordInSentence(example, corpusWord)
 
             gestureHelper.attachTo(tvExample)
         }
+
+        fun boldWordInSentence(sentence: String, word: String): SpannableString {
+            val spannable = SpannableString(sentence)
+            val start = sentence.indexOf(word, ignoreCase = true)
+
+            if (start >= 0) {
+                val end = start + word.length
+                spannable.setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    start,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+
+            return spannable
+        }
     }
+
+    fun addItems(newItems: List<String>) {
+        val currentList = ArrayList(currentList) // copy dari ListAdapter
+        currentList.addAll(newItems)
+        submitList(currentList)
+    }
+
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<String>() {
