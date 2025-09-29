@@ -17,6 +17,7 @@ data class Corpus(
     val mark: Mark = Mark.UNMARKED,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
+    val indexNumber: Int = 0,
 )
 
 fun Corpus.asEntity(): CorpusEntity {

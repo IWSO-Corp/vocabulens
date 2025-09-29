@@ -13,13 +13,26 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CorpusDao {
 
-    @Query(
-        """
-        SELECT COUNT(*) 
-        FROM corpus 
-        WHERE word IN (:words)
-    """
-    )
+    @Query("""
+        SELECT * FROM corpus
+        WHERE (:noteId = '' OR noteId = :noteId)
+        AND (:mark IS NULL OR mark = :mark)
+        ORDER BY 
+            CASE WHEN :sortBy = 'createdAt' AND :sortOrder = 'ASC' THEN createdAt END ASC,
+            CASE WHEN :sortBy = 'createdAt' AND :sortOrder = 'DESC' THEN createdAt END DESC,
+            CASE WHEN :sortBy = 'updatedAt' AND :sortOrder = 'ASC' THEN updatedAt END ASC,
+            CASE WHEN :sortBy = 'updatedAt' AND :sortOrder = 'DESC' THEN updatedAt END DESC,
+            CASE WHEN :sortBy = 'word' AND :sortOrder = 'ASC' THEN word END ASC,
+            CASE WHEN :sortBy = 'word' AND :sortOrder = 'DESC' THEN word END DESC
+    """)
+    fun getPagedCorpus(
+        noteId: String,
+        mark: Mark?,
+        sortBy: String,
+        sortOrder: String
+    ): PagingSource<Int, CorpusEntity>
+
+    @Query("SELECT COUNT(*) FROM corpus WHERE word IN (:words)")
     suspend fun countExisting(words: List<String>): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -43,8 +56,8 @@ interface CorpusDao {
     @Query("SELECT * FROM corpus ORDER BY word ASC")
     fun getAllCorpus(): PagingSource<Int, CorpusEntity>
 
-    @Query("SELECT COUNT(*) FROM corpus")
-    fun allCorpusSize(): Flow<Int>
+    @Query("SELECT * FROM corpus")
+    fun allCorpus(): Flow<List<CorpusEntity>>
 
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
     fun getLatestCorpus(noteId: String): Flow<List<CorpusEntity>>
@@ -66,7 +79,6 @@ interface CorpusDao {
 
 }
 
-// Extension / Helper function
 suspend fun CorpusDao.insertCorpusListWithResult(
     corpusList: List<CorpusEntity>,
 ): InsertResult {
@@ -76,7 +88,6 @@ suspend fun CorpusDao.insertCorpusListWithResult(
     return InsertResult(successCount, failedCount)
 }
 
-// Data class untuk menampung hasil
 data class InsertResult(
     val successCount: Int,
     val failedCount: Int,

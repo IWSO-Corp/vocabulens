@@ -39,7 +39,7 @@ class WordAdapter(
         private var openedSwipe: SwipeLayout? = null
 
         fun bind(corpus: Corpus, position: Int) = with(binding) {
-            tvNumber.text = String.format(Locale.US, "%d", position + 1)
+            tvNumber.text = String.format(Locale.US, "%d", corpus.indexNumber)
             tvWord.text = corpus.word
             tvMeaning.text = corpus.meaning.ifEmpty { "-" }
             tvPos.text = corpus.meanings.takeIf { it.isNotEmpty() }?.first()?.partOfSpeech

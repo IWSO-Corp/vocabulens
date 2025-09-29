@@ -12,6 +12,8 @@ import com.iwsocorp.vocabnotes.core.database.model.CorpusEntity
 import com.iwsocorp.vocabnotes.core.database.model.asExternalModel
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Mark
+import com.iwsocorp.vocabnotes.core.model.SortBy
+import com.iwsocorp.vocabnotes.core.model.SortOrder
 import com.iwsocorp.vocabnotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -53,8 +55,19 @@ class CorpusRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun allCorpusSize(): Flow<Int> {
-        return corpusDao.allCorpusSize()
+    override fun getPagedCorpus(
+        noteId: String,
+        mark: Mark?,
+        sortBy: SortBy,
+        sortOrder: SortOrder,
+    ): Flow<PagingData<Corpus>> {
+        return createPager {
+            corpusDao.getPagedCorpus(noteId, mark, sortBy.column, sortOrder.value)
+        }
+    }
+
+    override fun allCorpus(): Flow<List<Corpus>> {
+        return corpusDao.allCorpus().map { list -> list.map { it.asExternalModel() } }
     }
 
     override fun getLatestCorpus(noteId: String): Flow<List<Corpus>> {
@@ -126,7 +139,13 @@ interface CorpusRepository {
     suspend fun getCorpusByWord(word: String): Corpus?
     fun searchCorpus(query: String): Flow<PagingData<Corpus>>
     fun getAllCorpus(): Flow<PagingData<Corpus>>
-    fun allCorpusSize(): Flow<Int>
+    fun getPagedCorpus(
+        noteId: String,
+        mark: Mark?,
+        sortBy: SortBy,
+        sortOrder: SortOrder,
+    ): Flow<PagingData<Corpus>>
+    fun allCorpus(): Flow<List<Corpus>>
     fun getLatestCorpus(noteId: String): Flow<List<Corpus>>
     fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>>
     suspend fun deleteCorpusByNoteId(noteId: String)

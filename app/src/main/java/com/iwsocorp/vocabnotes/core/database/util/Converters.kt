@@ -3,9 +3,16 @@ package com.iwsocorp.vocabnotes.core.database.util
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Meaning
 
 class Converters {
+
+    @TypeConverter
+    fun fromMark(mark: Mark): String = mark.name
+
+    @TypeConverter
+    fun toMark(value: String): Mark = Mark.valueOf(value)
 
     @TypeConverter
     fun fromStringList(value: String): List<String> {

@@ -26,4 +26,5 @@
     <string name="delete_word">Delete word</string>
     <string name="action_sort">Sort</string>
     <string name="save">Save</string>
+    <string name="action_filter">Filter</string>
 </resources>

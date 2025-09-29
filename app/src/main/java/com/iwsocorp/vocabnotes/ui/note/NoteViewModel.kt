@@ -6,14 +6,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.map
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Mark
 import com.iwsocorp.vocabnotes.core.model.Note
+import com.iwsocorp.vocabnotes.core.model.SortBy
+import com.iwsocorp.vocabnotes.core.model.SortOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -23,6 +32,33 @@ class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
 ) : ViewModel() {
+
+    private val _queryState = MutableStateFlow(CorpusQueryState())
+    val queryState: StateFlow<CorpusQueryState> = _queryState
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val pagedCorpus: Flow<PagingData<Corpus>> = _queryState.flatMapLatest { state ->
+        corpusRepository.getPagedCorpus(
+            state.noteId,
+            state.mark,
+            state.sortBy,
+            state.sortOrder
+        ).map { pagingData ->
+            var counter = 0
+            pagingData.map { entity ->
+                counter++
+                entity.copy(indexNumber = counter)
+            }
+        }
+    }.cachedIn(viewModelScope)
+
+    fun setMark(noteId: String, mark: Mark?) = _queryState.update {
+        it.copy(noteId = noteId, mark = mark)
+    }
+
+    fun setSort(noteId: String, sortBy: SortBy, sortOrder: SortOrder) = _queryState.update {
+        it.copy(noteId = noteId, sortBy = sortBy, sortOrder = sortOrder)
+    }
 
     private val _notes = MutableLiveData<List<Note>>()
     val notes: LiveData<List<Note>> get() = _notes
@@ -49,9 +85,6 @@ class NoteViewModel @Inject constructor(
     fun getNote(noteId: String) = viewModelScope.launch {
         _note.value = noteRepository.getNoteById(noteId)
     }
-
-    fun getCorpusPagingDataFlow(noteId: String): Flow<PagingData<Corpus>> =
-        corpusRepository.getCorpusByNoteId(noteId).cachedIn(viewModelScope)
 
     fun insertCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
         val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
@@ -115,8 +148,6 @@ class NoteViewModel @Inject constructor(
         noteRepository.updateNote(note)
     }
 
-    fun getAllCorpus(): Flow<PagingData<Corpus>> = corpusRepository.getAllCorpus()
-
     fun deleteNote(noteId: String) = viewModelScope.launch {
         noteRepository.deleteNote(noteId)
     }
@@ -141,3 +172,10 @@ class NoteViewModel @Inject constructor(
     }
 
 }
+
+data class CorpusQueryState(
+    val noteId: String = "-",
+    val mark: Mark? = null,
+    val sortBy: SortBy = SortBy.WORD,
+    val sortOrder: SortOrder = SortOrder.ASC,
+)

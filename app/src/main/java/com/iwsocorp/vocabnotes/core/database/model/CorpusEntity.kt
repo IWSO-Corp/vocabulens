@@ -41,17 +41,17 @@ data class CorpusEntity(
 fun CorpusEntity.asExternalModel(): Corpus {
     val meanings = Gson().fromJson(meaningsJson, Array<Meaning>::class.java).toList()
     return Corpus(
-        id = id,
-        word = word,
         noteId = noteId,
+        word = word,
         meaning = meaning,
         wordLang = wordLang,
         meaningLang = meaningLang,
+        id = id,
         phonetic = phonetic,
         audio = audio,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
         meanings = meanings,
         mark = mark,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
 }

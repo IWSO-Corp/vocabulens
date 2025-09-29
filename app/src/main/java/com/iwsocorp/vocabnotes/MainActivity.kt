@@ -146,13 +146,11 @@ class MainActivity : AppCompatActivity() {
                 val meaning = row.getCell(3).stringCellValue
 
                 val corpus = Corpus(
-                    word = word,
                     noteId = "",
+                    word = word,
                     meaning = meaning,
                     wordLang = worldLang,
                     meaningLang = meaningLang,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
                 )
 
                 corpusList.add(corpus)

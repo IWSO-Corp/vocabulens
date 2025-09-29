@@ -27,6 +27,8 @@ import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vocabnotes.core.common.Utils.showPopupMenu
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.core.model.Mark
+import com.iwsocorp.vocabnotes.core.model.SortBy
+import com.iwsocorp.vocabnotes.core.model.SortOrder
 import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
 import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
@@ -35,7 +37,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_NOTE_ID = "noteIdParam"
@@ -131,31 +132,20 @@ class NoteFragment() : Fragment() {
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
-        viewModel.noteId.observe(viewLifecycleOwner) {
-            it?.let { noteId ->
-                lifecycleScope.launch(Dispatchers.IO) {
-                    if (noteId.isNotEmpty()) {
-                        viewModel.getCorpusPagingDataFlow(noteId)
-                            .collectLatest { corpusPagingData ->
-                                withContext(Dispatchers.Main) {
-                                    wordAdapter.submitData(corpusPagingData)
-                                }
-                            }
-                    } else {
-                        viewModel.getAllCorpus()
-                            .collectLatest { corpusPagingData ->
-                                withContext(Dispatchers.Main) {
-                                    wordAdapter.submitData(corpusPagingData)
-                                }
-                            }
-                    }
-                }
+        lifecycleScope.launch {
+            viewModel.pagedCorpus.collectLatest { corpusPagingData ->
+                wordAdapter.submitData(corpusPagingData)
             }
-            binding.iconSwitch.isVisible = it == null
+        }
+        viewModel.noteId.observe(viewLifecycleOwner) { id ->
+            id?.let {
+                viewModel.setMark(it, null)
+            }
+            binding.iconSwitch.isVisible = id == null
         }
 
         lifecycleScope.launch {
-            wordAdapter.loadStateFlow.collectLatest { loadStates ->
+            wordAdapter.loadStateFlow.collectLatest {
                 val alphabetSet = extractAvailableLettersFromLoadedPages()
                 populateAlphabetSidebar(alphabetSet)
                 updateUI()
@@ -252,6 +242,38 @@ class NoteFragment() : Fragment() {
         val selectedItems = wordAdapter.getSelectedItems()
 
         when (item.itemId) {
+            R.id.action_filter -> {
+                fun onFilter(mark: Mark?) = viewModel.setMark(viewModel.noteId.value!!, mark)
+
+                showPopupMenu(
+                    requireContext(),
+                    binding.toolbarNote.findViewById(R.id.action_filter),
+                    listOf(
+                        "Familiar" to { onFilter(Mark.FAMILIAR) },
+                        "Unfamiliar" to { onFilter(Mark.UNFAMILIAR) },
+                        "Unmarked" to { onFilter(Mark.UNMARKED) },
+                        "Clear Filter" to { onFilter(null) }
+                    )
+                )
+            }
+
+            R.id.action_sort -> {
+                fun onSort(sortBy: SortBy) = viewModel.setSort(
+                    viewModel.noteId.value!!,
+                    sortBy,
+                    if (sortBy == SortBy.WORD) SortOrder.ASC else SortOrder.DESC
+                )
+
+                showPopupMenu(
+                    requireContext(),
+                    binding.toolbarNote.findViewById(R.id.action_sort),
+                    listOf(
+                        "Sort Alphabetically" to { onSort(SortBy.WORD) },
+                        "Sort By Time" to { onSort(SortBy.UPDATED_AT) }
+                    )
+                )
+            }
+
             R.id.action_move -> {
                 viewModel.notes.observe(viewLifecycleOwner) { list ->
                     val bottomSheet = NoteBottomSheet(list.filter {
@@ -286,7 +308,7 @@ class NoteFragment() : Fragment() {
 
                 showPopupMenu(
                     requireContext(),
-                    binding.toolbarNote.findViewById<View>(R.id.action_mark),
+                    binding.toolbarNote.findViewById(R.id.action_mark),
                     listOf(
                         "Familiar" to { markWords(Mark.FAMILIAR) },
                         "Unfamiliar" to { markWords(Mark.UNFAMILIAR) },
@@ -332,12 +354,18 @@ class NoteFragment() : Fragment() {
     }
 
     private fun updateUI() {
-        wordAdapter.addLoadStateListener {
-            val isLoading = it.source.refresh is LoadState.Loading
+        wordAdapter.addLoadStateListener { loadStates ->
+            val isLoading = loadStates.source.refresh is LoadState.Loading
             _binding?.let {
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
                 binding.tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
                 binding.rvCorpus.addOnScrollListener(scrollListener)
+            }
+            if (loadStates.refresh is LoadState.NotLoading) binding.rvCorpus.scrollToPosition(0)
+        }
+        lifecycleScope.launch {
+            viewModel.queryState.collect {
+                binding.svAlphabet.isVisible = it.sortBy == SortBy.WORD
             }
         }
     }
@@ -430,13 +458,11 @@ class NoteFragment() : Fragment() {
         if (word.isEmpty() || meaning.isEmpty()) return
 
         val corpus = Corpus(
-            word = word,
             noteId = viewModel.noteId.value ?: "",
+            word = word,
             meaning = meaning,
             wordLang = worldLang,
             meaningLang = meaningLang,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
         )
 
         viewModel.insertCorpus(corpus) {

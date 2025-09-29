@@ -17,6 +17,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.LoadState
 import androidx.paging.PagingData
 import com.iwsocorp.vocabnotes.R
 import com.iwsocorp.vocabnotes.core.common.TextViewGestureHelper
@@ -125,6 +126,9 @@ class SearchFragment : Fragment() {
             it?.let { corpus ->
                 setupUI(corpus)
             }
+        }
+        wordAdapter.addLoadStateListener {
+            if (it.refresh is LoadState.NotLoading) binding.rvSearch.scrollToPosition(0)
         }
 
         val searchIcon: ImageView =
