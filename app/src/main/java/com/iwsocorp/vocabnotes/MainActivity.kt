@@ -1,5 +1,6 @@
 package com.iwsocorp.vocabnotes
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -24,6 +25,8 @@ import com.google.android.material.navigation.NavigationView
 import com.iwsocorp.vocabnotes.core.model.Corpus
 import com.iwsocorp.vocabnotes.databinding.ActivityMainBinding
 import com.iwsocorp.vocabnotes.ui.note.NoteViewModel
+import com.iwsocorp.vocabnotes.ui.widget.OPEN_FRAGMENT
+import com.iwsocorp.vocabnotes.ui.widget.SEARCH
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -100,6 +103,12 @@ class MainActivity : AppCompatActivity() {
                     supportActionBar?.hide()
                 }
             }
+        }
+
+        // Cek apakah ada instruksi dari widget
+        val openFragment = intent.getStringExtra(OPEN_FRAGMENT)
+        if (openFragment == SEARCH) {
+            navController.navigate(R.id.searchFragment)
         }
     }
 
@@ -218,6 +227,16 @@ class MainActivity : AppCompatActivity() {
 //            currentFocus!!.clearFocus()
 //        }
         return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // agar selalu baca intent baru
+
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) {
+            navController.navigate(R.id.searchFragment)
+        }
     }
 
 }
