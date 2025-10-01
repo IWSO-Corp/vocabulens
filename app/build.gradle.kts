@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.poi.ooxml)
     implementation(libs.library)
     implementation(libs.vbpd)
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.room.ktx)
     implementation(libs.room.paging)

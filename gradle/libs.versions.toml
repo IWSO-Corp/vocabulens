@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.2"
+datastorePreferences = "1.1.7"
 gsonVersion = "2.11.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
@@ -30,6 +31,7 @@ vbpd = "2.0.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

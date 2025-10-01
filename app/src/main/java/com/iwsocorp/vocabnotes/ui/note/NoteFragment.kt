@@ -135,21 +135,14 @@ class NoteFragment() : Fragment() {
 
         setupUI(argNoteId)
 
-        lifecycleScope.launch {
-            viewModel.pagedCorpus.collectLatest { corpusPagingData ->
-                wordAdapter.submitData(corpusPagingData)
-            }
-        }
         viewModel.noteId.observe(viewLifecycleOwner) { id ->
-            id?.let {
-                val savedState =
-                    viewModel.savedStateHandle.get<CorpusQueryState>(NoteViewModel.QUERY_KEY)
-                viewModel.setMark(it, savedState?.mark)
-                viewModel.setSort(
-                    it,
-                    savedState?.sortBy ?: SortBy.WORD,
-                    savedState?.sortOrder ?: SortOrder.ASC
-                )
+            id?.let { noteId ->
+                lifecycleScope.launch {
+                    viewModel.getPagedCorpus(noteId).collectLatest { corpusPagingData ->
+                        Timber.d("corpusPagingData: $corpusPagingData")
+                        wordAdapter.submitData(corpusPagingData)
+                    }
+                }
             }
             binding.iconSwitch.isVisible = id == null
         }
@@ -252,7 +245,7 @@ class NoteFragment() : Fragment() {
 
         when (item.itemId) {
             R.id.action_filter -> {
-                fun onFilter(mark: Mark?) = viewModel.setMark(viewModel.noteId.value!!, mark)
+                fun onFilter(mark: Mark?) = viewModel.setFilter(mark)
 
                 showPopupMenu(
                     requireContext(),
@@ -268,7 +261,6 @@ class NoteFragment() : Fragment() {
 
             R.id.action_sort -> {
                 fun onSort(sortBy: SortBy) = viewModel.setSort(
-                    viewModel.noteId.value!!,
                     sortBy,
                     if (sortBy == SortBy.WORD) SortOrder.ASC else SortOrder.DESC
                 )
@@ -374,11 +366,12 @@ class NoteFragment() : Fragment() {
         }
         lifecycleScope.launch {
             viewModel.queryState.collect { state ->
+                Timber.d("queryState: $state")
                 binding.svAlphabet.isVisible = state.sortBy == SortBy.WORD
 
                 val menuFilter = binding.toolbarNote.menu.findItem(R.id.action_filter)
                 menuFilter.setIcon(
-                    if (state.mark == Mark.FAMILIAR || state.mark == Mark.UNFAMILIAR) {
+                    if (state.mark != null) {
                         R.drawable.baseline_filter_alt_24
                     } else {
                         R.drawable.outline_filter_alt_24

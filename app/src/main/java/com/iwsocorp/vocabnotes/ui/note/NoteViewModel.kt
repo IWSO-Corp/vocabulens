@@ -3,12 +3,12 @@ package com.iwsocorp.vocabnotes.ui.note
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import com.iwsocorp.vocabnotes.core.common.CorpusQueryStateDataStore
 import com.iwsocorp.vocabnotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vocabnotes.core.data.repository.NoteRepository
 import com.iwsocorp.vocabnotes.core.database.dao.InsertResult
@@ -20,9 +20,11 @@ import com.iwsocorp.vocabnotes.core.model.SortOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import timber.log.Timber
@@ -32,16 +34,26 @@ import javax.inject.Inject
 class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
-    val savedStateHandle: SavedStateHandle,
+    private val queryStore: CorpusQueryStateDataStore,
 ) : ViewModel() {
 
-    private val _queryState = savedStateHandle.getStateFlow(QUERY_KEY, CorpusQueryState())
-    val queryState: StateFlow<CorpusQueryState> = _queryState
+    val queryState: StateFlow<CorpusQueryState> = queryStore.queryState
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CorpusQueryState())
+
+    fun setFilter(mark: Mark?) = viewModelScope.launch {
+        queryStore.saveQueryState(queryState.value.copy(mark))
+    }
+
+    fun setSort(sortBy: SortBy, sort: SortOrder) = viewModelScope.launch {
+        queryStore.saveQueryState(
+            queryState.value.copy(sortBy = sortBy, sortOrder = sort)
+        )
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val pagedCorpus: Flow<PagingData<Corpus>> = _queryState.flatMapLatest { state ->
+    fun getPagedCorpus(noteId: String): Flow<PagingData<Corpus>> = queryState.flatMapLatest { state ->
         corpusRepository.getPagedCorpus(
-            state.noteId,
+            noteId,
             state.mark,
             state.sortBy,
             state.sortOrder
@@ -53,19 +65,6 @@ class NoteViewModel @Inject constructor(
             }
         }
     }.cachedIn(viewModelScope)
-
-    fun setMark(noteId: String, mark: Mark?) {
-        savedStateHandle[QUERY_KEY] = _queryState.value.copy(noteId = noteId, mark = mark)
-    }
-
-    fun setSort(noteId: String, sortBy: SortBy, sortOrder: SortOrder) {
-        savedStateHandle[QUERY_KEY] =
-            _queryState.value.copy(noteId = noteId, sortBy = sortBy, sortOrder = sortOrder)
-    }
-
-    private fun saveState() {
-        savedStateHandle[QUERY_KEY] = _queryState.value
-    }
 
     private val _notes = MutableLiveData<List<Note>>()
     val notes: LiveData<List<Note>> get() = _notes
@@ -186,7 +185,6 @@ class NoteViewModel @Inject constructor(
 
 @Parcelize
 data class CorpusQueryState(
-    val noteId: String = "-",
     val mark: Mark? = null,
     val sortBy: SortBy = SortBy.WORD,
     val sortOrder: SortOrder = SortOrder.ASC,
