@@ -1,11 +1,9 @@
-package com.iwsocorp.vocabnotes.ui.note
+package com.iwsocorp.vobynotes.ui.note
 
 import android.graphics.Typeface
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import android.widget.Toast
@@ -14,29 +12,30 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.iwsocorp.vocabnotes.R
-import com.iwsocorp.vocabnotes.core.common.Utils.setIconColor
-import com.iwsocorp.vocabnotes.core.common.Utils.showAlertDialog
-import com.iwsocorp.vocabnotes.core.common.Utils.showPopupMenu
-import com.iwsocorp.vocabnotes.core.model.Corpus
-import com.iwsocorp.vocabnotes.core.model.Mark
-import com.iwsocorp.vocabnotes.core.model.SortBy
-import com.iwsocorp.vocabnotes.core.model.SortOrder
-import com.iwsocorp.vocabnotes.databinding.FragmentNoteBinding
-import com.iwsocorp.vocabnotes.ui.detail.ARG_CORPUS_WORD
-import com.iwsocorp.vocabnotes.ui.detail.DetailViewModel
+import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
+import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.common.Utils.showPopupMenu
+import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.core.model.Mark
+import com.iwsocorp.vobynotes.core.model.SortBy
+import com.iwsocorp.vobynotes.core.model.SortOrder
+import com.iwsocorp.vobynotes.databinding.FragmentNoteBinding
+import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_WORD
+import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -44,12 +43,12 @@ const val ARG_NOTE_ID = "noteIdParam"
 const val ARG_POSITION = "positionRecyclerView"
 
 @AndroidEntryPoint
-class NoteFragment() : Fragment() {
+class NoteFragment() : BaseFragment<FragmentNoteBinding>(
+    FragmentNoteBinding::inflate
+) {
 
     private var mediaPlayer: MediaPlayer? = null
-    private var _binding: FragmentNoteBinding? = null
-    private val binding get() = _binding!!
-    private val viewModel: NoteViewModel by activityViewModels()
+    private val viewModel: NoteViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(true, object : WordAdapter.ClickListener {
@@ -114,22 +113,19 @@ class NoteFragment() : Fragment() {
         }
 
         val argNoteId = arguments?.getString(ARG_NOTE_ID)
+        Timber.d("argNoteId: $argNoteId")
         argNoteId?.let {
             viewModel.updateNoteId(it)
             if (it.isNotEmpty()) {
                 viewModel.getNote(it)
-                viewModel.note.observe(viewLifecycleOwner) { note ->
-                    Timber.d("note: $note")
-                    binding.tvToolbarTitle.text = note.title.ifEmpty { "Untitled" }
-                    binding.tvWordLang.text = note.wordLang
-                    binding.tvMeaningLang.text = note.meaningLang
-                    viewModel.updateNoteTitle(note.title)
-                }
             } else {
-                binding.tvToolbarTitle.text = "All Words"
+                binding.tvToolbarTitle.text = "All Vocabulary"
             }
         } ?: run {
             binding.tvToolbarTitle.text = "Untitled"
+            binding.tvToolbarTitle.setTextColor(
+                resources.getColor(R.color.grey, null)
+            )
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
@@ -137,22 +133,25 @@ class NoteFragment() : Fragment() {
 
         viewModel.noteId.observe(viewLifecycleOwner) { id ->
             id?.let { noteId ->
-                lifecycleScope.launch {
-                    viewModel.getPagedCorpus(noteId).collectLatest { corpusPagingData ->
-                        Timber.d("corpusPagingData: $corpusPagingData")
-                        wordAdapter.submitData(corpusPagingData)
-                    }
+                viewModel.getPagedCorpus(noteId).collectLatestLifecycleAware { corpusPagingData ->
+                    Timber.d("corpusPagingData: $corpusPagingData")
+                    wordAdapter.submitData(corpusPagingData)
                 }
             }
             binding.iconSwitch.isVisible = id == null
         }
+        viewModel.note.observe(viewLifecycleOwner) { note ->
+            Timber.d("note: $note")
+            binding.tvToolbarTitle.text = note.title
+            binding.tvWordLang.text = note.wordLang
+            binding.tvMeaningLang.text = note.meaningLang
+            viewModel.updateNoteTitle(note.title)
+        }
 
-        lifecycleScope.launch {
-            wordAdapter.loadStateFlow.collectLatest {
-                val alphabetSet = extractAvailableLettersFromLoadedPages()
-                populateAlphabetSidebar(alphabetSet)
-                updateUI()
-            }
+        wordAdapter.loadStateFlow.collectLatestLifecycleAware {
+            val alphabetSet = extractAvailableLettersFromLoadedPages()
+            populateAlphabetSidebar(alphabetSet)
+            updateUI(it)
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
@@ -196,8 +195,6 @@ class NoteFragment() : Fragment() {
     }
 
     private fun setNormalToolbar() = with(binding) {
-        tvToolbarTitle.text = viewModel.noteTitle.value
-            ?: (if (viewModel.noteId.value == null) "Untitled" else "All Vocabulary")
         tvToolbarTitle.setOnClickListener {
             tvToolbarTitle.visibility = View.GONE
             etToolbarTitle.visibility = View.VISIBLE
@@ -354,43 +351,38 @@ class NoteFragment() : Fragment() {
         true
     }
 
-    private fun updateUI() {
-        wordAdapter.addLoadStateListener { loadStates ->
-            val isLoading = loadStates.source.refresh is LoadState.Loading
-            _binding?.let {
-                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-                binding.tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
-                binding.rvCorpus.addOnScrollListener(scrollListener)
-            }
-            if (loadStates.refresh is LoadState.NotLoading) binding.rvCorpus.scrollToPosition(0)
-        }
-        lifecycleScope.launch {
-            viewModel.queryState.collect { state ->
-                Timber.d("queryState: $state")
-                binding.svAlphabet.isVisible = state.sortBy == SortBy.WORD
+    private fun updateUI(loadStates: CombinedLoadStates) {
+        val isLoading = loadStates.refresh is LoadState.Loading
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
+        binding.rvCorpus.addOnScrollListener(scrollListener)
+        if (loadStates.refresh is LoadState.NotLoading) binding.rvCorpus.scrollToPosition(0)
 
-                val menuFilter = binding.toolbarNote.menu.findItem(R.id.action_filter)
-                menuFilter.setIcon(
-                    if (state.mark != null) {
-                        R.drawable.baseline_filter_alt_24
-                    } else {
-                        R.drawable.outline_filter_alt_24
-                    }
-                )
-                val drawable = menuFilter.icon
-                drawable?.let {
-                    DrawableCompat.setTint(
-                        it,
-                        ContextCompat.getColor(
-                            requireContext(),
-                            when (state.mark) {
-                                Mark.FAMILIAR -> R.color.blue
-                                Mark.UNFAMILIAR -> R.color.red
-                                else -> R.color.black
-                            }
-                        )
-                    )
+        viewModel.queryState.collectLatestLifecycleAware { state ->
+            Timber.d("queryState: $state")
+            binding.svAlphabet.isVisible = state.sortBy == SortBy.WORD
+
+            val menuFilter = binding.toolbarNote.menu.findItem(R.id.action_filter)
+            menuFilter.setIcon(
+                if (state.mark != null) {
+                    R.drawable.baseline_filter_alt_24
+                } else {
+                    R.drawable.outline_filter_alt_24
                 }
+            )
+            val drawable = menuFilter.icon
+            drawable?.let {
+                DrawableCompat.setTint(
+                    it,
+                    ContextCompat.getColor(
+                        requireContext(),
+                        when (state.mark) {
+                            Mark.FAMILIAR -> R.color.blue
+                            Mark.UNFAMILIAR -> R.color.red
+                            else -> R.color.black
+                        }
+                    )
+                )
             }
         }
     }
@@ -448,18 +440,16 @@ class NoteFragment() : Fragment() {
 
     // Populate the sidebar dynamically with the available letters
     private fun populateAlphabetSidebar(alphabetSet: List<Char>) {
-        _binding?.let {
-            binding.alphabetSidebar.removeAllViews()
-            alphabetSet.forEach { letter ->
-                val textView = TextView(requireContext()).apply {
-                    text = letter.toString()
-                    textSize = 20f
-                    setOnClickListener {
-                        scrollToLetter(letter)
-                    }
+        binding.alphabetSidebar.removeAllViews()
+        alphabetSet.forEach { letter ->
+            val textView = TextView(requireContext()).apply {
+                text = letter.toString()
+                textSize = 20f
+                setOnClickListener {
+                    scrollToLetter(letter)
                 }
-                binding.alphabetSidebar.addView(textView)
             }
+            binding.alphabetSidebar.addView(textView)
         }
     }
 
@@ -532,17 +522,8 @@ class NoteFragment() : Fragment() {
         mediaPlayer = null
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        _binding = FragmentNoteBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
         resetMediaPlayer()
     }
 }
