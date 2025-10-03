@@ -1,4 +1,4 @@
-package com.iwsocorp.vocabnotes
+package com.iwsocorp.vobynotes
 
 import android.content.Intent
 import android.net.Uri
@@ -22,11 +22,11 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
-import com.iwsocorp.vocabnotes.core.model.Corpus
-import com.iwsocorp.vocabnotes.databinding.ActivityMainBinding
-import com.iwsocorp.vocabnotes.ui.note.NoteViewModel
-import com.iwsocorp.vocabnotes.ui.widget.OPEN_FRAGMENT
-import com.iwsocorp.vocabnotes.ui.widget.SEARCH
+import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
+import com.iwsocorp.vobynotes.ui.note.NoteViewModel
+import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
+import com.iwsocorp.vobynotes.ui.widget.SEARCH
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_settings
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)

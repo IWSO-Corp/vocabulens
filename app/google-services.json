@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "529847151049",
+    "project_id": "voby-notes-a6311",
+    "storage_bucket": "voby-notes-a6311.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:529847151049:android:2ad9cd4836369ef8dd2018",
+        "android_client_info": {
+          "package_name": "com.iwsocorp.vobynotes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "529847151049-rrqfuuq30qfocl6e7lr641pn7ll85v9a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.iwsocorp.vobynotes",
+            "certificate_hash": "20f2a121e3bae1cc36be4a81e6133147f96e772b"
+          }
+        },
+        {
+          "client_id": "529847151049-ef677s6ibqdnfoduhad9puvk9dvnckgt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5XedXx-JAx5Ys-Qgug9q8zSY3Yyz-jvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "529847151049-ef677s6ibqdnfoduhad9puvk9dvnckgt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

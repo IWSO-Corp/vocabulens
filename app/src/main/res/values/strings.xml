@@ -27,4 +27,7 @@
     <string name="action_sort">Sort</string>
     <string name="save">Save</string>
     <string name="action_filter">Filter</string>
+    <string name="trash">Trash</string>
+    <string name="sign_in">Sign in</string>
+    <string name="sign_out">Sign out</string>
 </resources>

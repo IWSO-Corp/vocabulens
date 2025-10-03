@@ -2,13 +2,9 @@ package com.iwsocorp.vobynotes.core.database.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
-import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Relation
-import androidx.room.Transaction
 import androidx.room.Update
-import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import com.iwsocorp.vobynotes.core.database.model.NoteEntity
 
 @Dao
