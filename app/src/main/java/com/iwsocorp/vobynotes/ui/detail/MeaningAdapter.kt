@@ -1,0 +1,49 @@
+package com.iwsocorp.vobynotes.ui.detail
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
+import com.iwsocorp.vobynotes.core.model.Meaning
+import com.iwsocorp.vobynotes.databinding.ItemDefinitionBinding
+
+class MeaningAdapter(
+    private val meanings: List<Meaning>,
+    private val gestureHelper: TextViewGestureHelper,
+) : RecyclerView.Adapter<MeaningAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemDefinitionBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(meaning: Meaning) = with(binding) {
+            tvPartOfSpeech.text = meaning.partOfSpeech
+            rvDefinitions.adapter = DefinitionAdapter(meaning.definitions, gestureHelper)
+            tvSynonyms.text = meaning.synonyms.joinToString()
+            tvAntonyms.text = meaning.antonyms.joinToString()
+            llSynonyms.visibility = if (meaning.synonyms.isEmpty()) View.GONE else View.VISIBLE
+            llAntonyms.visibility = if (meaning.antonyms.isEmpty()) View.GONE else View.VISIBLE
+
+            gestureHelper.attachTo(tvSynonyms)
+            gestureHelper.attachTo(tvAntonyms)
+        }
+    }
+
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        return ViewHolder(
+            ItemDefinitionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(meanings[position])
+    }
+
+    override fun getItemCount(): Int {
+        return meanings.size
+    }
+
+}

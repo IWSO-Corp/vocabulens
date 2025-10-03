@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.iwsocorp.vocabnotes"
+    namespace = "com.iwsocorp.vobynotes"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.iwsocorp.vocabnotes"
+        applicationId = "com.iwsocorp.vobynotes"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
