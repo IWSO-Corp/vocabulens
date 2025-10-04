@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CorpusDao {
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM corpus
         WHERE (:noteId = '' OR noteId = :noteId)
         AND (:mark IS NULL OR mark = :mark)
@@ -24,12 +25,13 @@ interface CorpusDao {
             CASE WHEN :sortBy = 'updatedAt' AND :sortOrder = 'DESC' THEN updatedAt END DESC,
             CASE WHEN :sortBy = 'word' AND :sortOrder = 'ASC' THEN word END ASC,
             CASE WHEN :sortBy = 'word' AND :sortOrder = 'DESC' THEN word END DESC
-    """)
+    """
+    )
     fun getPagedCorpus(
         noteId: String,
         mark: Mark?,
         sortBy: String,
-        sortOrder: String
+        sortOrder: String,
     ): PagingSource<Int, CorpusEntity>
 
     @Query("SELECT COUNT(*) FROM corpus WHERE word IN (:words)")
@@ -58,6 +60,9 @@ interface CorpusDao {
 
     @Query("SELECT * FROM corpus")
     fun allCorpus(): Flow<List<CorpusEntity>>
+
+    @Query("SELECT * FROM corpus")
+    suspend fun getAll(): List<CorpusEntity>
 
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
     fun getLatestCorpus(noteId: String): Flow<List<CorpusEntity>>

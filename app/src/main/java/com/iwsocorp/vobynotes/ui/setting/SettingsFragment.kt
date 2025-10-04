@@ -2,8 +2,10 @@ package com.iwsocorp.vobynotes.ui.setting
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
@@ -17,6 +19,7 @@ import timber.log.Timber
 @AndroidEntryPoint
 class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsBinding::inflate) {
 
+    private val viewModel: SettingsViewModel by viewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -29,14 +32,30 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 parentFragmentManager.popBackStack()
             }
         }
-        binding.btnBackup.setOnClickListener {
-
-        }
 
         authViewModel.authState.collectLatestLifecycleAware {
             it.onSuccess { user ->
                 setupUI(user)
-                Timber.d("Firebase user: ${user.toString()}")
+                Timber.d("Firebase user: ${user?.uid}")
+            }
+        }
+        viewModel.backupState.collectLatestLifecycleAware {
+            binding.progressLoading.isVisible = it is BackupState.Loading
+
+            when (it) {
+                is BackupState.Success -> {
+                    Toast.makeText(requireContext(), "Backup success", Toast.LENGTH_SHORT).show()
+                }
+
+                is BackupState.Restored -> {
+                    Toast.makeText(requireContext(), "Restore success", Toast.LENGTH_SHORT).show()
+                }
+
+                is BackupState.Error -> {
+                    Toast.makeText(requireContext(), it.message, Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {}
             }
         }
     }
@@ -68,6 +87,36 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 findNavController().navigate(R.id.action_nav_settings_to_authFragment)
             }
         }
+        btnBackup.setOnClickListener {
+            user?.let {
+                viewModel.backupToFirestore(it.uid)
+                Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT).show()
+            } ?: run {
+                signInFirst()
+            }
+        }
+        btnRestore.setOnClickListener {
+            user?.let {
+                viewModel.restoreFromFirestoreAndInsertToDatabase(it.uid)
+                Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT).show()
+            } ?: run {
+                signInFirst()
+            }
+        }
+        btnImport.setOnClickListener {
+
+        }
     }
 
+    private fun signInFirst() {
+        showAlertDialog(
+            requireContext(),
+            "You are not signed in",
+            "Please sign in first",
+            "Sign in",
+            "Cancel",
+        ) {
+            findNavController().navigate(R.id.action_nav_settings_to_authFragment)
+        }
+    }
 }

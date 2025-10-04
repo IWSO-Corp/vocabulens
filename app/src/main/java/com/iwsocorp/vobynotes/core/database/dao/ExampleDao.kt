@@ -16,4 +16,10 @@ interface ExampleDao {
     @Query("SELECT * FROM examples WHERE LOWER(sentence) LIKE LOWER('%' || :word || '%')")
     fun getExamplesByWord(word: String): Flow<List<ExampleEntity>>
 
+    @Query("SELECT * FROM examples")
+    suspend fun getAll(): List<ExampleEntity>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertExampleList(exampleList: List<ExampleEntity>)
+
 }
