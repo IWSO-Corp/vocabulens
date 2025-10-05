@@ -100,7 +100,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
         binding.itemDetail.iconAddExample.setOnClickListener {
             ExampleBottomSheet {
                 viewModel.insertExampleSentence(
-                    Example(it)
+                    Example(viewModel.corpus.value!!.word, it)
                 )
                 Toast.makeText(requireContext(), "Example added", Toast.LENGTH_SHORT).show()
             }.show(childFragmentManager, null)

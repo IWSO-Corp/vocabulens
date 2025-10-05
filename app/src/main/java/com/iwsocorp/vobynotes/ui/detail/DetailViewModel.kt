@@ -124,7 +124,7 @@ class DetailViewModel @Inject constructor(
                         meaning.definitions.forEach { definition ->
                             definition.example?.let { sentence ->
                                 if (containsWordRegex(sentence, word)) {
-                                    examples.add(Example(sentence))
+                                    examples.add(Example("", sentence))
                                 }
                             }
                         }

@@ -13,6 +13,7 @@ import com.iwsocorp.vobynotes.core.model.Example
 )
 class ExampleEntity(
     @PrimaryKey val id: String,
+    val forWord: String,
     val sentence: String,
     val createdAt: Long,
     val updatedAt: Long,
@@ -20,6 +21,7 @@ class ExampleEntity(
 
 fun ExampleEntity.asExternalModel() = Example(
     id = id,
+    forWord = forWord,
     sentence = sentence,
     createdAt = createdAt,
     updatedAt = updatedAt

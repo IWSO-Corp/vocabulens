@@ -4,6 +4,7 @@ import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
 import java.util.UUID
 
 data class Example(
+    val forWord: String,
     val sentence: String,
     val id: String = UUID.randomUUID().toString(),
     val createdAt: Long = System.currentTimeMillis(),
@@ -12,6 +13,7 @@ data class Example(
 
 fun Example.asEntity() = ExampleEntity(
     id = id,
+    forWord = forWord,
     sentence = sentence,
     createdAt = createdAt,
     updatedAt = updatedAt

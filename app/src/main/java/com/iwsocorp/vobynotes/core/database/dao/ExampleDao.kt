@@ -13,7 +13,7 @@ interface ExampleDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExampleSentence(exampleEntity: ExampleEntity)
 
-    @Query("SELECT * FROM examples WHERE LOWER(sentence) LIKE LOWER('%' || :word || '%')")
+    @Query("SELECT * FROM examples WHERE LOWER(sentence) LIKE LOWER('%' || :word || '%') OR forWord = :word")
     fun getExamplesByWord(word: String): Flow<List<ExampleEntity>>
 
     @Query("SELECT * FROM examples")
