@@ -11,12 +11,15 @@ import com.iwsocorp.vobynotes.core.data.repository.ExampleRepository
 import com.iwsocorp.vobynotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Example
+import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.toCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -27,11 +30,11 @@ class DetailViewModel @Inject constructor(
     private val vocabularyRepository: VocabularyRepository,
 ) : ViewModel() {
 
-    private val _corpusWord = MutableLiveData<String>()
-    val corpusWord: LiveData<String> get() = _corpusWord
+    private val _corpusId = MutableLiveData<String>()
+    val corpusId: LiveData<String> get() = _corpusId
 
-    fun setCorpusWord(word: String) {
-        _corpusWord.value = word
+    fun setCorpusId(word: String) {
+        _corpusId.value = word
     }
 
     private val _corpusPosition = MutableLiveData<Int>()
@@ -41,24 +44,26 @@ class DetailViewModel @Inject constructor(
         _corpusPosition.value = position
     }
 
-    private val _wordList = MutableLiveData<List<String>>()
-    val wordList: LiveData<List<String>> get() = _wordList
+    private val _corpusList = MutableLiveData<List<Corpus>>()
+    val corpusList: LiveData<List<Corpus>> get() = _corpusList
 
-    fun setCorpusList(wordList: List<String>) {
-        _wordList.value = wordList
+    fun setCorpusList(wordList: List<Corpus>) {
+        _corpusList.value = wordList
     }
 
-    val posAndWords: LiveData<Pair<Int, List<String>>> = corpusPosition.asFlow()
-        .combine(wordList.asFlow()) { pos, list ->
-            Timber.d("Position: $pos, List: $list")
+    val posAndCorpusList: LiveData<Pair<Int, List<Corpus>>> = corpusPosition.asFlow()
+        .combine(corpusList.asFlow()) { pos, list ->
+            Timber.d("Position: $pos, List corpus: ${list.size}")
             Pair(pos, list)
         }.asLiveData()
 
     private val _corpus = MutableLiveData<Corpus?>()
     val corpus: LiveData<Corpus?> get() = _corpus
 
-    fun getCorpus(word: String) = viewModelScope.launch {
-        _corpus.value = corpusRepository.getCorpusByWord(word)
+    fun getCorpusById(id: String) = viewModelScope.launch {
+        corpusRepository.getCorpusById(id).distinctUntilChanged().collect {
+            _corpus.value = it
+        }
     }
 
     fun resetCorpus() {
@@ -69,51 +74,79 @@ class DetailViewModel @Inject constructor(
         _corpus.value = vocabularyRepository.getVocabulary(word).toCorpus()
     }
 
-    fun updateCorpusDetail(word: String) = viewModelScope.launch(Dispatchers.IO) {
-        val corpus = _corpus.value ?: return@launch
-        val vocab = vocabularyRepository.getVocabulary(word)
-        val newCorpus = corpus.copy(
-            phonetic = vocab.phonetic,
-            audio = vocab.audio,
-            meanings = vocab.meanings,
-            updatedAt = System.currentTimeMillis()
-        )
-        withContext(Dispatchers.Main) {
-            _corpus.value = newCorpus
+    fun updateCorpusDetail(word: String) = viewModelScope.launch {
+        _corpus.value?.let {
+            val vocab = vocabularyRepository.getVocabulary(word)
+            val newCorpus = it.copy(
+                phonetic = vocab.phonetic,
+                audio = vocab.audio,
+                meanings = vocab.meanings,
+                updatedAt = System.currentTimeMillis()
+            )
+            corpusRepository.updateCorpus(newCorpus)
         }
-        corpusRepository.updateCorpus(newCorpus)
     }
 
-    suspend fun getCorpusByWord(word: String): Corpus? = corpusRepository.getCorpusByWord(word)
-
-    fun updateCorpus(currentWord: String, corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
-        Timber.d("Updating corpus: $corpus")
-        if (currentWord != corpus.word) {
-            val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
-            if (existingCorpus != null) {
-                callback(-1L)
-                return@launch
+    fun updateCorpus(currentWord: String, corpus: Corpus, callback: (result: Long) -> Unit) =
+        viewModelScope.launch {
+            Timber.d("Updating corpus: $corpus")
+            if (currentWord != corpus.word) {
+                val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
+                if (existingCorpus != null) {
+                    callback(-1L)
+                    return@launch
+                } else {
+                    corpusRepository.updateCorpus(corpus)
+                    _corpus.value = corpus
+                    callback(1L)
+                }
             } else {
                 corpusRepository.updateCorpus(corpus)
                 _corpus.value = corpus
                 callback(1L)
             }
-        } else {
-            corpusRepository.updateCorpus(corpus)
-            _corpus.value = corpus
-            callback(1L)
         }
-    }
 
     fun insertExampleSentence(example: Example) = viewModelScope.launch {
         exampleRepository.insertExampleSentence(example)
     }
 
-    fun getExamplesByWord(word: String, callback: (examples: List<Example>) -> Unit) =
-        viewModelScope.launch {
-            exampleRepository.getExamplesByWord(word).collect {
-                callback(it)
+    @OptIn(FlowPreview::class)
+    fun getExamplesByWord(word: String, allCorpusFlow: Flow<List<Corpus>>): Flow<List<Example>> =
+        exampleRepository.getExamplesByWord(word).debounce(200).distinctUntilChanged()
+            .combine(
+                allCorpusFlow.debounce(200).distinctUntilChanged()
+            ) { exampleList, corpusList ->
+                val examples = mutableListOf<Example>().apply { addAll(exampleList) }
+
+                corpusList.forEach { corpus ->
+                    corpus.meanings.forEach { meaning ->
+                        meaning.definitions.forEach { definition ->
+                            definition.example?.let { sentence ->
+                                if (containsWordRegex(sentence, word)) {
+                                    examples.add(Example(sentence))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Timber.d("Examples flow [$word]: ${examples.map { it.sentence }}")
+                examples.distinctBy { it.sentence }.shuffled().take(5)
             }
-        }
+            .distinctUntilChanged() // <- cegah emit berulang untuk data sama
+
+    fun containsWordRegex(sentence: String, word: String): Boolean {
+        val pattern = "\\b${Regex.escape(word)}\\b".toRegex(RegexOption.IGNORE_CASE)
+        return pattern.containsMatchIn(sentence)
+    }
+
+    fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {
+        corpusRepository.updateCorpusMark(corpusIds, newMark)
+    }
+
+    fun deleteCorpus(corpusIds: List<String>) = viewModelScope.launch {
+        corpusRepository.deleteBatch(corpusIds)
+    }
 
 }

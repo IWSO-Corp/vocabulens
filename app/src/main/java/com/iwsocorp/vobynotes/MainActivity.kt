@@ -194,20 +194,14 @@ class MainActivity : AppCompatActivity() {
             R.id.action_search -> {
                 findNavController(R.id.nav_host_fragment_content_main)
                     .navigate(R.id.action_nav_home_to_searchFragment)
-                return true
-            }
-
-            R.id.action_sort -> {
-                return true
             }
 
             R.id.action_import -> {
                 pickExcelFile()
-                return true
             }
-
-            else -> return super.onOptionsItemSelected(item)
         }
+
+        return true
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

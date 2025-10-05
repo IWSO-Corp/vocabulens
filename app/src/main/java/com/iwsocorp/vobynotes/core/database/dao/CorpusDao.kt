@@ -46,11 +46,14 @@ interface CorpusDao {
     @Update
     suspend fun updateCorpus(corpus: CorpusEntity)
 
-    @Query("DELETE FROM corpus WHERE word IN (:words)")
-    suspend fun deleteBatch(words: List<String>)
+    @Query("DELETE FROM corpus WHERE id IN (:ids)")
+    suspend fun deleteBatch(ids: List<String>)
 
     @Query("SELECT * FROM corpus WHERE word = :word")
     suspend fun getCorpusByWord(word: String): CorpusEntity?
+
+    @Query("SELECT * FROM corpus WHERE id = :id")
+    fun getCorpusById(id: String): Flow<CorpusEntity>
 
     @Query("SELECT * FROM corpus WHERE word LIKE :query || '%'")
     fun searchCorpus(query: String): PagingSource<Int, CorpusEntity>
@@ -73,11 +76,11 @@ interface CorpusDao {
     @Query("DELETE FROM corpus WHERE noteId = :noteId")
     suspend fun deleteCorpusByNoteId(noteId: String)
 
-    @Query("UPDATE corpus SET noteId = :newNoteId WHERE word IN (:corpusWords)")
-    suspend fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String)
+    @Query("UPDATE corpus SET noteId = :newNoteId WHERE id IN (:corpusIds)")
+    suspend fun moveCorpusToNote(corpusIds: List<String>, newNoteId: String)
 
-    @Query("UPDATE corpus SET mark = :newMark WHERE word IN (:corpusWords)")
-    suspend fun updateCorpusMark(corpusWords: List<String>, newMark: Mark)
+    @Query("UPDATE corpus SET mark = :newMark WHERE id IN (:corpusIds)")
+    suspend fun updateCorpusMark(corpusIds: List<String>, newMark: Mark)
 
     @Query("SELECT COUNT(*) FROM corpus WHERE noteId = :noteId AND mark = :mark")
     suspend fun countMark(noteId: String, mark: Mark): Int

@@ -93,7 +93,7 @@ class NoteViewModel @Inject constructor(
     }
 
     fun insertCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
-        val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
+        val existingCorpus = corpusRepository.getCorpusById(corpus.word)
         Timber.d("existingCorpus: $existingCorpus")
         if (existingCorpus != null) {
             callback(-1L)
@@ -158,19 +158,19 @@ class NoteViewModel @Inject constructor(
         noteRepository.deleteNote(noteId)
     }
 
-    fun deleteCorpusBatch(words: List<String>) = viewModelScope.launch {
-        corpusRepository.deleteBatch(words)
-        noteRepository.decrementContentSize(noteId.value!!, words.size)
+    fun deleteCorpusBatch(ids: List<String>) = viewModelScope.launch {
+        corpusRepository.deleteBatch(ids)
+        noteRepository.decrementContentSize(noteId.value!!, ids.size)
     }
 
-    fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String) = viewModelScope.launch {
-        corpusRepository.moveCorpusToNote(corpusWords, newNoteId)
-        noteRepository.decrementContentSize(noteId.value!!, corpusWords.size)
-        noteRepository.incrementContentSize(newNoteId, corpusWords.size)
+    fun moveCorpusToNote(corpusIds: List<String>, newNoteId: String) = viewModelScope.launch {
+        corpusRepository.moveCorpusToNote(corpusIds, newNoteId)
+        noteRepository.decrementContentSize(noteId.value!!, corpusIds.size)
+        noteRepository.incrementContentSize(newNoteId, corpusIds.size)
     }
 
-    fun updateCorpusMark(corpusWords: List<String>, newMark: Mark) = viewModelScope.launch {
-        corpusRepository.updateCorpusMark(corpusWords, newMark)
+    fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {
+        corpusRepository.updateCorpusMark(corpusIds, newMark)
     }
 
     companion object {

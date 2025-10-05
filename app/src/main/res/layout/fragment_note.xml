@@ -116,6 +116,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/purple_200"
+        android:elevation="8dp"
         android:padding="16dp"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior">
 
@@ -187,4 +188,14 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btn_scroll_to_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Scroll to top"
+        android:src="@drawable/baseline_arrow_upward_24" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

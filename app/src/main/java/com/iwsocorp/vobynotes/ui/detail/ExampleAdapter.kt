@@ -12,12 +12,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
+import com.iwsocorp.vobynotes.core.model.Example
 import com.iwsocorp.vobynotes.databinding.ItemExampleBinding
 
 class ExampleAdapter(
     private val corpusWord: String,
-    private val gestureHelper: TextViewGestureHelper
-) : ListAdapter<String, ExampleAdapter.ViewHolder>(DIFF_CALLBACK) {
+    private val gestureHelper: TextViewGestureHelper,
+) : ListAdapter<Example, ExampleAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -39,9 +40,9 @@ class ExampleAdapter(
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val binding = ItemExampleBinding.bind(itemView)
 
-        fun bind(example: String, position: Int) = with(binding) {
+        fun bind(example: Example, position: Int) = with(binding) {
             tvNumber.text = (position + 1).toString()
-            tvExample.text = boldWordInSentence(example, corpusWord)
+            tvExample.text = boldWordInSentence(example.sentence, corpusWord)
 
             gestureHelper.attachTo(tvExample)
         }
@@ -64,29 +65,17 @@ class ExampleAdapter(
         }
     }
 
-    fun addItems(newItems: List<String>) {
-        val currentList = ArrayList(currentList) // copy dari ListAdapter
-        currentList.addAll(newItems)
-        submitList(currentList)
-    }
-
-
     companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<String>() {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Example>() {
             override fun areItemsTheSame(
-                oldItem: String,
-                newItem: String,
-            ): Boolean {
-                return oldItem == newItem
-            }
+                oldItem: Example,
+                newItem: Example,
+            ): Boolean = oldItem.id == newItem.id
 
             override fun areContentsTheSame(
-                oldItem: String,
-                newItem: String,
-            ): Boolean {
-                return oldItem == newItem
-            }
-
+                oldItem: Example,
+                newItem: Example,
+            ): Boolean = oldItem.sentence == newItem.sentence
         }
     }
 }

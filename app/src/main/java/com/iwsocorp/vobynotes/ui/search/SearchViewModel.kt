@@ -35,8 +35,10 @@ class SearchViewModel @Inject constructor(
             }
     }
 
-    fun updateCorpusMark(corpusWords: List<String>, newMark: Mark) = viewModelScope.launch {
-        corpusRepository.updateCorpusMark(corpusWords, newMark)
+    fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {
+        corpusRepository.updateCorpusMark(corpusIds, newMark)
     }
+
+    suspend fun getCorpusByWord(word: String): Corpus? = corpusRepository.getCorpusByWord(word)
 
 }

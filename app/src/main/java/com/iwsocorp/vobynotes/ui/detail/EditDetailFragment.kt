@@ -27,8 +27,8 @@ class EditDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        arguments?.getString(ARG_CORPUS_WORD)?.let {
-            detailViewModel.getCorpus(it)
+        arguments?.getString(ARG_CORPUS_ID)?.let {
+            detailViewModel.getCorpusById(it)
         }
 
         detailViewModel.corpus.observe(viewLifecycleOwner) { corpus ->

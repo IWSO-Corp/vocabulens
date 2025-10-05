@@ -24,10 +24,11 @@ import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.databinding.FragmentSearchBinding
-import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_WORD
+import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.ARG_FROM
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.detail.MeaningAdapter
+import com.iwsocorp.vobynotes.ui.note.ARG_POSITION
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.note.WordAdapter
@@ -52,7 +53,8 @@ class SearchFragment : Fragment() {
                 findNavController().navigate(
                     R.id.action_searchFragment_to_corpusDetailFragment,
                     Bundle().apply {
-                        putString(ARG_CORPUS_WORD, corpus.word)
+                        putString(ARG_CORPUS_ID, corpus.id)
+                        putInt(ARG_POSITION, 0)
                         putString(ARG_FROM, "searchFragment")
                     }
                 )
@@ -66,13 +68,10 @@ class SearchFragment : Fragment() {
 
             override fun onSelectionChanged(size: Int) {}
 
-            override fun onMark(
-                word: String,
-                mark: Mark,
-            ) {
+            override fun onMark(corpus: Corpus) {
                 viewModel.updateCorpusMark(
-                    listOf(word),
-                    when (mark) {
+                    listOf(corpus.id),
+                    when (corpus.mark) {
                         Mark.UNMARKED -> Mark.FAMILIAR
                         Mark.FAMILIAR -> Mark.UNFAMILIAR
                         Mark.UNFAMILIAR -> Mark.UNMARKED
@@ -80,11 +79,11 @@ class SearchFragment : Fragment() {
                 )
             }
 
-            override fun onEdit(corpusWord: String) {
+            override fun onEdit(corpus: Corpus) {
                 findNavController().navigate(
                     R.id.action_searchFragment_to_editDetailFragment,
                     Bundle().apply {
-                        putString(ARG_CORPUS_WORD, corpusWord)
+                        putString(ARG_CORPUS_ID, corpus.id)
                     }
                 )
             }
@@ -182,7 +181,7 @@ class SearchFragment : Fragment() {
         binding.itemDetail.contentDetail.visibility = View.VISIBLE
 
         lifecycleScope.launch {
-            val existingCorpus = detailViewModel.getCorpusByWord(word)
+            val existingCorpus = viewModel.getCorpusByWord(word)
             binding.btnSave.isVisible = existingCorpus == null
         }
     }

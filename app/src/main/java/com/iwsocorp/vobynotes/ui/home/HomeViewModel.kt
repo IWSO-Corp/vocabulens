@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,7 +28,7 @@ class HomeViewModel @Inject constructor(
     fun getAllNotes(): Flow<PagingData<Note>> = noteRepository.getNotes().cachedIn(viewModelScope)
 
     private val _allCorpus = MutableStateFlow<List<Corpus>>(emptyList())
-    val allCorpus = _allCorpus
+    val allCorpus: StateFlow<List<Corpus>> get() = _allCorpus
 
     fun allCorpus() = viewModelScope.launch(Dispatchers.IO) {
         corpusRepository.allCorpus().collect {

@@ -31,7 +31,7 @@ import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.SortBy
 import com.iwsocorp.vobynotes.core.model.SortOrder
 import com.iwsocorp.vobynotes.databinding.FragmentNoteBinding
-import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_WORD
+import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +56,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                 findNavController().navigate(
                     R.id.action_noteFragment_to_corpusDetailFragment,
                     Bundle().apply {
-                        putString(ARG_CORPUS_WORD, corpus.word)
+                        putString(ARG_CORPUS_ID, corpus.id)
                         putInt(ARG_POSITION, wordAdapter.snapshot().items.indexOf(corpus))
                     }
                 )
@@ -76,13 +76,10 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                 }
             }
 
-            override fun onMark(
-                word: String,
-                mark: Mark,
-            ) {
+            override fun onMark(corpus: Corpus) {
                 viewModel.updateCorpusMark(
-                    listOf(word),
-                    when (mark) {
+                    listOf(corpus.id),
+                    when (corpus.mark) {
                         Mark.UNMARKED -> Mark.FAMILIAR
                         Mark.FAMILIAR -> Mark.UNFAMILIAR
                         Mark.UNFAMILIAR -> Mark.UNMARKED
@@ -90,11 +87,11 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                 )
             }
 
-            override fun onEdit(corpusWord: String) {
+            override fun onEdit(corpus: Corpus) {
                 findNavController().navigate(
                     R.id.action_noteFragment_to_editDetailFragment,
                     Bundle().apply {
-                        putString(ARG_CORPUS_WORD, corpusWord)
+                        putString(ARG_CORPUS_ID, corpus.id)
                     }
                 )
             }
@@ -192,6 +189,9 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             tvWordLang.text = meaningLang
             tvMeaningLang.text = worldLang
         }
+        btnScrollToTop.setOnClickListener {
+            rvCorpus.scrollToPosition(0)
+        }
     }
 
     private fun setNormalToolbar() = with(binding) {
@@ -238,7 +238,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     }
 
     private val menuListener = Toolbar.OnMenuItemClickListener { item ->
-        val selectedItems = wordAdapter.getSelectedItems()
+        val selectedItemIds = wordAdapter.getSelectedItems()
 
         when (item.itemId) {
             R.id.action_filter -> {
@@ -279,12 +279,12 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     }) {
                         showAlertDialog(
                             requireContext(),
-                            "Move ${selectedItems.size} Words to ${it.title}",
+                            "Move ${selectedItemIds.size} Words to ${it.title}",
                             null,
                             "Move",
                             "Cancel"
                         ) {
-                            viewModel.moveCorpusToNote(selectedItems, it.id)
+                            viewModel.moveCorpusToNote(selectedItemIds, it.id)
                             setNormalToolbar()
                         }
                     }
@@ -295,12 +295,12 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             R.id.action_mark -> {
                 fun markWords(mark: Mark) = showAlertDialog(
                     requireContext(),
-                    "Mark ${selectedItems.size} Words as $mark",
+                    "Mark ${selectedItemIds.size} Words as $mark",
                     null,
                     "Mark",
                     "Cancel"
                 ) {
-                    viewModel.updateCorpusMark(selectedItems, mark)
+                    viewModel.updateCorpusMark(selectedItemIds, mark)
                     setNormalToolbar()
                 }
 
@@ -318,12 +318,12 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             R.id.action_delete -> {
                 showAlertDialog(
                     requireContext(),
-                    "Delete ${selectedItems.size} Words",
+                    "Delete ${selectedItemIds.size} Words",
                     null,
                     "Delete",
                     "Cancel"
                 ) {
-                    viewModel.deleteCorpusBatch(selectedItems)
+                    viewModel.deleteCorpusBatch(selectedItemIds)
                     setNormalToolbar()
                 }
             }
@@ -351,18 +351,18 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         true
     }
 
-    private fun updateUI(loadStates: CombinedLoadStates) {
+    private fun updateUI(loadStates: CombinedLoadStates) = with(binding) {
         val isLoading = loadStates.refresh is LoadState.Loading
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        binding.tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
-        binding.rvCorpus.addOnScrollListener(scrollListener)
-        if (loadStates.refresh is LoadState.NotLoading) binding.rvCorpus.scrollToPosition(0)
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
+        rvCorpus.addOnScrollListener(scrollListener)
 
         viewModel.queryState.collectLatestLifecycleAware { state ->
             Timber.d("queryState: $state")
-            binding.svAlphabet.isVisible = state.sortBy == SortBy.WORD
+            svAlphabet.isVisible = state.sortBy == SortBy.WORD
+            btnScrollToTop.isVisible = state.sortBy == SortBy.UPDATED_AT
 
-            val menuFilter = binding.toolbarNote.menu.findItem(R.id.action_filter)
+            val menuFilter = toolbarNote.menu.findItem(R.id.action_filter)
             menuFilter.setIcon(
                 if (state.mark != null) {
                     R.drawable.baseline_filter_alt_24
@@ -431,7 +431,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     // Function to extract available letters from currently loaded pages
     private fun extractAvailableLettersFromLoadedPages(): List<Char> {
         val currentList = wordAdapter.snapshot().items
-        detailViewModel.setCorpusList(currentList.map { it.word })
+        detailViewModel.setCorpusList(currentList)
         Timber.d("currentList size: ${currentList.size}")
         return currentList.map {
             it.word.first().uppercaseChar()

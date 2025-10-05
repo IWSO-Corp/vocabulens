@@ -14,7 +14,6 @@ import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.databinding.ItemWordBinding
-import timber.log.Timber
 import java.util.Locale
 
 class WordAdapter(
@@ -26,11 +25,11 @@ class WordAdapter(
         fun onClick(corpus: Corpus)
         fun onPlay(url: String)
         fun onSelectionChanged(size: Int)
-        fun onMark(word: String, mark: Mark)
-        fun onEdit(corpusWord: String)
+        fun onMark(corpus: Corpus)
+        fun onEdit(corpus: Corpus)
     }
 
-    private val selectedWords = mutableSetOf<String>()
+    private val selectedIds = mutableSetOf<String>()
     private var isSelectionMode = false
 
     inner class ViewHolder(val binding: ItemWordBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -53,10 +52,8 @@ class WordAdapter(
                 }
             }
             iconMark.setOnClickListener {
-                listener.onMark(corpus.word, corpus.mark)
+                listener.onMark(corpus)
             }
-
-            Timber.d("corpus: $corpus")
 
             when (corpus.mark) {
                 Mark.FAMILIAR -> {
@@ -109,7 +106,7 @@ class WordAdapter(
                 }
             }
 
-            val isSelected = selectedWords.contains(corpus.word)
+            val isSelected = selectedIds.contains(corpus.id)
 
             itemView.setBackgroundColor(
                 if (isSelected) itemView.context.resources.getColor(
@@ -121,7 +118,7 @@ class WordAdapter(
             swipeLayout.surfaceView.setOnClickListener {
                 if (!isDragging) {
                     if (isSelectionMode) {
-                        toggleSelection(corpus.word)
+                        toggleSelection(corpus.id)
                     } else {
                         listener.onClick(corpus)
                     }
@@ -132,7 +129,7 @@ class WordAdapter(
             swipeLayout.surfaceView.setOnLongClickListener {
                 if (!isDragging && isNote) {
                     if (!isSelectionMode) isSelectionMode = true
-                    toggleSelection(corpus.word)
+                    toggleSelection(corpus.id)
                     true
                 } else {
                     false
@@ -140,7 +137,7 @@ class WordAdapter(
             }
 
             btnEdit.setOnClickListener {
-                listener.onEdit(corpus.word)
+                listener.onEdit(corpus)
                 swipeLayout.close()
             }
 
@@ -188,28 +185,28 @@ class WordAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun toggleSelection(word: String) {
-        if (selectedWords.contains(word)) {
-            selectedWords.remove(word)
+    private fun toggleSelection(id: String) {
+        if (selectedIds.contains(id)) {
+            selectedIds.remove(id)
         } else {
-            selectedWords.add(word)
+            selectedIds.add(id)
         }
-        if (selectedWords.isEmpty()) {
+        if (selectedIds.isEmpty()) {
             isSelectionMode = false
         }
-        listener.onSelectionChanged(selectedWords.size)
+        listener.onSelectionChanged(selectedIds.size)
         notifyDataSetChanged()
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearSelection() {
-        selectedWords.clear()
+        selectedIds.clear()
         isSelectionMode = false
         notifyDataSetChanged()
         listener.onSelectionChanged(0)
     }
 
-    fun getSelectedItems(): List<String> = selectedWords.toList()
+    fun getSelectedItems(): List<String> = selectedIds.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(

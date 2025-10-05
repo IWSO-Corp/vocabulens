@@ -5,10 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.map
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.iwsocorp.vobynotes.core.database.dao.CorpusDao
 import com.iwsocorp.vobynotes.core.database.dao.InsertResult
 import com.iwsocorp.vobynotes.core.database.dao.insertCorpusListWithResult
@@ -21,8 +18,6 @@ import com.iwsocorp.vobynotes.core.model.SortOrder
 import com.iwsocorp.vobynotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.tasks.await
-import timber.log.Timber
 import javax.inject.Inject
 
 class CorpusRepositoryImpl @Inject constructor(
@@ -42,12 +37,16 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.updateCorpus(corpus.asEntity())
     }
 
-    override suspend fun deleteBatch(words: List<String>) {
-        corpusDao.deleteBatch(words)
+    override suspend fun deleteBatch(ids: List<String>) {
+        corpusDao.deleteBatch(ids)
     }
 
     override suspend fun getCorpusByWord(word: String): Corpus? {
         return corpusDao.getCorpusByWord(word)?.asExternalModel()
+    }
+
+    override fun getCorpusById(id: String): Flow<Corpus> {
+        return corpusDao.getCorpusById(id).map { it.asExternalModel() }
     }
 
     override fun searchCorpus(query: String): Flow<PagingData<Corpus>> {
@@ -100,17 +99,17 @@ class CorpusRepositoryImpl @Inject constructor(
     }
 
     override suspend fun moveCorpusToNote(
-        corpusWords: List<String>,
+        corpusIds: List<String>,
         newNoteId: String,
     ) {
-        corpusDao.moveCorpusToNote(corpusWords, newNoteId)
+        corpusDao.moveCorpusToNote(corpusIds, newNoteId)
     }
 
     override suspend fun updateCorpusMark(
-        corpusWords: List<String>,
+        corpusIds: List<String>,
         newMark: Mark,
     ) {
-        corpusDao.updateCorpusMark(corpusWords, newMark)
+        corpusDao.updateCorpusMark(corpusIds, newMark)
     }
 
     override suspend fun countMark(
@@ -137,57 +136,15 @@ class CorpusRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun syncAllGrouped(userId: String) {
-        val allData = corpusDao.getAll()
-
-        // Group by noteId
-        val grouped = allData.groupBy { it.noteId }
-
-        grouped.forEach { (noteId, list) ->
-            val json = Gson().toJson(list)
-            val docRef = firestore.collection("backups")
-                .document(userId)
-                .collection("notes")
-                .document(noteId)
-
-            docRef.set(
-                mapOf(
-                    "data" to json,
-                    "updatedAt" to FieldValue.serverTimestamp()
-                )
-            ).addOnSuccessListener {
-                Timber.d("Backup noteId=$noteId berhasil")
-            }.addOnFailureListener {
-                Timber.e("Backup noteId=$noteId gagal: $it")
-            }
-        }
-    }
-
-    override suspend fun restoreGrouped(userId: String): List<Corpus> {
-        val snapshot = firestore.collection("backups")
-            .document(userId)
-            .collection("notes")
-            .get()
-            .await()
-
-        val allEntities = mutableListOf<CorpusEntity>()
-        val type = object : TypeToken<List<CorpusEntity>>() {}.type
-
-        snapshot.documents.forEach { doc ->
-            val json = doc.getString("data") ?: return@forEach
-            val entities: List<CorpusEntity> = Gson().fromJson(json, type)
-            allEntities.addAll(entities)
-        }
-        return allEntities.map { it.asExternalModel() }
-    }
 }
 
 interface CorpusRepository {
     suspend fun addCorpus(corpus: Corpus): Long
     suspend fun insertCorpusList(corpusList: List<Corpus>): InsertResult
     suspend fun updateCorpus(corpus: Corpus)
-    suspend fun deleteBatch(words: List<String>)
+    suspend fun deleteBatch(ids: List<String>)
     suspend fun getCorpusByWord(word: String): Corpus?
+    fun getCorpusById(id: String): Flow<Corpus>
     fun searchCorpus(query: String): Flow<PagingData<Corpus>>
     fun getAllCorpus(): Flow<PagingData<Corpus>>
     fun getPagedCorpus(
@@ -202,9 +159,7 @@ interface CorpusRepository {
     fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>>
     suspend fun deleteCorpusByNoteId(noteId: String)
     suspend fun countExisting(words: List<String>): Int
-    suspend fun moveCorpusToNote(corpusWords: List<String>, newNoteId: String)
-    suspend fun updateCorpusMark(corpusWords: List<String>, newMark: Mark)
+    suspend fun moveCorpusToNote(corpusIds: List<String>, newNoteId: String)
+    suspend fun updateCorpusMark(corpusIds: List<String>, newMark: Mark)
     suspend fun countMark(noteId: String, mark: Mark): Int
-    suspend fun syncAllGrouped(userId: String)
-    suspend fun restoreGrouped(userId: String): List<Corpus>
 }
