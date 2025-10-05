@@ -120,7 +120,7 @@ class SearchFragment : Fragment() {
                 onSearch(word)
             }
         }
-        detailViewModel.corpus.observe(viewLifecycleOwner) {
+        viewModel.searchCorpus.observe(viewLifecycleOwner) {
             Timber.d("Corpus: $it")
             it?.let { corpus ->
                 setupUI(corpus)
@@ -159,7 +159,7 @@ class SearchFragment : Fragment() {
                 NoteBottomSheet(list) { note ->
                     noteViewModel.updateNoteId(note.id)
                     noteViewModel.insertCorpus(
-                        detailViewModel.corpus.value!!.copy(noteId = note.id)
+                        viewModel.searchCorpus.value!!.copy(noteId = note.id)
                     ) {
                         Toast.makeText(
                             requireContext(),
@@ -175,7 +175,7 @@ class SearchFragment : Fragment() {
     }
 
     private fun onSearch(word: String) {
-        detailViewModel.searchWordDefinition(word.trim())
+        viewModel.searchWordDefinition(word.trim())
 
         binding.btnSearch.visibility = View.GONE
         binding.itemDetail.contentDetail.visibility = View.VISIBLE
@@ -286,7 +286,6 @@ class SearchFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        detailViewModel.resetCorpus()
     }
 
 }

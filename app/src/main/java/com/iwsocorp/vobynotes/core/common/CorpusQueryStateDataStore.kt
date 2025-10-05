@@ -25,7 +25,6 @@ class CorpusQueryStateDataStore @Inject constructor(
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "corpus_query")
 
     private object Keys {
-        val NOTE_ID = stringPreferencesKey("note_id")
         val MARK = stringPreferencesKey("mark")
         val SORT_BY = stringPreferencesKey("sort_by")
         val SORT_ORDER = stringPreferencesKey("sort_order")

@@ -93,7 +93,7 @@ class NoteViewModel @Inject constructor(
     }
 
     fun insertCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
-        val existingCorpus = corpusRepository.getCorpusById(corpus.word)
+        val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
         Timber.d("existingCorpus: $existingCorpus")
         if (existingCorpus != null) {
             callback(-1L)

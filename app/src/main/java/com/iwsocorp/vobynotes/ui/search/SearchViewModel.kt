@@ -7,8 +7,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepository
+import com.iwsocorp.vobynotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
+import com.iwsocorp.vobynotes.core.model.toCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -17,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val corpusRepository: CorpusRepository,
+    private val vocabularyRepository: VocabularyRepository,
 ) : ViewModel() {
 
     private val _searchResults = MutableLiveData<PagingData<Corpus>>()
@@ -33,6 +36,13 @@ class SearchViewModel @Inject constructor(
             }.collect {
                 _searchResults.value = it
             }
+    }
+
+    private val _searchCorpus = MutableLiveData<Corpus>()
+    val searchCorpus: LiveData<Corpus> = _searchCorpus
+
+    fun searchWordDefinition(word: String) = viewModelScope.launch {
+        _searchCorpus.value = vocabularyRepository.getVocabulary(word).toCorpus()
     }
 
     fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {

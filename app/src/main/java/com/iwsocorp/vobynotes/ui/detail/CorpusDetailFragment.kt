@@ -162,6 +162,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
             setFragmentResult("requestKey", result)
             popBackStack()
         }
+        viewModel.resetCorpus()
     }
 
     private var examplesJob: Job? = null
@@ -185,7 +186,6 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
             tvEmpty.isVisible = corpus.meanings.isEmpty()
 
             val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word) {
-                viewModel.resetCorpus()
                 lifecycleScope.launch {
                     findNavController().navigate(
                         R.id.action_corpusDetailFragment_to_searchFragment,

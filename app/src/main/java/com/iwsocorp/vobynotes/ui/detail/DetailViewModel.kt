@@ -12,7 +12,6 @@ import com.iwsocorp.vobynotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Example
 import com.iwsocorp.vobynotes.core.model.Mark
-import com.iwsocorp.vobynotes.core.model.toCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -70,10 +69,6 @@ class DetailViewModel @Inject constructor(
         _corpus.value = null
     }
 
-    fun searchWordDefinition(word: String) = viewModelScope.launch {
-        _corpus.value = vocabularyRepository.getVocabulary(word).toCorpus()
-    }
-
     fun updateCorpusDetail(word: String) = viewModelScope.launch {
         _corpus.value?.let {
             val vocab = vocabularyRepository.getVocabulary(word)
@@ -124,7 +119,10 @@ class DetailViewModel @Inject constructor(
                         meaning.definitions.forEach { definition ->
                             definition.example?.let { sentence ->
                                 if (containsWordRegex(sentence, word)) {
-                                    examples.add(Example("", sentence))
+                                    examples.add(Example(word, sentence))
+                                }
+                                if (word == corpus.word && sentence.isNotEmpty()) {
+                                    examples.add(Example(word, sentence))
                                 }
                             }
                         }
