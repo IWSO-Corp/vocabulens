@@ -22,9 +22,14 @@ class ExampleRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAll(): List<Example> {
+        return exampleDao.getAll().map { it.asExternalModel() }
+    }
+
 }
 
 interface ExampleRepository {
     suspend fun insertExampleSentence(example: Example)
     fun getExamplesByWord(word: String): Flow<List<Example>>
+    suspend fun getAll(): List<Example>
 }

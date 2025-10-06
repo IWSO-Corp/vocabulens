@@ -39,6 +39,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private val viewModel: NoteViewModel by viewModels()
+    private val navController by lazy {
+        findNavController(R.id.nav_host_fragment_content_main)
+    }
     lateinit var drawerLayout: DrawerLayout
         private set
     lateinit var toolbar: Toolbar
@@ -78,10 +81,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupNavigation() {
         val navView: NavigationView = binding.navView
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_settings
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_practice, R.id.nav_settings
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -91,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             when (destination.id) {
                 R.id.nav_home,
                 R.id.nav_gallery,
-                R.id.nav_slideshow,
+                R.id.nav_practice,
                     -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                     setupDrawer()
@@ -205,7 +207,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main, menu)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if (destination.id == R.id.nav_home) menuInflater.inflate(
+                R.menu.main,
+                menu
+            ) else menu.clear()
+        }
         return true
     }
 

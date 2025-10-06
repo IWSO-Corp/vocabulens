@@ -25,10 +25,10 @@
         tools:layout="@layout/fragment_gallery" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.iwsocorp.vobynotes.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_practice"
+        android:name="com.iwsocorp.vobynotes.ui.slideshow.PracticeFragment"
+        android:label="@string/menu_practice"
+        tools:layout="@layout/fragment_practice" />
 
     <fragment
         android:id="@+id/noteFragment"

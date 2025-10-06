@@ -195,6 +195,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     }
 
     private fun setNormalToolbar() = with(binding) {
+        tvToolbarTitle.text = viewModel.note.value?.title ?: ""
         tvToolbarTitle.setOnClickListener {
             tvToolbarTitle.visibility = View.GONE
             etToolbarTitle.visibility = View.VISIBLE
