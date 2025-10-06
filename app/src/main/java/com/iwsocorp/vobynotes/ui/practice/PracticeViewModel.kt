@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vobynotes.core.data.repository.ExampleRepository
 import com.iwsocorp.vobynotes.core.model.Example
+import com.iwsocorp.vobynotes.core.model.Mark
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,34 +18,56 @@ class PracticeViewModel @Inject constructor(
     private val exampleRepository: ExampleRepository,
 ) : ViewModel() {
 
-    private val _currentExample = MutableStateFlow<Example?>(null)
-    val currentExample: StateFlow<Example?> = _currentExample
+    private val _noteId = MutableStateFlow<String?>(null)
+    val noteId: StateFlow<String?> = _noteId
 
-    private val _questionSentence = MutableStateFlow("")
-    val questionSentence: StateFlow<String> = _questionSentence
+    fun setNoteId(noteId: String?) = viewModelScope.launch {
+        _noteId.value = noteId
+    }
 
-    private val _options = MutableStateFlow<List<String>>(emptyList())
-    val options: StateFlow<List<String>> = _options
+    private val _mark = MutableStateFlow<Mark?>(null)
+    val mark: StateFlow<Mark?> = _mark
 
-    fun loadNewQuestion() = viewModelScope.launch {
-        val allExamples = exampleRepository.getAll()
-        val example = allExamples.random()
-        _currentExample.value = example
+    fun setMark(mark: Mark?) = viewModelScope.launch {
+        _mark.value = mark
+    }
 
-        // Hilangkan kata target dari kalimat
-        val sentenceWithBlank = example.sentence.replace(
-            Regex("\\b${example.forWord}\\b", RegexOption.IGNORE_CASE),
-            "_____"
-        )
-        _questionSentence.value = sentenceWithBlank
+    private val _wordLang = MutableStateFlow<String?>(null)
+    val wordLang: StateFlow<String?> = _wordLang
 
-        // Buat opsi acak (1 benar + 3 salah)
-        val wrongOptions = allExamples.map { it.forWord }
-            .filterNot { it == example.forWord }
-            .shuffled()
-            .take(3)
+    private val _meaningLang = MutableStateFlow<String?>(null)
+    val meaningLang: StateFlow<String?> = _meaningLang
 
-        _options.value = (wrongOptions + example.forWord).shuffled()
+    private val _limit = MutableStateFlow(50)
+    val limit: StateFlow<Int> = _limit
+
+    fun setLimit(limit: Int) = viewModelScope.launch {
+        _limit.value = limit
+    }
+
+    private val _quizList = MutableStateFlow<List<Example>>(emptyList())
+    val quizList: StateFlow<List<Example>> = _quizList
+
+    private val _isExampleEnough = MutableSharedFlow<Boolean>()
+    val isExampleEnough: SharedFlow<Boolean> = _isExampleEnough
+
+    fun getExamplesForQuiz(
+        noteId: String? = null,
+        mark: Mark? = null,
+        wordLang: String? = null,
+        meaningLang: String? = null,
+        limit: Int = 50,
+    ) = viewModelScope.launch {
+        exampleRepository.getExamplesForQuiz(
+            noteId,
+            mark,
+            wordLang,
+            meaningLang,
+            limit,
+        ).collect {
+            _quizList.value = it
+            _isExampleEnough.emit(it.size >= limit)
+        }
     }
 
 }

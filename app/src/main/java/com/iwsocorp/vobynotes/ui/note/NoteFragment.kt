@@ -130,7 +130,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
 
         viewModel.noteId.observe(viewLifecycleOwner) { id ->
             id?.let { noteId ->
-                viewModel.getPagedCorpus(noteId).collectLatestLifecycleAware { corpusPagingData ->
+                viewModel.getPagedCorpus(noteId).collectOnStarted { corpusPagingData ->
                     Timber.d("corpusPagingData: $corpusPagingData")
                     wordAdapter.submitData(corpusPagingData)
                 }
@@ -145,7 +145,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             viewModel.updateNoteTitle(note.title)
         }
 
-        wordAdapter.loadStateFlow.collectLatestLifecycleAware {
+        wordAdapter.loadStateFlow.collectOnStarted {
             val alphabetSet = extractAvailableLettersFromLoadedPages()
             populateAlphabetSidebar(alphabetSet)
             updateUI(it)
@@ -358,7 +358,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
         rvCorpus.addOnScrollListener(scrollListener)
 
-        viewModel.queryState.collectLatestLifecycleAware { state ->
+        viewModel.queryState.collectOnStarted { state ->
             Timber.d("queryState: $state")
             svAlphabet.isVisible = state.sortBy == SortBy.WORD
             btnScrollToTop.isVisible = state.sortBy == SortBy.UPDATED_AT

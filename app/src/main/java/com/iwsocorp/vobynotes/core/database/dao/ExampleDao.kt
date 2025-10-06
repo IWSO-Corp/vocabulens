@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
+import com.iwsocorp.vobynotes.core.model.Mark
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -21,5 +22,24 @@ interface ExampleDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExampleList(exampleList: List<ExampleEntity>)
+
+    @Query("""
+        SELECT e.* FROM examples e
+        INNER JOIN Corpus c ON e.forWord = c.word
+        WHERE 
+            (:noteId IS NULL OR c.noteId = :noteId)
+        AND (:mark IS NULL OR c.mark = :mark)
+        AND (:wordLang IS NULL OR c.wordLang = :wordLang)
+        AND (:meaningLang IS NULL OR c.meaningLang = :meaningLang)
+        ORDER BY e.createdAt DESC
+        LIMIT :limit
+    """)
+    fun getExamplesForQuiz(
+        noteId: String? = null,
+        mark: Mark? = null,
+        wordLang: String? = null,
+        meaningLang: String? = null,
+        limit: Int = 50
+    ): Flow<List<ExampleEntity>>
 
 }

@@ -33,13 +33,13 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             }
         }
 
-        authViewModel.authState.collectLatestLifecycleAware {
+        authViewModel.authState.collectOnStarted {
             it.onSuccess { user ->
                 setupUI(user)
                 Timber.d("Firebase user: ${user?.uid}")
             }
         }
-        viewModel.backupState.collectLatestLifecycleAware {
+        viewModel.backupState.collectOnStarted {
             binding.progressLoading.isVisible = it is BackupState.Loading
 
             when (it) {

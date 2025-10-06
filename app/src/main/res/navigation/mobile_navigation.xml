@@ -28,7 +28,11 @@
         android:id="@+id/nav_practice"
         android:name="com.iwsocorp.vobynotes.ui.practice.PracticeFragment"
         android:label="@string/menu_practice"
-        tools:layout="@layout/fragment_practice" />
+        tools:layout="@layout/fragment_practice" >
+        <action
+            android:id="@+id/action_nav_practice_to_quizFragment"
+            app:destination="@id/quizFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/noteFragment"
@@ -92,5 +96,10 @@
         android:name="com.iwsocorp.vobynotes.ui.auth.AuthFragment"
         android:label="AuthFragment"
         tools:layout="@layout/fragment_auth" />
+    <fragment
+        android:id="@+id/quizFragment"
+        android:name="com.iwsocorp.vobynotes.ui.practice.QuizFragment"
+        android:label="QuizFragment"
+        tools:layout="@layout/fragment_quiz" />
 
 </navigation>

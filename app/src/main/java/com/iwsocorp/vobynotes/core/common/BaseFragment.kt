@@ -37,12 +37,12 @@ abstract class BaseFragment<VB : ViewBinding>(
     /**
      * Collect Flow dengan aman sesuai lifecycle Fragment
      */
-    protected fun <T> Flow<T>.collectLatestLifecycleAware(
+    protected fun <T> Flow<T>.collectOnStarted(
         collector: suspend (T) -> Unit
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                this@collectLatestLifecycleAware.collectLatest(collector)
+                this@collectOnStarted.collectLatest(collector)
             }
         }
     }

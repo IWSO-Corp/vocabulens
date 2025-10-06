@@ -19,7 +19,7 @@ class AuthFragment : BaseFragment<FragmentAuthBinding>(FragmentAuthBinding::infl
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.authState.collectLatestLifecycleAware {
+        viewModel.authState.collectOnStarted {
             it.onSuccess { user ->
                 user?.let {
                     Toast.makeText(requireContext(), "Signed in", Toast.LENGTH_SHORT).show()
