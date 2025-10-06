@@ -14,10 +14,12 @@ import com.iwsocorp.vobynotes.core.model.Example
 import com.iwsocorp.vobynotes.core.model.Mark
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -107,37 +109,15 @@ class DetailViewModel @Inject constructor(
     }
 
     @OptIn(FlowPreview::class)
-    fun getExamplesByWord(word: String, allCorpusFlow: Flow<List<Corpus>>): Flow<List<Example>> =
-        exampleRepository.getExamplesByWord(word).debounce(200).distinctUntilChanged()
-            .combine(
-                allCorpusFlow.debounce(200).distinctUntilChanged()
-            ) { exampleList, corpusList ->
-                val examples = mutableListOf<Example>().apply { addAll(exampleList) }
-
-                corpusList.forEach { corpus ->
-                    corpus.meanings.forEach { meaning ->
-                        meaning.definitions.forEach { definition ->
-                            definition.example?.let { sentence ->
-                                if (containsWordRegex(sentence, word)) {
-                                    examples.add(Example(word, sentence))
-                                }
-                                if (word == corpus.word && sentence.isNotEmpty()) {
-                                    examples.add(Example(word, sentence))
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Timber.d("Examples flow [$word]: ${examples.map { it.sentence }}")
-                examples.distinctBy { it.sentence }.shuffled().take(5)
-            }
-            .distinctUntilChanged() // <- cegah emit berulang untuk data sama
-
-    fun containsWordRegex(sentence: String, word: String): Boolean {
-        val pattern = "\\b${Regex.escape(word)}\\b".toRegex(RegexOption.IGNORE_CASE)
-        return pattern.containsMatchIn(sentence)
-    }
+    fun getExamplesByWord(word: String): StateFlow<List<Example>> =
+        exampleRepository.getExamplesByWord(word)
+            .debounce(200)
+            .distinctUntilChanged()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                emptyList()
+            )
 
     fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {
         corpusRepository.updateCorpusMark(corpusIds, newMark)

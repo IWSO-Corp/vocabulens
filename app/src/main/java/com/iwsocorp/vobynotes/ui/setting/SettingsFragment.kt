@@ -52,7 +52,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 }
 
                 is BackupState.Error -> {
-                    Toast.makeText(requireContext(), it.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error occurred", Toast.LENGTH_SHORT).show()
+                    Timber.e(it.message)
                 }
 
                 else -> {}

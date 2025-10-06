@@ -11,7 +11,6 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vobynotes.R
@@ -30,9 +29,7 @@ import com.iwsocorp.vobynotes.ui.search.ARG_SEARCH_WORD
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -202,16 +199,10 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
             rvExample.adapter = adapter
         }
 
-        // TODO: get examples by inconsistency in word
-        examplesJob?.cancel() // hentikan collector lama
+        examplesJob?.cancel()
 
         examplesJob = viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.getExamplesByWord(corpus.word, homeViewModel.allCorpus)
-                .stateIn(
-                    viewModel.viewModelScope,
-                    SharingStarted.WhileSubscribed(5000),
-                    emptyList()
-                ) // opsional, caching sementara
+            viewModel.getExamplesByWord(corpus.word)
                 .collectLatest { examples ->
                     adapter.submitList(examples)
                     Timber.d("Examples by word: ${corpus.word}")

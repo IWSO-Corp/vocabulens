@@ -1,4 +1,4 @@
-package com.iwsocorp.vobynotes.ui.slideshow
+package com.iwsocorp.vobynotes.ui.practice
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -40,7 +40,7 @@ class PracticeViewModel @Inject constructor(
         val wrongOptions = allExamples.map { it.forWord }
             .filterNot { it == example.forWord }
             .shuffled()
-            .take(4)
+            .take(3)
 
         _options.value = (wrongOptions + example.forWord).shuffled()
     }

@@ -21,6 +21,11 @@ object Utils {
         return format.format(date)
     }
 
+    fun containsWordRegex(sentence: String, word: String): Boolean {
+        val pattern = "\\b${Regex.escape(word)}\\b".toRegex(RegexOption.IGNORE_CASE)
+        return pattern.containsMatchIn(sentence)
+    }
+
     fun generateRandomString(length: Int): String {
         val charset = ('A'..'Z') + ('a'..'z') + ('0'..'9')
         return (1..length)

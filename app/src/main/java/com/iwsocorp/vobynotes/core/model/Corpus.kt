@@ -1,6 +1,5 @@
 package com.iwsocorp.vobynotes.core.model
 
-import com.google.gson.Gson
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import java.util.UUID
 
@@ -21,7 +20,6 @@ data class Corpus(
 )
 
 fun Corpus.asEntity(): CorpusEntity {
-    val meaningsJson = Gson().toJson(meanings)
     return CorpusEntity(
         id = id,
         word = word,
@@ -31,7 +29,7 @@ fun Corpus.asEntity(): CorpusEntity {
         meaningLang = meaningLang,
         phonetic = phonetic,
         audio = audio,
-        meaningsJson = meaningsJson,
+        meanings = meanings,
         mark = mark,
         createdAt = createdAt,
         updatedAt = updatedAt

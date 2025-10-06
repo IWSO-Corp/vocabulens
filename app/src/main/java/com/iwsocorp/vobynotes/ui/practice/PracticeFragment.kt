@@ -1,4 +1,4 @@
-package com.iwsocorp.vobynotes.ui.slideshow
+package com.iwsocorp.vobynotes.ui.practice
 
 import android.os.Bundle
 import android.os.Handler

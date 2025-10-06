@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.google.gson.Gson
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.Meaning
@@ -20,7 +19,8 @@ import com.iwsocorp.vobynotes.core.model.Meaning
         )
     ],
     indices = [
-        Index(value = ["word", "wordLang", "meaningLang"], unique = true)
+        Index(value = ["noteId"]),
+        Index(value = ["word", "wordLang", "meaningLang"], unique = true),
     ]
 )
 data class CorpusEntity(
@@ -32,14 +32,13 @@ data class CorpusEntity(
     val meaningLang: String,
     val phonetic: String,
     val audio: String,
-    val meaningsJson: String,
+    val meanings: List<Meaning>,
     val mark: Mark,
     val createdAt: Long,
     val updatedAt: Long,
 )
 
 fun CorpusEntity.asExternalModel(): Corpus {
-    val meanings = Gson().fromJson(meaningsJson, Array<Meaning>::class.java).toList()
     return Corpus(
         noteId = noteId,
         word = word,

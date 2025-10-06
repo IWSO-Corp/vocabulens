@@ -12,6 +12,7 @@ import com.iwsocorp.vobynotes.core.database.dao.insertCorpusListWithResult
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import com.iwsocorp.vobynotes.core.database.model.asExternalModel
 import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.core.model.Example
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.SortBy
 import com.iwsocorp.vobynotes.core.model.SortOrder
@@ -34,7 +35,22 @@ class CorpusRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateCorpus(corpus: Corpus) {
-        corpusDao.updateCorpus(corpus.asEntity())
+        val examples = mutableListOf<Example>()
+
+        corpus.meanings.map { meaning ->
+            meaning.definitions.map { definition ->
+                definition.example?.let {
+                    if (it.isNotEmpty()) examples.add(Example(corpus.word, it))
+                }
+            }
+        }
+
+        corpusDao.updateCorpusAndInsertExamples(
+            corpus.asEntity(),
+            examples.toList().map {
+                it.asEntity()
+            }
+        )
     }
 
     override suspend fun deleteBatch(ids: List<String>) {

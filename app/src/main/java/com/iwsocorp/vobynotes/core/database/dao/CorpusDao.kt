@@ -5,8 +5,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
+import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
 import com.iwsocorp.vobynotes.core.model.Mark
 import kotlinx.coroutines.flow.Flow
 
@@ -45,6 +47,18 @@ interface CorpusDao {
 
     @Update
     suspend fun updateCorpus(corpus: CorpusEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertExamples(examples: List<ExampleEntity>)
+
+    @Transaction
+    suspend fun updateCorpusAndInsertExamples(
+        corpus: CorpusEntity,
+        examples: List<ExampleEntity>
+    ) {
+        updateCorpus(corpus)
+        insertExamples(examples)
+    }
 
     @Query("DELETE FROM corpus WHERE id IN (:ids)")
     suspend fun deleteBatch(ids: List<String>)
