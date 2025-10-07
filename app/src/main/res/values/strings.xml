@@ -31,4 +31,9 @@
     <string name="sign_in">Sign in</string>
     <string name="sign_out">Sign out</string>
     <string name="start">Start</string>
+    <string name="next">Continue</string>
+    <string name="correct_d">Correct: %1$d</string>
+    <string name="wrong_d">Wrong: %1$d</string>
+    <string name="your_answer_s">Your answer: %1$s</string>
+    <string name="quiz_completed">Quiz Completed</string>
 </resources>

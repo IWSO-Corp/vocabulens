@@ -11,17 +11,13 @@ class QuizViewModel : ViewModel() {
     private val _quizState = MutableStateFlow<QuizState>(QuizState.Idle)
     val state: StateFlow<QuizState> = _quizState.asStateFlow()
     private var currentIndex = 0
+    private val _result = mutableListOf<Triple<String, Boolean, String>>()
 
     fun startQuiz(examples: List<Example>) {
-        if (examples.isNotEmpty()) {
-            _quizState.value = QuizState.ShowQuestion(
-                examples[currentIndex],
-                currentIndex + 1,
-                examples.size
-            )
-        } else {
-            _quizState.value = QuizState.Finished
-        }
+        _quizState.value = QuizState.ShowQuestion(
+            examples[currentIndex],
+            currentIndex + 1,
+        )
     }
 
     fun answerQuestion(selected: String, examples: List<Example>) {
@@ -42,19 +38,22 @@ class QuizViewModel : ViewModel() {
             _quizState.value = QuizState.ShowQuestion(
                 examples[currentIndex],
                 currentIndex + 1,
-                examples.size
             )
         } else {
-            _quizState.value = QuizState.Finished
+            _quizState.value = QuizState.Finished(_result)
         }
     }
+
+    fun saveResult(sentence: String, isCorrect: Boolean, selectedAnswer: String) = _result.add(
+        Triple(sentence, isCorrect, selectedAnswer)
+    )
 }
 
 sealed class QuizState {
+    object Idle : QuizState()
     data class ShowQuestion(
         val example: Example,
         val position: Int,
-        val total: Int,
     ) : QuizState()
 
     data class ShowResult(
@@ -64,6 +63,7 @@ sealed class QuizState {
         val sentence: String,
     ) : QuizState()
 
-    object Idle : QuizState()
-    object Finished : QuizState()
+    data class Finished(
+        val result: List<Triple<String, Boolean, String>>,
+    ) : QuizState()
 }

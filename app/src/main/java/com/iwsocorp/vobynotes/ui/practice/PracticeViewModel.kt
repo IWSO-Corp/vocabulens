@@ -38,11 +38,11 @@ class PracticeViewModel @Inject constructor(
     private val _meaningLang = MutableStateFlow<String?>(null)
     val meaningLang: StateFlow<String?> = _meaningLang
 
-    private val _limit = MutableStateFlow(50)
-    val limit: StateFlow<Int> = _limit
+    private val _amount = MutableStateFlow(1)
+    val amount: StateFlow<Int> = _amount
 
-    fun setLimit(limit: Int) = viewModelScope.launch {
-        _limit.value = limit
+    fun setAmount(amount: Int) = viewModelScope.launch {
+        _amount.value = amount
     }
 
     private val _quizList = MutableStateFlow<List<Example>>(emptyList())
@@ -56,17 +56,16 @@ class PracticeViewModel @Inject constructor(
         mark: Mark? = null,
         wordLang: String? = null,
         meaningLang: String? = null,
-        limit: Int = 50,
+        amount: Int,
     ) = viewModelScope.launch {
         exampleRepository.getExamplesForQuiz(
             noteId,
             mark,
             wordLang,
             meaningLang,
-            limit,
         ).collect {
             _quizList.value = it
-            _isExampleEnough.emit(it.size >= limit)
+            _isExampleEnough.emit(it.size >= amount)
         }
     }
 

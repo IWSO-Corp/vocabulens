@@ -32,14 +32,12 @@ class ExampleRepositoryImpl @Inject constructor(
         mark: Mark?,
         wordLang: String?,
         meaningLang: String?,
-        limit: Int,
     ): Flow<List<Example>> {
         return exampleDao.getExamplesForQuiz(
             noteId,
             mark,
             wordLang,
             meaningLang,
-            limit
         ).map { list ->
             list.map { it.asExternalModel() }
         }
@@ -56,6 +54,5 @@ interface ExampleRepository {
         mark: Mark? = null,
         wordLang: String? = null,
         meaningLang: String? = null,
-        limit: Int = 50
     ): Flow<List<Example>>
 }

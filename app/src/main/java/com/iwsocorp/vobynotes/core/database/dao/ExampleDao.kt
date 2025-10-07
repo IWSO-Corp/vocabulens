@@ -31,15 +31,13 @@ interface ExampleDao {
         AND (:mark IS NULL OR c.mark = :mark)
         AND (:wordLang IS NULL OR c.wordLang = :wordLang)
         AND (:meaningLang IS NULL OR c.meaningLang = :meaningLang)
-        ORDER BY e.createdAt DESC
-        LIMIT :limit
+        ORDER BY RANDOM()
     """)
     fun getExamplesForQuiz(
         noteId: String? = null,
         mark: Mark? = null,
         wordLang: String? = null,
         meaningLang: String? = null,
-        limit: Int = 50
     ): Flow<List<ExampleEntity>>
 
 }
