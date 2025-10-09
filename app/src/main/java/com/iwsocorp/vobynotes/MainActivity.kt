@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         val navView: NavigationView = binding.navView
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_practice, R.id.nav_settings
+                R.id.nav_home, R.id.nav_scan, R.id.nav_practice, R.id.nav_settings
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
             if (destination.id == R.id.nav_home) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
             when (destination.id) {
                 R.id.nav_home,
-                R.id.nav_gallery,
+                R.id.nav_scan,
                 R.id.nav_practice,
                     -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)

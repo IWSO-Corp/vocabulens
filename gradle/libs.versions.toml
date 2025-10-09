@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.2"
+cameraCore = "1.5.0"
 credentials = "1.6.0-beta01"
 datastorePreferences = "1.1.7"
 firebaseBom = "34.3.0"
@@ -11,6 +12,7 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.7.0"
+languageId = "17.0.6"
 library = "1.2.0"
 material = "1.13.0"
 constraintlayout = "2.2.0"
@@ -22,6 +24,7 @@ legacySupportV4 = "1.0.0"
 fragmentKtx = "1.8.5"
 pagingRuntimeKtx = "3.3.4"
 poiOoxml = "5.2.3"
+textRecognition = "16.0.1"
 timber = "5.0.1"
 room = "2.6.1"
 hilt = "2.52"
@@ -30,9 +33,14 @@ kotlinxSerializationJson = "1.6.3"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 activity = "1.9.3"
+translate = "17.0.3"
 vbpd = "2.0.4"
 
 [libraries]
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCore" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCore" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
@@ -48,6 +56,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+language-id = { module = "com.google.mlkit:language-id", version.ref = "languageId" }
 library = { module = "com.daimajia.swipelayout:library", version.ref = "library" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
@@ -58,6 +67,7 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poiOoxml" }
+text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
@@ -69,6 +79,7 @@ retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.r
 retrofit-kotlin-serialization = { group = "com.squareup.retrofit2", name = "converter-kotlinx-serialization", version.ref = "retrofit" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+translate = { module = "com.google.mlkit:translate", version.ref = "translate" }
 vbpd = { module = "dev.androidbroadcast.vbpd:vbpd", version.ref = "vbpd" }
 
 [plugins]
