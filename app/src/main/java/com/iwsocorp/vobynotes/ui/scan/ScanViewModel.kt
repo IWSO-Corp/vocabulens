@@ -43,6 +43,12 @@ class ScanViewModel @Inject constructor(
 
         try {
             val textBlocks: List<String> = detectText(uri)
+
+            if (textBlocks.isEmpty()) {
+                _uiState.value = ScanUiState.Error("No text found in the image")
+                return@launch
+            }
+
             val results: List<WordResult> = identifyAndTranslate(textBlocks)
 
             _uiState.value = ScanUiState.Success(
@@ -65,22 +71,24 @@ class ScanViewModel @Inject constructor(
         return result.textBlocks.flatMap { it.lines.map { line -> line.text } }
     }
 
-    private suspend fun identifyAndTranslate(texts: List<String>): List<WordResult> {
+    private suspend fun identifyAndTranslate(sentences: List<String>): List<WordResult> {
         val identifier = LanguageIdentification.getClient()
         val translatorMap = mutableMapOf<String, Translator>()
 
-        return texts.flatMap { line ->
-            line.split(" ").filter { it.isNotBlank() }.map { word ->
-                val language = identifier.identifyLanguage(word).await()
-
-                val translator = translatorMap.getOrPut(TranslateLanguage.ENGLISH) {
-                    getTranslator(TranslateLanguage.ENGLISH, TranslateLanguage.INDONESIAN)
-                }
-
-                val translated = translator.translate(word).await()
-                WordResult(word, language, translated)
-            }
+        val allWords = sentences.flatMap { line ->
+            val words = line.split(" ").filter { it.isNotBlank() }
+            words
         }
+
+        return allWords.distinct().map { word ->
+            val language = identifier.identifyLanguage(word).await()
+
+            val translator = translatorMap.getOrPut(TranslateLanguage.ENGLISH) {
+                getTranslator(TranslateLanguage.ENGLISH, TranslateLanguage.INDONESIAN)
+            }
+            val translated = translator.translate(word).await()
+            WordResult(word, language, translated)
+        }.distinct()
     }
 
     private suspend fun getTranslator(source: String, target: String): Translator {
@@ -125,11 +133,7 @@ data class WordResult(
 sealed class ScanUiState {
     object Idle : ScanUiState()
     object Loading : ScanUiState()
-    data class Success(
-        val imageUri: Uri,
-        val results: List<WordResult>,
-    ) : ScanUiState()
-
     data class DownloadingModel(val sourceLang: String, val targetLang: String) : ScanUiState()
+    data class Success(val imageUri: Uri, val results: List<WordResult>) : ScanUiState()
     data class Error(val message: String) : ScanUiState()
 }

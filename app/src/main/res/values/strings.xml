@@ -37,4 +37,10 @@
     <string name="your_answer_s">Your answer: %1$s</string>
     <string name="quiz_completed">Quiz Completed</string>
     <string name="scan">Scan</string>
+    <string name="scan_result">Scan result (%1$d)</string>
+    <string name="scan_word">%1$s (%2$s)</string>
+    <string name="save_all">Save all</string>
+    <string name="save_s">Save %1$d</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="detect_language">Detect language</string>
 </resources>
