@@ -2,6 +2,7 @@ package com.iwsocorp.vobynotes.ui.scan
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.nl.languageid.LanguageIdentification
@@ -12,6 +13,8 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.iwsocorp.vobynotes.core.common.Utils.removePunctuation
+import com.iwsocorp.vobynotes.core.model.WordResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +52,7 @@ class ScanViewModel @Inject constructor(
                 return@launch
             }
 
-            val results: List<WordResult> = identifyAndTranslate(textBlocks)
+            val results: List<WordResult> = identifyAndTranslate(textBlocks).sortedBy { it.word }
 
             _uiState.value = ScanUiState.Success(
                 imageUri = uri,
@@ -76,8 +79,8 @@ class ScanViewModel @Inject constructor(
         val translatorMap = mutableMapOf<String, Translator>()
 
         val allWords = sentences.flatMap { line ->
-            val words = line.split(" ").filter { it.isNotBlank() }
-            words
+            val words = line.removePunctuation().split(" ").filter { it.isNotBlank() }
+            words.filterNot { it.isDigitsOnly() }
         }
 
         return allWords.distinct().map { word ->
@@ -87,7 +90,13 @@ class ScanViewModel @Inject constructor(
                 getTranslator(TranslateLanguage.ENGLISH, TranslateLanguage.INDONESIAN)
             }
             val translated = translator.translate(word).await()
-            WordResult(word, language, translated)
+            WordResult(
+                if (word.trim().uppercase() == "I") word.trim().uppercase()
+                else word.trim().lowercase(),
+                language,
+                translated.trim().lowercase(),
+                TranslateLanguage.INDONESIAN
+            )
         }.distinct()
     }
 
@@ -123,12 +132,6 @@ class ScanViewModel @Inject constructor(
     }
 
 }
-
-data class WordResult(
-    val word: String,
-    val language: String,
-    val translation: String,
-)
 
 sealed class ScanUiState {
     object Idle : ScanUiState()

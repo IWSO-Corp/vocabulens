@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.model.WordResult
 import com.iwsocorp.vobynotes.databinding.ItemScanBinding
 
 class ScanAdapter(
@@ -45,6 +46,14 @@ class ScanAdapter(
         notifyDataSetChanged()
     }
 
+    fun removeSelectedItems() {
+        val itemsToRemove = selectedItem.toList()
+        val currentList = currentList.toMutableList()
+        currentList.removeAll(itemsToRemove)
+        submitList(currentList)
+        clearSelection()
+    }
+
     inner class ViewHolder(
         private val binding: ItemScanBinding
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -52,7 +61,7 @@ class ScanAdapter(
             tvWord.text = itemView.context.getString(
                 R.string.scan_word,
                 wordResult.word,
-                wordResult.language
+                wordResult.sourceLang
             )
             tvTranslate.text = wordResult.translation
 

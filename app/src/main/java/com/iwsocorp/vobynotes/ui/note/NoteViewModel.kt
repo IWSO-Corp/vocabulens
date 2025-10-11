@@ -51,20 +51,21 @@ class NoteViewModel @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getPagedCorpus(noteId: String): Flow<PagingData<Corpus>> = queryState.flatMapLatest { state ->
-        corpusRepository.getPagedCorpus(
-            noteId,
-            state.mark,
-            state.sortBy,
-            state.sortOrder
-        ).map { pagingData ->
-            var counter = 0
-            pagingData.map { entity ->
-                counter++
-                entity.copy(indexNumber = counter)
+    fun getPagedCorpus(noteId: String): Flow<PagingData<Corpus>> =
+        queryState.flatMapLatest { state ->
+            corpusRepository.getPagedCorpus(
+                noteId,
+                state.mark,
+                state.sortBy,
+                state.sortOrder
+            ).map { pagingData ->
+                var counter = 0
+                pagingData.map { entity ->
+                    counter++
+                    entity.copy(indexNumber = counter)
+                }
             }
-        }
-    }.cachedIn(viewModelScope)
+        }.cachedIn(viewModelScope)
 
     private val _notes = MutableLiveData<List<Note>>()
     val notes: LiveData<List<Note>> get() = _notes
@@ -148,6 +149,13 @@ class NoteViewModel @Inject constructor(
         // Insert corpus baru (yang belum ada)
         val corpusWithNote = corpusBatch.map { it.copy(noteId = note.id) }
         insertResult(corpusRepository.insertCorpusList(corpusWithNote))
+    }
+
+    fun insertCorpusList(
+        corpusList: List<Corpus>,
+        insertResult: (result: InsertResult) -> Unit,
+    ) = viewModelScope.launch {
+        insertResult(corpusRepository.insertCorpusList(corpusList))
     }
 
     fun updateNote(note: Note) = viewModelScope.launch {

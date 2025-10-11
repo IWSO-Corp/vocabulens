@@ -18,14 +18,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.transition.Fade
-import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.fadeVisibility
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.model.WordResult
+import com.iwsocorp.vobynotes.core.model.asCorpus
 import com.iwsocorp.vobynotes.databinding.FragmentScanBinding
+import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
+import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import java.io.File
@@ -38,6 +41,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
     private lateinit var cameraExecutor: ExecutorService
 
     private val viewModel: ScanViewModel by activityViewModels()
+    private val notesViewModel: NoteViewModel by activityViewModels()
     private var imageCapture: ImageCapture? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private val permissionLauncher = registerForActivityResult(
@@ -76,12 +80,30 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
     private fun setupUI() {
         binding.rvScan.adapter = adapter
         binding.btnSave.setOnClickListener {
-            val items = adapter.getSelectedItems()
-            if (items.isNotEmpty()) {
-                Timber.d("Selected items: ${adapter.getSelectedItems()}")
-                adapter.clearSelection()
-            } else {
-                Timber.d("All items: ${adapter.currentList}")
+            val items: List<WordResult> = adapter.getSelectedItems()
+
+            notesViewModel.notes.observe(viewLifecycleOwner) { notes ->
+                NoteBottomSheet(notes) { note ->
+                    notesViewModel.insertCorpusList(
+                        items.ifEmpty { adapter.currentList }
+                            .map { it.asCorpus(note.id) }
+                    ) {
+                        if (items.isNotEmpty()) adapter.removeSelectedItems() else rescan()
+
+                        notesViewModel.updateNote(
+                            note.copy(
+                                contentSize = note.contentSize + it.successCount,
+                                updatedAt = System.currentTimeMillis()
+                            )
+                        )
+
+                        Toast.makeText(
+                            requireContext(),
+                            "${it.successCount} items saved to ${note.title.ifEmpty { "Untitled" }}, ${it.failedCount} failed",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }.show(childFragmentManager, null)
             }
         }
         binding.tvClear.setOnClickListener {
@@ -215,12 +237,6 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
                 }
             }"
         )
-    }
-
-    fun View.fadeVisibility(show: Boolean, duration: Long = 300) {
-        val transition = Fade().apply { this.duration = duration }
-        TransitionManager.beginDelayedTransition(this.parent as ViewGroup, transition)
-        visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun setupOnSuccessToolbar() = (requireActivity() as MainActivity).toolbar.apply {

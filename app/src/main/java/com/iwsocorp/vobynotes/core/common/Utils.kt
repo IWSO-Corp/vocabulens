@@ -4,9 +4,12 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.transition.Fade
+import androidx.transition.TransitionManager
 import com.iwsocorp.vobynotes.R
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -14,6 +17,18 @@ import java.util.Locale
 import kotlin.random.Random
 
 object Utils {
+
+    fun String.removePunctuation(): String {
+        return this.replace(Regex("[^\\p{L}\\p{N}\\s]"), "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    fun View.fadeVisibility(show: Boolean, duration: Long = 300) {
+        val transition = Fade().apply { this.duration = duration }
+        TransitionManager.beginDelayedTransition(this.parent as ViewGroup, transition)
+        visibility = if (show) View.VISIBLE else View.GONE
+    }
 
     fun Long.asString(): String {
         val date = Date(this)

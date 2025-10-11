@@ -19,22 +19,20 @@ data class Corpus(
     val indexNumber: Int = 0,
 )
 
-fun Corpus.asEntity(): CorpusEntity {
-    return CorpusEntity(
-        id = id,
-        word = word,
-        noteId = noteId,
-        meaning = meaning,
-        wordLang = wordLang,
-        meaningLang = meaningLang,
-        phonetic = phonetic,
-        audio = audio,
-        meanings = meanings,
-        mark = mark,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
-}
+fun Corpus.asEntity(): CorpusEntity = CorpusEntity(
+    id = id,
+    word = if (word.trim().uppercase() != "I") word.trim().lowercase() else word.trim().uppercase(),
+    noteId = noteId,
+    meaning = meaning.trim().lowercase(),
+    wordLang = wordLang,
+    meaningLang = meaningLang,
+    phonetic = phonetic,
+    audio = audio,
+    meanings = meanings,
+    mark = mark,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
 
 enum class Mark {
     UNMARKED,

@@ -38,19 +38,17 @@ data class CorpusEntity(
     val updatedAt: Long,
 )
 
-fun CorpusEntity.asExternalModel(): Corpus {
-    return Corpus(
-        noteId = noteId,
-        word = word,
-        meaning = meaning,
-        wordLang = wordLang,
-        meaningLang = meaningLang,
-        id = id,
-        phonetic = phonetic,
-        audio = audio,
-        meanings = meanings,
-        mark = mark,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-    )
-}
+fun CorpusEntity.asExternalModel(): Corpus = Corpus(
+    noteId = noteId,
+    word = word,
+    meaning = meaning,
+    wordLang = wordLang,
+    meaningLang = meaningLang,
+    id = id,
+    phonetic = phonetic,
+    audio = audio,
+    meanings = meanings,
+    mark = mark,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
