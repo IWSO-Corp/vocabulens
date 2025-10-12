@@ -3,8 +3,11 @@ package com.iwsocorp.vobynotes.core.common
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
@@ -60,6 +63,31 @@ object Utils {
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
             else -> false
         }
+    }
+
+    fun Context.alertInputDialog(noteTitle: String, action: (String) -> Unit) {
+        val editText = EditText(this).apply {
+            setText(noteTitle)
+            hint = "Note title"
+            inputType = InputType.TYPE_CLASS_TEXT
+            setPadding(32, 24, 32, 24)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Create new note")
+            .setMessage("Enter title:")
+            .setView(editText)
+            .setPositiveButton("Create") { dialog, _ ->
+                val input = editText.text.toString().trim()
+                if (input.isNotEmpty()) {
+                    action(input)
+                } else {
+                    Toast.makeText(this, "Input cannot be empty", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     fun showAlertDialog(

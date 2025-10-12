@@ -21,6 +21,7 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
+import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.databinding.FragmentSearchBinding
@@ -156,7 +157,22 @@ class SearchFragment : Fragment() {
         }
         binding.btnSave.setOnClickListener {
             noteViewModel.notes.observe(viewLifecycleOwner) { list ->
-                NoteBottomSheet(list) { note ->
+                NoteBottomSheet(list, { note ->
+                    requireContext().alertInputDialog(note.title) {
+                        val newNote = if (note.title == it) note else note.copy(title = it)
+                        noteViewModel.updateNoteId(newNote.id)
+                        noteViewModel.createNote(newNote)
+                        noteViewModel.insertCorpus(
+                            viewModel.searchCorpus.value!!.copy(noteId = newNote.id)
+                        ) {
+                            Toast.makeText(
+                                requireContext(),
+                                "Word saved to ${newNote.title}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }) { note ->
                     noteViewModel.updateNoteId(note.id)
                     noteViewModel.insertCorpus(
                         viewModel.searchCorpus.value!!.copy(noteId = note.id)

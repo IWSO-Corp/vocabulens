@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.common.Utils.showPopupMenu
@@ -275,21 +276,25 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
 
             R.id.action_move -> {
                 viewModel.notes.observe(viewLifecycleOwner) { list ->
-                    val bottomSheet = NoteBottomSheet(list.filter {
-                        it.id != viewModel.noteId.value
-                    }) {
+                    NoteBottomSheet(list.filter { it.id != viewModel.noteId.value }, { note ->
+                        requireContext().alertInputDialog(note.title) {
+                            val newNote = if (note.title == it) note else note.copy(title = it)
+                            viewModel.createNote(newNote)
+                            viewModel.moveCorpusToNote(selectedItemIds, newNote.id)
+                            setNormalToolbar()
+                        }
+                    }) { note ->
                         showAlertDialog(
                             requireContext(),
-                            "Move ${selectedItemIds.size} Words to ${it.title}",
+                            "Move ${selectedItemIds.size} Words to ${note.title}",
                             null,
                             "Move",
                             "Cancel"
                         ) {
-                            viewModel.moveCorpusToNote(selectedItemIds, it.id)
+                            viewModel.moveCorpusToNote(selectedItemIds, note.id)
                             setNormalToolbar()
                         }
-                    }
-                    bottomSheet.show(childFragmentManager, null)
+                    }.show(childFragmentManager, null)
                 }
             }
 

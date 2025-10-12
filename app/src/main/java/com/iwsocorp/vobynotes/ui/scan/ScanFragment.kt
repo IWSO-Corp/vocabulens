@@ -22,8 +22,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.fadeVisibility
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.core.model.WordResult
 import com.iwsocorp.vobynotes.core.model.asCorpus
 import com.iwsocorp.vobynotes.databinding.FragmentScanBinding
@@ -83,26 +85,14 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             val items: List<WordResult> = adapter.getSelectedItems()
 
             notesViewModel.notes.observe(viewLifecycleOwner) { notes ->
-                NoteBottomSheet(notes) { note ->
-                    notesViewModel.insertCorpusList(
-                        items.ifEmpty { adapter.currentList }
-                            .map { it.asCorpus(note.id) }
-                    ) {
-                        if (items.isNotEmpty()) adapter.removeSelectedItems() else rescan()
-
-                        notesViewModel.updateNote(
-                            note.copy(
-                                contentSize = note.contentSize + it.successCount,
-                                updatedAt = System.currentTimeMillis()
-                            )
-                        )
-
-                        Toast.makeText(
-                            requireContext(),
-                            "${it.successCount} items saved to ${note.title.ifEmpty { "Untitled" }}, ${it.failedCount} failed",
-                            Toast.LENGTH_LONG
-                        ).show()
+                NoteBottomSheet(notes, { note ->
+                    requireContext().alertInputDialog(note.title) {
+                        val newNote = if (note.title == it) note else note.copy(title = it)
+                        notesViewModel.createNote(newNote)
+                        onSaveToNote(items, newNote)
                     }
+                }) { note ->
+                    onSaveToNote(items, note)
                 }.show(childFragmentManager, null)
             }
         }
@@ -112,6 +102,28 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         binding.tvTargetLang.setOnClickListener {
             Toast.makeText(requireContext(), "More language coming soon!", Toast.LENGTH_SHORT)
                 .show()
+        }
+    }
+
+    private fun onSaveToNote(items: List<WordResult>, note: Note) {
+        notesViewModel.insertCorpusList(
+            items.ifEmpty { adapter.currentList }
+                .map { it.asCorpus(note.id) }
+        ) {
+            if (items.isNotEmpty()) adapter.removeSelectedItems() else rescan()
+
+            notesViewModel.updateNote(
+                note.copy(
+                    contentSize = note.contentSize + it.successCount,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+
+            Toast.makeText(
+                requireContext(),
+                "${it.successCount} items saved to ${note.title.ifEmpty { "Untitled" }}, ${it.failedCount} failed",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

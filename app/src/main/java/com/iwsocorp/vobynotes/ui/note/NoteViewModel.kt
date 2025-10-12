@@ -120,6 +120,10 @@ class NoteViewModel @Inject constructor(
         }
     }
 
+    fun createNote(note: Note) = viewModelScope.launch {
+        noteRepository.addNote(note)
+    }
+
     suspend fun importCorpusBatch(
         fileName: String?,
         corpusBatch: List<Corpus>,
