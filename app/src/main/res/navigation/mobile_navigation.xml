@@ -95,11 +95,20 @@
         android:id="@+id/authFragment"
         android:name="com.iwsocorp.vobynotes.ui.auth.AuthFragment"
         android:label="AuthFragment"
-        tools:layout="@layout/fragment_auth" />
+        tools:layout="@layout/fragment_auth" >
+        <action
+            android:id="@+id/action_authFragment_to_resetPassFragment"
+            app:destination="@id/resetPassFragment" />
+    </fragment>
     <fragment
         android:id="@+id/quizFragment"
         android:name="com.iwsocorp.vobynotes.ui.practice.QuizFragment"
         android:label="QuizFragment"
         tools:layout="@layout/fragment_quiz" />
+    <fragment
+        android:id="@+id/resetPassFragment"
+        android:name="com.iwsocorp.vobynotes.ui.auth.ResetPassFragment"
+        android:label="fragment_reset_pass"
+        tools:layout="@layout/fragment_reset_pass" />
 
 </navigation>

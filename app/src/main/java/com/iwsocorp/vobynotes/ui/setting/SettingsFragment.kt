@@ -25,18 +25,18 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.toolbarSetting.apply {
-            title = "Settings"
-            setNavigationIcon(R.drawable.baseline_arrow_back_24)
-            setNavigationOnClickListener {
-                parentFragmentManager.popBackStack()
-            }
-        }
+        observeState()
+    }
 
+    private fun observeState() {
         authViewModel.authState.collectOnStarted {
             it.onSuccess { user ->
                 setupUI(user)
                 Timber.d("Firebase user: ${user?.uid}")
+            }.onFailure { error ->
+                setupUI(null)
+                Timber.e(error)
+                Toast.makeText(requireContext(), error.message, Toast.LENGTH_SHORT).show()
             }
         }
         viewModel.backupState.collectOnStarted {
@@ -62,6 +62,13 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     }
 
     private fun setupUI(user: FirebaseUser?) = with(binding) {
+        toolbarSetting.apply {
+            title = "Settings"
+            setNavigationIcon(R.drawable.baseline_arrow_back_24)
+            setNavigationOnClickListener {
+                parentFragmentManager.popBackStack()
+            }
+        }
         tvAccount.text = user?.email
         tvAccount.isVisible = user != null
         tvSignin.text = getString(
@@ -83,6 +90,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                     "Cancel",
                 ) {
                     authViewModel.signOut()
+                    Toast.makeText(requireContext(), "Signed out", Toast.LENGTH_SHORT).show()
                 }
             } ?: run {
                 findNavController().navigate(R.id.action_nav_settings_to_authFragment)
@@ -109,15 +117,13 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         }
     }
 
-    private fun signInFirst() {
-        showAlertDialog(
-            requireContext(),
-            "You are not signed in",
-            "Please sign in first",
-            "Sign in",
-            "Cancel",
-        ) {
-            findNavController().navigate(R.id.action_nav_settings_to_authFragment)
-        }
+    private fun signInFirst() = showAlertDialog(
+        requireContext(),
+        "You are not signed in",
+        "Please sign in first",
+        "Sign in",
+        "Cancel",
+    ) {
+        findNavController().navigate(R.id.action_nav_settings_to_authFragment)
     }
 }

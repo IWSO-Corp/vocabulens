@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -25,6 +26,7 @@ interface AuthRepository {
     suspend fun signInWithEmail(email: String, password: String): Result<FirebaseUser?>
     fun getCurrentUser(): FirebaseUser?
     suspend fun signOut()
+    suspend fun resetPassword(email: String): Result<Void?>
 }
 
 class AuthRepositoryImpl @Inject constructor(
@@ -69,16 +71,19 @@ class AuthRepositoryImpl @Inject constructor(
             val user = firebaseAuth.signInWithEmailAndPassword(email, password).await().user
             Result.success(user)
         } catch (e: Exception) {
-            if (e is FirebaseAuthInvalidUserException) {
-                // Kalau user belum terdaftar → auto signup
-                try {
-                    val newUser = firebaseAuth.createUserWithEmailAndPassword(email, password).await().user
-                    Result.success(newUser)
-                } catch (signupError: Exception) {
-                    Result.failure(signupError)
+            when (e) {
+                is FirebaseAuthInvalidUserException,
+                is FirebaseAuthInvalidCredentialsException -> {
+                    try {
+                        val newUser = firebaseAuth.createUserWithEmailAndPassword(email, password)
+                            .await().user
+                        Result.success(newUser)
+                    } catch (signupError: Exception) {
+                        Result.failure(signupError)
+                    }
                 }
-            } else {
-                Result.failure(e)
+
+                else -> Result.failure(e)
             }
         }
     }
@@ -92,6 +97,15 @@ class AuthRepositoryImpl @Inject constructor(
             credentialManager.clearCredentialState(request)
         } catch (e: Exception) {
             Timber.e(e)
+        }
+    }
+
+    override suspend fun resetPassword(email: String): Result<Void?> {
+        return try {
+            firebaseAuth.sendPasswordResetEmail(email, null).await()
+            Result.success(null)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

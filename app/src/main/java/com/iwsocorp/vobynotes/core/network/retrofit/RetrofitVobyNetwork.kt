@@ -34,6 +34,7 @@ internal class RetrofitVobyNetwork @Inject constructor(networkJson: Json) : Voby
             val response = networkApi.getVocabulary(word)
             Timber.d("response: $response")
             if (response.isSuccessful) {
+                Timber.d("response body: ${response.body()}")
                 response.body() ?: listOf(VocabularyResponseItem())
             } else {
                 Timber.e("Failed: ${response.errorBody()}")

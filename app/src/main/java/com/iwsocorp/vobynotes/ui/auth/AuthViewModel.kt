@@ -20,10 +20,13 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow(Result.success(repository.getCurrentUser()))
     val authState: StateFlow<Result<FirebaseUser?>> = _authState.asStateFlow()
 
-    fun signInWithGoogle(context: Context, webClientId: String, nonce: String? = null) =
-        viewModelScope.launch {
-            _authState.value = repository.signInWithGoogle(context, webClientId, nonce)
-        }
+    fun signInWithGoogle(
+        context: Context,
+        webClientId: String,
+        nonce: String? = null
+    ) = viewModelScope.launch {
+        _authState.value = repository.signInWithGoogle(context, webClientId, nonce)
+    }
 
     fun signInWithEmail(email: String, password: String) = viewModelScope.launch {
         _authState.value = repository.signInWithEmail(email, password)
@@ -32,6 +35,13 @@ class AuthViewModel @Inject constructor(
     fun signOut() = viewModelScope.launch {
         repository.signOut()
         _authState.value = Result.success(null)
+    }
+
+    private val _resetPasswordState: MutableStateFlow<Result<Void?>?> = MutableStateFlow(null)
+    val resetPasswordState: StateFlow<Result<Void?>?> = _resetPasswordState.asStateFlow()
+
+    fun resetPassword(email: String) = viewModelScope.launch {
+        _resetPasswordState.value = repository.resetPassword(email)
     }
 
 }

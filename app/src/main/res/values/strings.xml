@@ -43,4 +43,5 @@
     <string name="save_s">Save %1$d</string>
     <string name="clear_selection">Clear selection</string>
     <string name="detect_language">Detect language</string>
+    <string name="or">"  or  "</string>
 </resources>
