@@ -5,7 +5,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.map
-import com.google.firebase.firestore.FirebaseFirestore
 import com.iwsocorp.vobynotes.core.database.dao.CorpusDao
 import com.iwsocorp.vobynotes.core.database.dao.InsertResult
 import com.iwsocorp.vobynotes.core.database.dao.insertCorpusListWithResult
@@ -23,7 +22,6 @@ import javax.inject.Inject
 
 class CorpusRepositoryImpl @Inject constructor(
     private val corpusDao: CorpusDao,
-    private val firestore: FirebaseFirestore,
 ) : CorpusRepository {
 
     override suspend fun addCorpus(corpus: Corpus): Long {
@@ -40,7 +38,7 @@ class CorpusRepositoryImpl @Inject constructor(
         corpus.meanings.map { meaning ->
             meaning.definitions.map { definition ->
                 definition.example?.let {
-                    if (it.isNotEmpty()) examples.add(Example(corpus.word, it))
+                    if (it.isNotEmpty()) examples.add(Example(corpus.id, corpus.word, it))
                 }
             }
         }
@@ -66,15 +64,11 @@ class CorpusRepositoryImpl @Inject constructor(
     }
 
     override fun searchCorpus(query: String): Flow<PagingData<Corpus>> {
-        return createPager {
-            corpusDao.searchCorpus(query)
-        }
+        return createPager { corpusDao.searchCorpus(query) }
     }
 
     override fun getAllCorpus(): Flow<PagingData<Corpus>> {
-        return createPager {
-            corpusDao.getAllCorpus()
-        }
+        return createPager { corpusDao.getAllCorpus() }
     }
 
     override fun getPagedCorpus(
@@ -82,28 +76,16 @@ class CorpusRepositoryImpl @Inject constructor(
         mark: Mark?,
         sortBy: SortBy,
         sortOrder: SortOrder,
-    ): Flow<PagingData<Corpus>> {
-        return createPager {
-            corpusDao.getPagedCorpus(noteId, mark, sortBy.column, sortOrder.value)
-        }
+    ): Flow<PagingData<Corpus>> = createPager {
+        corpusDao.getPagedCorpus(noteId, mark, sortBy.column, sortOrder.value)
     }
 
-    override fun allCorpus(): Flow<List<Corpus>> {
-        return corpusDao.allCorpus().map { list -> list.map { it.asExternalModel() } }
+    override fun allCorpusFlow(): Flow<List<Corpus>> {
+        return corpusDao.allCorpusFlow().map { list -> list.map { it.asExternalModel() } }
     }
 
-    override fun getLatestCorpus(noteId: String): Flow<List<Corpus>> {
-        return corpusDao.getLatestCorpus(noteId).map { list ->
-            list.map { entity ->
-                entity.asExternalModel()
-            }
-        }
-    }
-
-    override fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>> {
-        return createPager {
-            corpusDao.getCorpusByNoteId(noteId)
-        }
+    override fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>> = createPager {
+        corpusDao.getCorpusByNoteId(noteId)
     }
 
     override suspend fun deleteCorpusByNoteId(noteId: String) {
@@ -128,27 +110,17 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.updateCorpusMark(corpusIds, newMark)
     }
 
-    override suspend fun countMark(
-        noteId: String,
-        mark: Mark,
-    ): Int {
-        return corpusDao.countMark(noteId, mark)
-    }
-
     private fun createPager(
         factory: () -> PagingSource<Int, CorpusEntity>,
-    ): Flow<PagingData<Corpus>> {
-        val pager: Pager<Int, CorpusEntity> = Pager(
-            config = PagingConfig(
-                pageSize = Int.MAX_VALUE,
-                initialLoadSize = Int.MAX_VALUE
-            ),
-            pagingSourceFactory = factory
-        )
-        return pager.flow.map { pagingData ->
-            pagingData.map { entity ->
-                entity.asExternalModel()
-            }
+    ): Flow<PagingData<Corpus>> = Pager(
+        config = PagingConfig(
+            pageSize = Int.MAX_VALUE,
+            initialLoadSize = Int.MAX_VALUE
+        ),
+        pagingSourceFactory = factory
+    ).flow.map { pagingData ->
+        pagingData.map { entity ->
+            entity.asExternalModel()
         }
     }
 
@@ -170,12 +142,10 @@ interface CorpusRepository {
         sortOrder: SortOrder,
     ): Flow<PagingData<Corpus>>
 
-    fun allCorpus(): Flow<List<Corpus>>
-    fun getLatestCorpus(noteId: String): Flow<List<Corpus>>
+    fun allCorpusFlow(): Flow<List<Corpus>>
     fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>>
     suspend fun deleteCorpusByNoteId(noteId: String)
     suspend fun countExisting(words: List<String>): Int
     suspend fun moveCorpusToNote(corpusIds: List<String>, newNoteId: String)
     suspend fun updateCorpusMark(corpusIds: List<String>, newMark: Mark)
-    suspend fun countMark(noteId: String, mark: Mark): Int
 }

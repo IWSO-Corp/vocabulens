@@ -63,26 +63,23 @@ interface CorpusDao {
     @Query("DELETE FROM corpus WHERE id IN (:ids)")
     suspend fun deleteBatch(ids: List<String>)
 
-    @Query("SELECT * FROM corpus WHERE word = :word")
+    @Query("SELECT * FROM corpus WHERE word = :word AND deletedAt IS NULL")
     suspend fun getCorpusByWord(word: String): CorpusEntity?
 
     @Query("SELECT * FROM corpus WHERE id = :id")
     fun getCorpusById(id: String): Flow<CorpusEntity>
 
-    @Query("SELECT * FROM corpus WHERE word LIKE :query || '%'")
+    @Query("SELECT * FROM corpus WHERE deletedAt IS NULL AND word LIKE :query || '%'")
     fun searchCorpus(query: String): PagingSource<Int, CorpusEntity>
 
-    @Query("SELECT * FROM corpus ORDER BY word ASC")
+    @Query("SELECT * FROM corpus WHERE deletedAt IS NULL ORDER BY word ASC")
     fun getAllCorpus(): PagingSource<Int, CorpusEntity>
 
-    @Query("SELECT * FROM corpus")
-    fun allCorpus(): Flow<List<CorpusEntity>>
+    @Query("SELECT * FROM corpus WHERE deletedAt IS NULL")
+    fun allCorpusFlow(): Flow<List<CorpusEntity>>
 
-    @Query("SELECT * FROM corpus")
+    @Query("SELECT * FROM corpus WHERE deletedAt IS NULL")
     suspend fun getAll(): List<CorpusEntity>
-
-    @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
-    fun getLatestCorpus(noteId: String): Flow<List<CorpusEntity>>
 
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY word ASC")
     fun getCorpusByNoteId(noteId: String): PagingSource<Int, CorpusEntity>
@@ -95,9 +92,6 @@ interface CorpusDao {
 
     @Query("UPDATE corpus SET mark = :newMark WHERE id IN (:corpusIds)")
     suspend fun updateCorpusMark(corpusIds: List<String>, newMark: Mark)
-
-    @Query("SELECT COUNT(*) FROM corpus WHERE noteId = :noteId AND mark = :mark")
-    suspend fun countMark(noteId: String, mark: Mark): Int
 
 }
 

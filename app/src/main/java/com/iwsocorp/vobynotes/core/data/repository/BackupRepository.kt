@@ -46,7 +46,7 @@ class BackupRepository @Inject constructor(
         .document(userId)
 
     private suspend fun backupNotes(userId: String) {
-        val allNotes = noteDao.getAll()
+        val allNotes = noteDao.getNoteList()
         if (allNotes.isEmpty()) return
         val json = Gson().toJson(allNotes)
         val lastBackupData = restoreAllNotes(userId)

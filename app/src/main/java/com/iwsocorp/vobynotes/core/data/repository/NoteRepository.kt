@@ -1,16 +1,14 @@
 package com.iwsocorp.vobynotes.core.data.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.insertHeaderItem
-import androidx.paging.map
 import com.iwsocorp.vobynotes.core.database.dao.NoteDao
-import com.iwsocorp.vobynotes.core.database.model.NoteEntity
+import com.iwsocorp.vobynotes.core.database.dao.NoteWithLatestCorpus
 import com.iwsocorp.vobynotes.core.database.model.asExternalModel
+import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -46,27 +44,49 @@ class NoteRepositoryImpl @Inject constructor(
         return noteDao.getNoteList().map { it.asExternalModel() }
     }
 
-    override fun getNotes(): Flow<PagingData<Note>> {
-        val staticNote = Note(
-            id = "",
-            title = "All Vocabulary",
-            wordLang = "",
-            meaningLang = "",
-            contentSize = 0,
-            createdAt = 0L,
-            updatedAt = 0L
-        )
-
-        return Pager(
-            config = PagingConfig(pageSize = 10),
-            pagingSourceFactory = {
-                noteDao.getAllNotes()
-            }
-        ).flow.map { pagingData: PagingData<NoteEntity> ->
-            pagingData.map {
-                it.asExternalModel()
-            }.insertHeaderItem(item = staticNote)
+    override fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>> = combine(
+        noteDao.getNotesWithCorpusCountFlow(),
+        noteDao.getAllCorpusFlow()
+    ) { notes, _ ->
+        notes.map { partial ->
+            NoteWithLatestCorpus(
+                partial.note,
+                partial.corpusCount,
+                noteDao.countNoteContentMark(partial.note.id, Mark.FAMILIAR),
+                noteDao.countNoteContentMark(partial.note.id, Mark.UNFAMILIAR),
+                noteDao.getLastFiveCorpusByNoteIdSuspend(partial.note.id)
+            )
         }
+    }.map { list ->
+        list.map {
+            NoteWithCorpus(
+                note = it.note.asExternalModel(),
+                familiarCount = it.familiarCount,
+                unfamiliarCount = it.unfamiliarCount,
+                corpus = it.corpus.map { entity -> entity.asExternalModel() }
+            )
+        }
+    }.map { list ->
+        listOf(
+            NoteWithCorpus(
+                note = Note(
+                    id = "",
+                    title = "All Vocabulary",
+                    wordLang = "",
+                    meaningLang = "",
+                    contentSize = 0,
+                    createdAt = 0L,
+                    updatedAt = 0L
+                ),
+                familiarCount = 0,
+                unfamiliarCount = 0,
+                corpus = emptyList()
+            )
+        ) + list
+    }
+
+    override fun getTrashNotesFlow(): Flow<List<Note>> = noteDao.getTrashNotesFlow().map { list ->
+        list.map { it.asExternalModel() }
     }
 
 }
@@ -79,5 +99,13 @@ interface NoteRepository {
     suspend fun deleteNote(id: String)
     suspend fun getNoteById(id: String): Note
     suspend fun getNoteList(): List<Note>
-    fun getNotes(): Flow<PagingData<Note>>
+    fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>>
+    fun getTrashNotesFlow(): Flow<List<Note>>
 }
+
+data class NoteWithCorpus(
+    val note: Note,
+    val familiarCount: Int,
+    val unfamiliarCount: Int,
+    val corpus: List<Corpus>,
+)

@@ -18,29 +18,30 @@ class ExampleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAll(): List<Example> {
-        return exampleDao.getAll().map { it.asExternalModel() }
+        return exampleDao.getAll().sortedBy { it.quizCount }.map { it.asExternalModel() }
     }
 
-    override fun getExamplesByWord(word: String): Flow<List<Example>> {
-        return exampleDao.getExamplesByWord(word).map {
+    override fun getExamplesByWord(word: String): Flow<List<Example>> =
+        exampleDao.getExamplesByWord(word).map {
             it.map { entity -> entity.asExternalModel() }
         }
-    }
 
     override fun getExamplesForQuiz(
         noteId: String?,
         mark: Mark?,
         wordLang: String?,
         meaningLang: String?,
-    ): Flow<List<Example>> {
-        return exampleDao.getExamplesForQuiz(
-            noteId,
-            mark,
-            wordLang,
-            meaningLang,
-        ).map { list ->
-            list.map { it.asExternalModel() }
-        }
+    ): Flow<List<Example>> = exampleDao.getExamplesForQuiz(
+        noteId,
+        mark,
+        wordLang,
+        meaningLang,
+    ).map { list ->
+        list.map { it.asExternalModel() }
+    }
+
+    override suspend fun incrementQuizCount(ids: List<String>) {
+        exampleDao.incrementQuizCount(ids)
     }
 
 }
@@ -55,4 +56,6 @@ interface ExampleRepository {
         wordLang: String? = null,
         meaningLang: String? = null,
     ): Flow<List<Example>>
+
+    suspend fun incrementQuizCount(ids: List<String>)
 }

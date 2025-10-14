@@ -11,16 +11,16 @@ data class Note(
     val contentSize: Int,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
+    val deletedAt: Long? = null
 )
 
-fun Note.asEntity() : NoteEntity {
-    return NoteEntity(
-        id = id,
-        title = title,
-        wordLang = wordLang,
-        meaningLang = meaningLang,
-        contentSize = contentSize,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-    )
-}
+fun Note.asEntity() = NoteEntity(
+    id = id,
+    title = title,
+    wordLang = wordLang,
+    meaningLang = meaningLang,
+    contentSize = contentSize,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt,
+)

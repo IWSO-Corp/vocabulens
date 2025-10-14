@@ -13,16 +13,16 @@ class NoteEntity(
     val contentSize: Int,
     val createdAt: Long,
     val updatedAt: Long,
+    val deletedAt: Long?,
 )
 
-fun NoteEntity.asExternalModel() : Note {
-    return Note(
-        id = id,
-        title = title,
-        wordLang = wordLang,
-        meaningLang = meaningLang,
-        contentSize = contentSize,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-    )
-}
+fun NoteEntity.asExternalModel() = Note(
+    id = id,
+    title = title,
+    wordLang = wordLang,
+    meaningLang = meaningLang,
+    contentSize = contentSize,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt,
+)

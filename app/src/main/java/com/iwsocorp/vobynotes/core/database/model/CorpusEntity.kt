@@ -36,9 +36,10 @@ data class CorpusEntity(
     val mark: Mark,
     val createdAt: Long,
     val updatedAt: Long,
+    val deletedAt: Long? = null,
 )
 
-fun CorpusEntity.asExternalModel(): Corpus = Corpus(
+fun CorpusEntity.asExternalModel() = Corpus(
     noteId = noteId,
     word = word,
     meaning = meaning,

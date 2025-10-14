@@ -19,7 +19,7 @@ data class Corpus(
     val indexNumber: Int = 0,
 )
 
-fun Corpus.asEntity(): CorpusEntity = CorpusEntity(
+fun Corpus.asEntity() = CorpusEntity(
     id = id,
     word = if (word.trim().uppercase() != "I") word.trim().lowercase() else word.trim().uppercase(),
     noteId = noteId,
