@@ -1,12 +1,20 @@
 package com.iwsocorp.vobynotes.ui.practice
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.iwsocorp.vobynotes.core.data.repository.ExampleRepository
 import com.iwsocorp.vobynotes.core.model.Example
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class QuizViewModel : ViewModel() {
+@HiltViewModel
+class QuizViewModel @Inject constructor(
+    private val exampleRepository: ExampleRepository,
+) : ViewModel() {
 
     private val _quizState = MutableStateFlow<QuizState>(QuizState.Idle)
     val state: StateFlow<QuizState> = _quizState.asStateFlow()
@@ -47,6 +55,10 @@ class QuizViewModel : ViewModel() {
     fun saveResult(sentence: String, isCorrect: Boolean, selectedAnswer: String) = _result.add(
         Triple(sentence, isCorrect, selectedAnswer)
     )
+
+    fun incrementQuizCount(ids: List<String>) = viewModelScope.launch {
+        exampleRepository.incrementQuizCount(ids)
+    }
 }
 
 sealed class QuizState {

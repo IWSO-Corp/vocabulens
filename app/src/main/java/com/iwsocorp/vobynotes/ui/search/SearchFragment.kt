@@ -3,23 +3,20 @@ package com.iwsocorp.vobynotes.ui.search
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.paging.PagingData
+import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
@@ -27,27 +24,26 @@ import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.ARG_FROM
-import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.detail.MeaningAdapter
 import com.iwsocorp.vobynotes.ui.note.ARG_POSITION
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.note.WordAdapter
+import com.iwsocorp.vobynotes.ui.scan.ScanViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_SEARCH_WORD = "searchWordParam"
 
 @AndroidEntryPoint
-class SearchFragment : Fragment() {
+class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding::inflate) {
 
-    private var _binding: FragmentSearchBinding? = null
-    private val binding get() = _binding!!
     private val viewModel: SearchViewModel by viewModels()
-    private val detailViewModel: DetailViewModel by activityViewModels()
     private val noteViewModel: NoteViewModel by viewModels()
+    private val scanViewModel: ScanViewModel by viewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
@@ -90,7 +86,6 @@ class SearchFragment : Fragment() {
             }
         })
     }
-    private val searchWord = MutableLiveData<String>()
     private val args by lazy {
         arguments?.getString(ARG_SEARCH_WORD)
     }
@@ -104,33 +99,43 @@ class SearchFragment : Fragment() {
             binding.searchView.requestFocus()
         }
 
-        viewModel.searchResults.observe(viewLifecycleOwner) {
-            lifecycleScope.launch {
-                wordAdapter.submitData(it)
+        setupUI()
+        observeState()
+    }
+
+    private fun observeState() = viewModel.searchUiState.collectOnStarted { state ->
+        binding.progressBar.isVisible = state is SearchUiState.Loading
+        binding.rvSearch.isVisible = state is SearchUiState.LocalLoaded
+
+        when (state) {
+            is SearchUiState.Idle -> {}
+            is SearchUiState.Loading -> {}
+            is SearchUiState.LocalLoaded -> {
+                withContext(Dispatchers.Main) {
+                    wordAdapter.submitData(state.corpusPagingData)
+                }
+                wordAdapter.addLoadStateListener {
+                    if (it.refresh is LoadState.NotLoading) binding.rvSearch.scrollToPosition(0)
+                    binding.tvEmpty.isVisible = wordAdapter.itemCount == 0
+                }
             }
-        }
-        lifecycleScope.launch {
-            wordAdapter.loadStateFlow.collect {
-                binding.btnSearch.isVisible =
-                    (wordAdapter.itemCount == 0 && searchWord.value?.isNotEmpty() == true)
+
+            is SearchUiState.ApiLoaded -> {
+                setupDetailUI(state.corpus)
             }
-        }
-        searchWord.observe(viewLifecycleOwner) { word ->
-            binding.btnSearch.text = word.trim()
-            binding.btnSearch.setOnClickListener {
-                onSearch(word)
-            }
-        }
-        viewModel.searchCorpus.observe(viewLifecycleOwner) {
-            Timber.d("Corpus: $it")
-            it?.let { corpus ->
-                setupUI(corpus)
-            }
-        }
-        wordAdapter.addLoadStateListener {
-            if (it.refresh is LoadState.NotLoading) binding.rvSearch.scrollToPosition(0)
         }
 
+        Timber.d("State: ${
+            when (state) {
+                is SearchUiState.Idle -> "Idle"
+                is SearchUiState.Loading -> "Loading"
+                is SearchUiState.LocalLoaded -> "LocalLoaded: ${state.corpusPagingData}"
+                is SearchUiState.ApiLoaded -> "ApiLoaded: ${state.corpus}"
+            }
+        }")
+    }
+
+    private fun setupUI() {
         val searchIcon: ImageView =
             binding.searchView.findViewById(androidx.appcompat.R.id.search_mag_icon)
         searchIcon.visibility = View.GONE
@@ -155,39 +160,6 @@ class SearchFragment : Fragment() {
                 parentFragmentManager.popBackStack()
             }
         }
-        binding.btnSave.setOnClickListener {
-            noteViewModel.notes.observe(viewLifecycleOwner) { list ->
-                NoteBottomSheet(list, { note ->
-                    requireContext().alertInputDialog(note.title) {
-                        val newNote = if (note.title == it) note else note.copy(title = it)
-                        noteViewModel.updateNoteId(newNote.id)
-                        noteViewModel.createNote(newNote)
-                        noteViewModel.insertCorpus(
-                            viewModel.searchCorpus.value!!.copy(noteId = newNote.id)
-                        ) {
-                            Toast.makeText(
-                                requireContext(),
-                                "Word saved to ${newNote.title}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                }) { note ->
-                    noteViewModel.updateNoteId(note.id)
-                    noteViewModel.insertCorpus(
-                        viewModel.searchCorpus.value!!.copy(noteId = note.id)
-                    ) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Word saved to ${note.title}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    binding.btnSave.visibility = View.GONE
-                    binding.btnSearch.visibility = View.GONE
-                }.show(childFragmentManager, null)
-            }
-        }
     }
 
     private fun onSearch(word: String) {
@@ -202,7 +174,7 @@ class SearchFragment : Fragment() {
         }
     }
 
-    private fun setupUI(corpus: Corpus) = with(binding.itemDetail) {
+    private fun setupDetailUI(corpus: Corpus) = with(binding.itemDetail) {
         tvWord.text = corpus.word.ifEmpty { args }
         tvMeaning.visibility = View.GONE
         csExample.visibility = View.GONE
@@ -219,11 +191,59 @@ class SearchFragment : Fragment() {
         }
         tvEmpty.isVisible = corpus.meanings.isEmpty()
 
-        val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word) {
+        val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word, {
             binding.searchView.setQuery("", false)
             onSearch(it)
+        }) { word ->
+            scanViewModel.translate(word) {
+                Snackbar.make(
+                    requireView(),
+                    it,
+                    Snackbar.LENGTH_INDEFINITE,
+                ).setAction("OK") {}.show()
+            }
         }
         rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
+
+        binding.btnSave.setOnClickListener {
+            noteViewModel.notes.observe(viewLifecycleOwner) { list ->
+                NoteBottomSheet(list, { note ->
+                    requireContext().alertInputDialog(note.title) {
+                        val newNote = if (note.title == it) note else note.copy(title = it)
+                        noteViewModel.updateNoteId(newNote.id)
+                        noteViewModel.createNote(newNote)
+                        noteViewModel.insertCorpus(
+                            corpus.copy(noteId = newNote.id)
+                        ) {
+                            Toast.makeText(
+                                requireContext(),
+                                "Word saved to ${newNote.title}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        binding.btnSave.visibility = View.GONE
+                        binding.btnSearch.visibility = View.GONE
+                        binding.rvSearch.visibility = View.GONE
+                    }
+                }) { note ->
+                    noteViewModel.updateNoteId(note.id)
+                    noteViewModel.insertCorpus(
+                        corpus.copy(noteId = note.id)
+                    ) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Word saved to ${note.title}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    binding.btnSave.visibility = View.GONE
+                    binding.btnSearch.visibility = View.GONE
+                    binding.rvSearch.visibility = View.GONE
+                }.show(childFragmentManager, null)
+            }
+        }
     }
 
     private val queryListener = object : SearchView.OnQueryTextListener {
@@ -234,17 +254,24 @@ class SearchFragment : Fragment() {
         override fun onQueryTextChange(p0: String?): Boolean {
             val endIcon: ImageView =
                 binding.searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
-            p0?.let {
-                endIcon.isVisible = it.isNotEmpty()
-                if (it.isNotEmpty()) {
-                    viewModel.searchWord(it)
+            p0?.let { q ->
+                endIcon.isVisible = q.isNotEmpty()
+                if (q.isNotEmpty()) {
+                    viewModel.searchWord(q)
                 } else {
                     wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
+                    viewModel.setIdleState()
                 }
 
                 binding.btnSave.visibility = View.GONE
                 binding.itemDetail.contentDetail.visibility = View.GONE
-                searchWord.value = it
+
+                binding.btnSearch.isVisible = q.isNotEmpty()
+                binding.btnSearch.text = q.trim()
+                binding.btnSearch.setOnClickListener {
+                    onSearch(q)
+                    wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
+                }
             }
             return true
         }
@@ -289,19 +316,6 @@ class SearchFragment : Fragment() {
         val imm =
             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        _binding = FragmentSearchBinding.inflate(inflater)
-        return binding.root
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
 }

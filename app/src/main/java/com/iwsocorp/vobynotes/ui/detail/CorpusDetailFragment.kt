@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -23,8 +24,8 @@ import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Example
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.databinding.FragmentCorpusDetailBinding
-import com.iwsocorp.vobynotes.ui.home.HomeViewModel
 import com.iwsocorp.vobynotes.ui.note.ARG_POSITION
+import com.iwsocorp.vobynotes.ui.scan.ScanViewModel
 import com.iwsocorp.vobynotes.ui.search.ARG_SEARCH_WORD
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
 ) {
 
     private val viewModel: DetailViewModel by activityViewModels()
-    private val homeViewModel: HomeViewModel by activityViewModels()
+    private val scanViewModel: ScanViewModel by viewModels()
     private val corpusId: String by lazy {
         arguments?.getString(ARG_CORPUS_ID)!!
     }
@@ -96,8 +97,9 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
 
         binding.itemDetail.iconAddExample.setOnClickListener {
             ExampleBottomSheet {
+                val corpus = viewModel.corpus.value!!
                 viewModel.insertExampleSentence(
-                    Example(viewModel.corpus.value!!.word, it)
+                    Example(corpus.id, corpus.word, it)
                 )
                 Toast.makeText(requireContext(), "Example added", Toast.LENGTH_SHORT).show()
             }.show(childFragmentManager, null)
@@ -182,7 +184,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
             }
             tvEmpty.isVisible = corpus.meanings.isEmpty()
 
-            val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word) {
+            val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word, {
                 lifecycleScope.launch {
                     findNavController().navigate(
                         R.id.action_corpusDetailFragment_to_searchFragment,
@@ -190,6 +192,14 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                             putString(ARG_SEARCH_WORD, it)
                         }
                     )
+                }
+            }) { word ->
+                scanViewModel.translate(word) {
+                    Snackbar.make(
+                        requireView(),
+                        it,
+                        Snackbar.LENGTH_INDEFINITE,
+                    ).setAction("OK") {}.show()
                 }
             }
             rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)

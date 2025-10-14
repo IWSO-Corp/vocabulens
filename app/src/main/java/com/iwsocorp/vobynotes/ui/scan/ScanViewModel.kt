@@ -100,6 +100,12 @@ class ScanViewModel @Inject constructor(
         }.distinct()
     }
 
+    fun translate(word: String, result: (String) -> Unit) = viewModelScope.launch {
+        val translator = getTranslator(TranslateLanguage.ENGLISH, TranslateLanguage.INDONESIAN)
+        val translated = translator.translate(word).await()
+        result(translated)
+    }
+
     private suspend fun getTranslator(source: String, target: String): Translator {
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(source)

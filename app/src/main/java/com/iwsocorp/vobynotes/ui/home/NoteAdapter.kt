@@ -5,36 +5,29 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.paging.PagingDataAdapter
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.Utils.asString
+import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
 import com.iwsocorp.vobynotes.core.model.Corpus
-import com.iwsocorp.vobynotes.core.model.Mark
-import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.databinding.ItemNoteBinding
 import com.iwsocorp.vobynotes.databinding.ItemWordPreviewBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 class NoteAdapter(
-    private val viewModel: HomeViewModel,
+    private val noteWithCorpus: List<NoteWithCorpus>,
     private val listener: ClickListener,
-) : PagingDataAdapter<Note, NoteAdapter.ViewHolder>(DiffCallback()) {
+) : RecyclerView.Adapter<NoteAdapter.ViewHolder>() {
 
     interface ClickListener {
         fun onClick(pos: Int, noteId: String)
+        fun getAllCorpusSize(callback: (Int) -> Unit)
     }
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(note: Note) = with(binding) {
+        fun bind(noteWithCorpus: NoteWithCorpus) = with(binding) {
+            val note = noteWithCorpus.note
+
             tvTitle.apply {
                 text = note.title
                 visibility = if (note.title.isEmpty()) View.GONE else View.VISIBLE
@@ -47,18 +40,13 @@ class NoteAdapter(
                 tvWordCount.text =
                     itemView.context.getString(R.string.word_amount, note.contentSize)
 
-                if (note.contentSize > 0) setupMark(note)
-            } else {
-                CoroutineScope(Dispatchers.IO).launch {
-                    viewModel.allCorpus.collectLatest {
-                        Timber.d("All corpus: ${it.size}")
-                        withContext(Dispatchers.Main) {
-                            tvWordCount.isVisible = it.isNotEmpty()
-                            tvWordCount.text =
-                                itemView.context.getString(R.string.word_amount, it.size)
-                        }
-                    }
-                }
+                if (note.contentSize > 0) setupMark(
+                    noteWithCorpus.familiarCount,
+                    noteWithCorpus.unfamiliarCount
+                )
+            } else listener.getAllCorpusSize() {
+                tvWordCount.isVisible = it != 0
+                tvWordCount.text = itemView.context.getString(R.string.word_amount, it)
             }
 
             itemView.setOnClickListener {
@@ -67,16 +55,17 @@ class NoteAdapter(
 
             rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
             val previewAdapter = PreviewAdapter(
+                corpusList = noteWithCorpus.corpus,
                 noteId = note.id,
                 onClick = { listener.onClick(absoluteAdapterPosition, it) },
             )
             rvPreview.adapter = previewAdapter
-            viewModel.getCorpusByNoteId(note.id) {
-                previewAdapter.submitList(it)
-            }
         }
 
-        private fun ItemNoteBinding.setupMark(note: Note) {
+        private fun ItemNoteBinding.setupMark(
+            familiarCount: Int,
+            unfamiliarCount: Int
+        ) {
             val iconFam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
             iconFam?.setBounds(0, 0, 48, 48) // width x height dalam px
             iconFam?.setTint(
@@ -97,30 +86,22 @@ class NoteAdapter(
             tvFamiliar.setCompoundDrawables(iconFam, null, null, null)
             tvUnfamiliar.setCompoundDrawables(iconUnfam, null, null, null)
 
-            CoroutineScope(Dispatchers.IO).launch {
-                viewModel.countMark(note.id, Mark.FAMILIAR).collectLatest {
-                    withContext(Dispatchers.Main) {
-                        tvFamiliar.text = it.toString()
-                        tvFamiliar.setTextColor(
-                            itemView.context.resources.getColor(
-                                R.color.blue,
-                                itemView.context.theme
-                            )
-                        )
-                    }
-                }
-                viewModel.countMark(note.id, Mark.UNFAMILIAR).collectLatest {
-                    withContext(Dispatchers.Main) {
-                        tvUnfamiliar.text = it.toString()
-                        tvUnfamiliar.setTextColor(
-                            itemView.context.resources.getColor(
-                                R.color.red,
-                                itemView.context.theme
-                            )
-                        )
-                    }
-                }
-            }
+            tvFamiliar.text = familiarCount.toString()
+            tvFamiliar.setTextColor(
+                itemView.context.resources.getColor(
+                    R.color.blue,
+                    itemView.context.theme
+                )
+            )
+
+            tvUnfamiliar.text = unfamiliarCount.toString()
+            tvUnfamiliar.setTextColor(
+                itemView.context.resources.getColor(
+                    R.color.red,
+                    itemView.context.theme
+                )
+            )
+
         }
     }
 
@@ -135,24 +116,20 @@ class NoteAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        getItem(position)?.let {
-            holder.bind(it)
-        }
+        holder.bind(noteWithCorpus[position])
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<Note>() {
-        override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean =
-            oldItem.id == newItem.id
-
-        override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean = oldItem == newItem
+    override fun getItemCount(): Int {
+        return noteWithCorpus.size
     }
 
 }
 
 class PreviewAdapter(
+    private val corpusList: List<Corpus>,
     private val noteId: String,
     private val onClick: (noteId: String) -> Unit,
-) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DiffCallback()) {
+) : RecyclerView.Adapter<PreviewAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -183,16 +160,11 @@ class PreviewAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        holder.bind(item)
+        holder.bind(corpusList[position])
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<Corpus>() {
-        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
-            oldItem.word == newItem.word
-
-        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
-            oldItem == newItem
+    override fun getItemCount(): Int {
+        return corpusList.size
     }
 
 }

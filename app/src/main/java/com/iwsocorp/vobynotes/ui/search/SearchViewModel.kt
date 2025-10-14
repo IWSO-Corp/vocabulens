@@ -1,7 +1,5 @@
 package com.iwsocorp.vobynotes.ui.search
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -12,6 +10,7 @@ import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.toCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,10 +21,15 @@ class SearchViewModel @Inject constructor(
     private val vocabularyRepository: VocabularyRepository,
 ) : ViewModel() {
 
-    private val _searchResults = MutableLiveData<PagingData<Corpus>>()
-    val searchResults: LiveData<PagingData<Corpus>> = _searchResults
+    private val _searchUiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
+    val searchUiState: MutableStateFlow<SearchUiState> = _searchUiState
+
+    fun setIdleState() {
+        _searchUiState.value = SearchUiState.Idle
+    }
 
     fun searchWord(word: String) = viewModelScope.launch {
+        _searchUiState.value = SearchUiState.Loading
         corpusRepository.searchCorpus(word)
             .map { pagingData ->
                 var counter = 0
@@ -34,15 +38,15 @@ class SearchViewModel @Inject constructor(
                     entity.copy(indexNumber = counter)
                 }
             }.collect {
-                _searchResults.value = it
+                _searchUiState.value = SearchUiState.LocalLoaded(it)
             }
     }
 
-    private val _searchCorpus = MutableLiveData<Corpus>()
-    val searchCorpus: LiveData<Corpus> = _searchCorpus
-
     fun searchWordDefinition(word: String) = viewModelScope.launch {
-        _searchCorpus.value = vocabularyRepository.getVocabulary(word).toCorpus()
+        _searchUiState.value = SearchUiState.Loading
+        _searchUiState.value = SearchUiState.ApiLoaded(
+            vocabularyRepository.getVocabulary(word).toCorpus()
+        )
     }
 
     fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {
@@ -51,4 +55,11 @@ class SearchViewModel @Inject constructor(
 
     suspend fun getCorpusByWord(word: String): Corpus? = corpusRepository.getCorpusByWord(word)
 
+}
+
+sealed class SearchUiState {
+    object Idle : SearchUiState()
+    object Loading : SearchUiState()
+    data class LocalLoaded(val corpusPagingData: PagingData<Corpus>) : SearchUiState()
+    data class ApiLoaded(val corpus: Corpus) : SearchUiState()
 }

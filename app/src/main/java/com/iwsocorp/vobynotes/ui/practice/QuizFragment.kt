@@ -17,8 +17,10 @@ import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.Example
 import com.iwsocorp.vobynotes.databinding.FragmentQuizBinding
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
+@AndroidEntryPoint
 class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::inflate) {
 
     private val viewModel: QuizViewModel by viewModels()
@@ -29,12 +31,9 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
         super.onViewCreated(view, savedInstanceState)
 
         val amount = practiceViewModel.amount.value
-        practiceViewModel.quizList.collectOnStarted {
-            Timber.d("Quiz List ${it.size}: ${it.map { example -> example.sentence }}")
-            observe(it.take(
-                if (amount == 1) it.size else amount
-            ))
-        }
+        val quizList = practiceViewModel.quizList.value
+        Timber.d("Quiz List ${quizList.size}: ${quizList.map { example -> example.sentence }}")
+        observe(quizList.take(if (amount == 1) quizList.size else amount))
     }
 
     private fun observe(examples: List<Example>) = viewModel.state.collectOnStarted { state ->
@@ -65,7 +64,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
             }
 
             is QuizState.Finished -> {
-                showFinishedUI(state.result)
+                showFinishedUI(state.result, examples)
             }
         }
     }
@@ -136,7 +135,10 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
         binding.nextButton.setOnClickListener { viewModel.nextQuestion(examples) }
     }
 
-    private fun showFinishedUI(result: List<Triple<String, Boolean, String>>) {
+    private fun showFinishedUI(
+        result: List<Triple<String, Boolean, String>>,
+        examples: List<Example>
+    ) {
         binding.optionsGrid.removeAllViews()
         optionButtons.clear()
         binding.nextButton.apply {
@@ -153,6 +155,8 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
 
         val adapter = ResultAdapter(result)
         binding.rvResult.adapter = adapter
+
+        viewModel.incrementQuizCount(examples.map { it.id })
     }
 
     private fun setupToolbar(position: Int, total: Int) {
