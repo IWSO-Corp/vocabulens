@@ -124,13 +124,13 @@ class NoteViewModel @Inject constructor(
         noteRepository.addNote(note)
     }
 
-    suspend fun importCorpusBatch(
+    fun importCorpusBatch(
         fileName: String?,
         corpusBatch: List<Corpus>,
         existingCount: (existingCount: Int) -> Unit,
         insertResult: (result: InsertResult) -> Unit,
-    ) {
-        if (corpusBatch.isEmpty()) return
+    ) = viewModelScope.launch {
+        if (corpusBatch.isEmpty()) return@launch
 
         val words = corpusBatch.map { it.word }
         val wordLang = corpusBatch.first().wordLang
@@ -139,7 +139,7 @@ class NoteViewModel @Inject constructor(
         // Hitung corpus yang sudah ada di DB
         val existingCount = corpusRepository.countExisting(words)
         existingCount(existingCount)
-        if (existingCount == words.size) return
+        if (existingCount == words.size) return@launch
 
         // Buat Note baru
         val note = Note(
@@ -168,6 +168,10 @@ class NoteViewModel @Inject constructor(
 
     fun deleteNote(noteId: String) = viewModelScope.launch {
         noteRepository.deleteNote(noteId)
+    }
+
+    fun moveNoteToTrash(noteId: String) = viewModelScope.launch {
+        noteRepository.moveNoteToTrash(noteId)
     }
 
     fun deleteCorpusBatch(ids: List<String>) = viewModelScope.launch {

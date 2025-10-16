@@ -15,6 +15,25 @@ import dagger.hilt.android.AndroidEntryPoint
 class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
 
     private val viewModel: HomeViewModel by activityViewModels()
+    private val adapter: NoteAdapter by lazy {
+        NoteAdapter(
+            object : NoteAdapter.ClickListener {
+                override fun onClick(pos: Int, noteId: String) = findNavController().navigate(
+                    R.id.action_nav_home_to_noteFragment,
+                    Bundle().apply { putString(ARG_NOTE_ID, noteId) }
+                )
+
+                override fun getAllCorpusSize(callback: (Int) -> Unit) =
+                    viewModel.allCorpus.collectOnStarted {
+                        callback(it.size)
+                    }
+
+                override fun onSelectionChanged(size: Int) {
+                }
+
+            }
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -23,23 +42,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             binding.progressBar.isVisible = it is UiState.Loading
 
             if (it is UiState.Loaded) with(binding) {
-                rvNote.adapter = NoteAdapter(it.notes, listener)
+                adapter.submitList(it.notes)
+                rvNote.adapter = adapter
                 tvEmpty.isVisible = it.notes.isEmpty()
             }
         }
-    }
-
-    private val listener = object : NoteAdapter.ClickListener {
-        override fun onClick(pos: Int, noteId: String) = findNavController().navigate(
-            R.id.action_nav_home_to_noteFragment,
-            Bundle().apply { putString(ARG_NOTE_ID, noteId) }
-        )
-
-        override fun getAllCorpusSize(callback: (Int) -> Unit) =
-            viewModel.allCorpus.collectOnStarted {
-                callback(it.size)
-            }
-
     }
 
 }

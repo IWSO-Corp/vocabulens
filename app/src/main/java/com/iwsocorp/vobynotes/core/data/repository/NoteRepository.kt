@@ -85,8 +85,36 @@ class NoteRepositoryImpl @Inject constructor(
         ) + list
     }
 
-    override fun getTrashNotesFlow(): Flow<List<Note>> = noteDao.getTrashNotesFlow().map { list ->
-        list.map { it.asExternalModel() }
+    override fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>> = combine(
+        noteDao.getTrashNotesFlow(),
+        noteDao.getAllTrashCorpusFlow()
+    ) { notes, _ ->
+        notes.map { partial ->
+            NoteWithLatestCorpus(
+                partial.note,
+                partial.corpusCount,
+                noteDao.countNoteContentMark(partial.note.id, Mark.FAMILIAR),
+                noteDao.countNoteContentMark(partial.note.id, Mark.UNFAMILIAR),
+                noteDao.getLastFiveCorpusByNoteIdSuspend(partial.note.id)
+            )
+        }
+    }.map { list ->
+        list.map {
+            NoteWithCorpus(
+                note = it.note.asExternalModel(),
+                familiarCount = it.familiarCount,
+                unfamiliarCount = it.unfamiliarCount,
+                corpus = it.corpus.map { entity -> entity.asExternalModel() }
+            )
+        }
+    }
+
+    override suspend fun moveNoteToTrash(id: String) {
+        noteDao.moveNoteToTrash(id)
+    }
+
+    override suspend fun restoreNoteFromTrash(id: String) {
+        noteDao.restoreNoteFromTrash(id)
     }
 
 }
@@ -100,7 +128,9 @@ interface NoteRepository {
     suspend fun getNoteById(id: String): Note
     suspend fun getNoteList(): List<Note>
     fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>>
-    fun getTrashNotesFlow(): Flow<List<Note>>
+    fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>>
+    suspend fun moveNoteToTrash(id: String)
+    suspend fun restoreNoteFromTrash(id: String)
 }
 
 data class NoteWithCorpus(

@@ -15,20 +15,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.navigation.NavigationView
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
 import com.iwsocorp.vobynotes.ui.widget.SEARCH
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import timber.log.Timber
 import java.io.InputStream
@@ -50,44 +47,39 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
+
         setContentView(binding.root)
 
         drawerLayout = binding.drawerLayout
         toolbar = binding.appBarMain.toolbar
 
+        setSupportActionBar(toolbar)
+
         toolbar.title = getString(R.string.app_name)
         toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.black))
 
-        binding.appBarMain.fab.setOnClickListener { view ->
+        binding.appBarMain.fab.setOnClickListener {
             findNavController(R.id.nav_host_fragment_content_main)
                 .navigate(R.id.action_nav_home_to_noteFragment)
         }
 
-        setSupportActionBar(toolbar)
         setupNavigation()
     }
 
-    private fun setupDrawer() {
-        val drawerLayout = drawerLayout
-        val drawerToggle = ActionBarDrawerToggle(
-            this, drawerLayout, toolbar,
-            R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.black)
-        drawerLayout.addDrawerListener(drawerToggle)
-        drawerToggle.syncState()
-    }
-
     private fun setupNavigation() {
-        val navView: NavigationView = binding.navView
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_scan, R.id.nav_practice, R.id.nav_settings
+                R.id.nav_home, R.id.nav_scan, R.id.nav_practice, R.id.nav_trash, R.id.nav_settings
             ), drawerLayout
         )
+
         setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+
+        binding.navView.setupWithNavController(navController)
+
         navController.addOnDestinationChangedListener { _, destination, _ ->
             if (destination.id == R.id.nav_home) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
             when (destination.id) {
@@ -99,6 +91,11 @@ class MainActivity : AppCompatActivity() {
                     setupDrawer()
                     supportActionBar?.show()
                 }
+                R.id.nav_trash -> {
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+                    setupDrawer()
+                    supportActionBar?.hide()
+                }
 
                 else -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
@@ -106,12 +103,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
 
-        // Cek apakah ada instruksi dari widget
-        val openFragment = intent.getStringExtra(OPEN_FRAGMENT)
-        if (openFragment == SEARCH) {
-            navController.navigate(R.id.searchFragment)
-        }
+    private fun setupDrawer() {
+        val drawerToggle = ActionBarDrawerToggle(
+            this, drawerLayout, toolbar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.black)
+        drawerLayout.addDrawerListener(drawerToggle)
+        drawerToggle.syncState()
     }
 
     private val openDocumentLauncher = registerForActivityResult(
@@ -128,16 +129,14 @@ class MainActivity : AppCompatActivity() {
                     return@let
                 }
 
-                lifecycleScope.launch {
-                    viewModel.importCorpusBatch(getFileName(uri), data, existingCount = {
-                        Toast.makeText(this@MainActivity, "Existing $it", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Imported ${it.successCount} items, duplicate ${it.failedCount}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                viewModel.importCorpusBatch(getFileName(uri), data, existingCount = {
+                    Toast.makeText(this@MainActivity, "Existing $it", Toast.LENGTH_SHORT).show()
+                }) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Imported ${it.successCount} items, duplicate ${it.failedCount}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -217,7 +216,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
@@ -232,12 +230,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent) // agar selalu baca intent baru
 
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) {
-            navController.navigate(R.id.searchFragment)
-        }
+        setIntent(intent)
+
+        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
     }
 
 }

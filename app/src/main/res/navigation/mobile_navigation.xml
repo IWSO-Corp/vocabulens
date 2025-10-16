@@ -28,7 +28,7 @@
         android:id="@+id/nav_practice"
         android:name="com.iwsocorp.vobynotes.ui.practice.PracticeFragment"
         android:label="@string/menu_practice"
-        tools:layout="@layout/fragment_practice" >
+        tools:layout="@layout/fragment_practice">
         <action
             android:id="@+id/action_nav_practice_to_quizFragment"
             app:destination="@id/quizFragment" />
@@ -50,6 +50,7 @@
             android:id="@+id/action_noteFragment_to_editDetailFragment"
             app:destination="@id/editDetailFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/corpusDetailFragment"
         android:name="com.iwsocorp.vobynotes.ui.detail.CorpusDetailFragment"
@@ -65,6 +66,7 @@
             android:id="@+id/action_corpusDetailFragment_to_editDetailFragment"
             app:destination="@id/editDetailFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/searchFragment"
         android:name="com.iwsocorp.vobynotes.ui.search.SearchFragment"
@@ -77,38 +79,59 @@
             android:id="@+id/action_searchFragment_to_editDetailFragment"
             app:destination="@id/editDetailFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/editDetailFragment"
         android:name="com.iwsocorp.vobynotes.ui.detail.EditDetailFragment"
         android:label="fragment_edit_detail"
         tools:layout="@layout/fragment_edit_detail" />
+
     <fragment
         android:id="@+id/nav_settings"
         android:name="com.iwsocorp.vobynotes.ui.setting.SettingsFragment"
         android:label="@string/action_settings"
-        tools:layout="@layout/fragment_settings" >
+        tools:layout="@layout/fragment_settings">
         <action
             android:id="@+id/action_nav_settings_to_authFragment"
             app:destination="@id/authFragment" />
     </fragment>
+    
     <fragment
         android:id="@+id/authFragment"
         android:name="com.iwsocorp.vobynotes.ui.auth.AuthFragment"
         android:label="AuthFragment"
-        tools:layout="@layout/fragment_auth" >
+        tools:layout="@layout/fragment_auth">
         <action
             android:id="@+id/action_authFragment_to_resetPassFragment"
             app:destination="@id/resetPassFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/quizFragment"
         android:name="com.iwsocorp.vobynotes.ui.practice.QuizFragment"
         android:label="QuizFragment"
         tools:layout="@layout/fragment_quiz" />
+
     <fragment
         android:id="@+id/resetPassFragment"
         android:name="com.iwsocorp.vobynotes.ui.auth.ResetPassFragment"
         android:label="fragment_reset_pass"
         tools:layout="@layout/fragment_reset_pass" />
+
+    <fragment
+        android:id="@+id/nav_trash"
+        android:name="com.iwsocorp.vobynotes.ui.trash.TrashFragment"
+        android:label="fragment_trash"
+        tools:layout="@layout/fragment_trash" >
+        <action
+            android:id="@+id/action_nav_trash_to_trashNoteFragment"
+            app:destination="@id/trashNoteFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/trashNoteFragment"
+        android:name="com.iwsocorp.vobynotes.ui.trash.TrashNoteFragment"
+        android:label="fragment_trash_note"
+        tools:layout="@layout/fragment_trash_note" />
 
 </navigation>

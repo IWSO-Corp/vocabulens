@@ -346,11 +346,11 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     requireContext(),
                     "Delete Note",
                     "Are you sure you want to delete this note and all its contents?",
-                    "Delete",
+                    "Move to Trash",
                     "Cancel"
                 ) {
                     viewModel.noteId.observe(viewLifecycleOwner) {
-                        it?.let { noteId -> viewModel.deleteNote(noteId) }
+                        it?.let { noteId -> viewModel.moveNoteToTrash(noteId) }
                     }
                     parentFragmentManager.popBackStack()
                 }

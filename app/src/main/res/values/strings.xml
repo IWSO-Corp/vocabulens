@@ -44,4 +44,7 @@
     <string name="clear_selection">Clear selection</string>
     <string name="detect_language">Detect language</string>
     <string name="or">"  or  "</string>
+    <string name="action_restore">Restore</string>
+    <string name="action_empty_trash">Empty Trash</string>
+    <string name="action_delete_forever">Delete Forever</string>
 </resources>

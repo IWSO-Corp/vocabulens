@@ -47,8 +47,20 @@ interface NoteDao {
     @Query("SELECT * FROM corpus WHERE deletedAt IS NULL")
     fun getAllCorpusFlow(): Flow<List<CorpusEntity>>
 
-    @Query("SELECT * FROM notes WHERE deletedAt IS NOT NULL")
-    fun getTrashNotesFlow(): Flow<List<NoteEntity>>
+    @Query("SELECT * FROM corpus WHERE deletedAt IS NOT NULL")
+    fun getAllTrashCorpusFlow(): Flow<List<CorpusEntity>>
+
+    @Query(
+        """
+        SELECT n.*, COUNT(c.id) AS corpus_count
+        FROM notes AS n
+        LEFT JOIN corpus AS c ON n.id = c.noteId
+        WHERE n.deletedAt IS NOT NULL
+        GROUP BY n.id
+        ORDER BY n.updatedAt DESC
+    """
+    )
+    fun getTrashNotesFlow(): Flow<List<NoteWithCorpusCount>>
 
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
     suspend fun getLastFiveCorpusByNoteIdSuspend(noteId: String): List<CorpusEntity>
