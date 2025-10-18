@@ -32,8 +32,8 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.decrementContentSize(id, count)
     }
 
-    override suspend fun deleteNote(id: String) {
-        noteDao.deleteNoteById(id)
+    override suspend fun deleteNotes(ids: List<String>) {
+        noteDao.deleteNoteByIds(ids)
     }
 
     override suspend fun getNoteById(id: String): Note {
@@ -109,8 +109,8 @@ class NoteRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun moveNoteToTrash(id: String) {
-        noteDao.moveNoteToTrash(id)
+    override suspend fun moveNotesToTrash(ids: List<String>) {
+        noteDao.moveNotesToTrash(ids)
     }
 
     override suspend fun restoreNoteFromTrash(id: String) {
@@ -124,12 +124,12 @@ interface NoteRepository {
     suspend fun updateNote(note: Note)
     suspend fun incrementContentSize(id: String, count: Int)
     suspend fun decrementContentSize(id: String, count: Int)
-    suspend fun deleteNote(id: String)
+    suspend fun deleteNotes(ids: List<String>)
     suspend fun getNoteById(id: String): Note
     suspend fun getNoteList(): List<Note>
     fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>>
     fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>>
-    suspend fun moveNoteToTrash(id: String)
+    suspend fun moveNotesToTrash(ids: List<String>)
     suspend fun restoreNoteFromTrash(id: String)
 }
 

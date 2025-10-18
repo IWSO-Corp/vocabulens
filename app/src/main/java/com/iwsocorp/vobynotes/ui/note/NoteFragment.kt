@@ -350,7 +350,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     "Cancel"
                 ) {
                     viewModel.noteId.observe(viewLifecycleOwner) {
-                        it?.let { noteId -> viewModel.moveNoteToTrash(noteId) }
+                        it?.let { noteId -> viewModel.moveNotesToTrash(listOf(noteId)) }
                     }
                     parentFragmentManager.popBackStack()
                 }
@@ -406,6 +406,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
 
             if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
                 val firstCorpus = data[firstVisiblePosition]
+                if (firstCorpus.word.isEmpty()) return
+
                 val firstLetter = firstCorpus.word.first().uppercaseChar()
 
                 highlightCurrentLetterInSidebar(firstLetter)
@@ -440,11 +442,16 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     // Function to extract available letters from currently loaded pages
     private fun extractAvailableLettersFromLoadedPages(): List<Char> {
         val currentList = wordAdapter.snapshot().items
+
         detailViewModel.setCorpusList(currentList)
         Timber.d("currentList size: ${currentList.size}")
-        return currentList.map {
+
+        val letters = currentList.map {
+            if (it.word.isEmpty()) return emptyList()
             it.word.first().uppercaseChar()
         }.distinct().sorted()
+
+        return letters
     }
 
     // Populate the sidebar dynamically with the available letters

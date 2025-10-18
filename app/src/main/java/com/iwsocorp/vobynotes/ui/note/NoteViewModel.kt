@@ -124,37 +124,6 @@ class NoteViewModel @Inject constructor(
         noteRepository.addNote(note)
     }
 
-    fun importCorpusBatch(
-        fileName: String?,
-        corpusBatch: List<Corpus>,
-        existingCount: (existingCount: Int) -> Unit,
-        insertResult: (result: InsertResult) -> Unit,
-    ) = viewModelScope.launch {
-        if (corpusBatch.isEmpty()) return@launch
-
-        val words = corpusBatch.map { it.word }
-        val wordLang = corpusBatch.first().wordLang
-        val meaningLang = corpusBatch.first().meaningLang
-
-        // Hitung corpus yang sudah ada di DB
-        val existingCount = corpusRepository.countExisting(words)
-        existingCount(existingCount)
-        if (existingCount == words.size) return@launch
-
-        // Buat Note baru
-        val note = Note(
-            title = fileName ?: "$wordLang-$meaningLang",
-            wordLang = wordLang,
-            meaningLang = meaningLang,
-            contentSize = corpusBatch.size,
-        )
-        noteRepository.addNote(note)
-
-        // Insert corpus baru (yang belum ada)
-        val corpusWithNote = corpusBatch.map { it.copy(noteId = note.id) }
-        insertResult(corpusRepository.insertCorpusList(corpusWithNote))
-    }
-
     fun insertCorpusList(
         corpusList: List<Corpus>,
         insertResult: (result: InsertResult) -> Unit,
@@ -166,12 +135,8 @@ class NoteViewModel @Inject constructor(
         noteRepository.updateNote(note)
     }
 
-    fun deleteNote(noteId: String) = viewModelScope.launch {
-        noteRepository.deleteNote(noteId)
-    }
-
-    fun moveNoteToTrash(noteId: String) = viewModelScope.launch {
-        noteRepository.moveNoteToTrash(noteId)
+    fun moveNotesToTrash(noteIds: List<String>) = viewModelScope.launch {
+        noteRepository.moveNotesToTrash(noteIds)
     }
 
     fun deleteCorpusBatch(ids: List<String>) = viewModelScope.launch {

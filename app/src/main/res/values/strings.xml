@@ -47,4 +47,5 @@
     <string name="action_restore">Restore</string>
     <string name="action_empty_trash">Empty Trash</string>
     <string name="action_delete_forever">Delete Forever</string>
+    <string name="export">Export</string>
 </resources>

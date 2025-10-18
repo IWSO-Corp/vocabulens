@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNote(note: NoteEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -26,8 +26,8 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: NoteEntity)
 
-    @Query("DELETE FROM notes WHERE id = :id")
-    suspend fun deleteNoteById(id: String)
+    @Query("DELETE FROM notes WHERE id IN (:ids)")
+    suspend fun deleteNoteByIds(ids: List<String>)
 
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: String): NoteEntity
@@ -84,31 +84,31 @@ interface NoteDao {
     @Query("UPDATE notes SET updatedAt = :time WHERE id = :noteId")
     suspend fun updateTimestamp(noteId: String, time: Long)
 
-    @Query("UPDATE notes SET deletedAt = :deletedAt WHERE id = :noteId")
-    suspend fun markNoteDeleted(noteId: String, deletedAt: Long)
+    @Query("UPDATE notes SET deletedAt = :deletedAt WHERE id IN (:noteIds)")
+    suspend fun markNoteDeleted(noteIds: List<String>, deletedAt: Long)
 
     @Query(
         """
             UPDATE corpus SET deletedAt = :deletedAt
-            WHERE noteId = :noteId
+            WHERE noteId IN (:noteIds)
     """
     )
-    suspend fun markCorpusDeletedByNoteId(noteId: String, deletedAt: Long)
+    suspend fun markCorpusDeletedByNoteId(noteIds: List<String>, deletedAt: Long)
 
     @Query(
         """
             UPDATE examples SET deletedAt = :deletedAt
-            WHERE corpusId IN (SELECT id FROM corpus WHERE noteId = :noteId)
+            WHERE corpusId IN (SELECT id FROM corpus WHERE noteId = :noteIds)
     """
     )
-    suspend fun markExampleDeletedByNoteId(noteId: String, deletedAt: Long)
+    suspend fun markExampleDeletedByNoteId(noteIds: List<String>, deletedAt: Long)
 
     @Transaction
-    suspend fun moveNoteToTrash(noteId: String) {
+    suspend fun moveNotesToTrash(noteIds: List<String>) {
         val deletedAt = System.currentTimeMillis()
-        markNoteDeleted(noteId, deletedAt)
-        markCorpusDeletedByNoteId(noteId, deletedAt)
-        markExampleDeletedByNoteId(noteId, deletedAt)
+        markNoteDeleted(noteIds, deletedAt)
+        markCorpusDeletedByNoteId(noteIds, deletedAt)
+        markExampleDeletedByNoteId(noteIds, deletedAt)
     }
 
     @Query("UPDATE notes SET deletedAt = NULL WHERE id = :noteId")
