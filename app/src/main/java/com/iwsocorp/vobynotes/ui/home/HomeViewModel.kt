@@ -13,7 +13,9 @@ import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,8 +54,16 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private val _deletedNoteId = MutableSharedFlow< List<String>>()
+    val deletedNoteId: SharedFlow<List<String>> get() = _deletedNoteId
+
     fun moveNotesToTrash(noteIds: List<String>) = viewModelScope.launch {
         noteRepository.moveNotesToTrash(noteIds)
+        _deletedNoteId.emit(noteIds)
+    }
+
+    fun restoreNotes(noteIds: List<String>) = viewModelScope.launch {
+        noteRepository.restoreNotesFromTrash(noteIds)
     }
 
     fun readExcelFile(inputStream: InputStream): List<Corpus> {

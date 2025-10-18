@@ -25,6 +25,18 @@ class TrashViewModel @Inject constructor(
         }
     }
 
+    fun moveNotesToTrash(ids: List<String>) = viewModelScope.launch {
+        noteRepository.moveNotesToTrash(ids)
+    }
+
+    fun deleteNotes(ids: List<String>) = viewModelScope.launch {
+        noteRepository.deleteNotes(ids)
+    }
+
+    fun restoreNotes(ids: List<String>) = viewModelScope.launch {
+        noteRepository.restoreNotesFromTrash(ids)
+    }
+
     init {
         getTrashNotes()
     }

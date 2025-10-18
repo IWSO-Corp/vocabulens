@@ -11,6 +11,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
@@ -60,6 +61,18 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         binding.toolbarHome.apply {
             setOnMenuItemClickListener(menuListener)
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
+        }
+
+        viewModel.deletedNoteId.collectOnStarted { ids ->
+            Snackbar.make(
+                requireView(),
+                "Moved ${ids.size} notes to trash",
+                Snackbar.LENGTH_SHORT
+            ).setAction("Undo") {
+                viewModel.restoreNotes(ids)
+            }.setAnchorView(
+                (requireActivity() as MainActivity).binding.appBarMain.fab
+            ).show()
         }
     }
 
@@ -132,13 +145,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 ) {
                     viewModel.moveNotesToTrash(items)
                     adapter.clearSelection()
-                    setNormalToolbar()
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Moved ${items.size} notes to trash",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         }

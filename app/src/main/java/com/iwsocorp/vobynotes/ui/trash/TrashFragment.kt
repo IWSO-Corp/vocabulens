@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.databinding.FragmentTrashBinding
 import com.iwsocorp.vobynotes.ui.home.NoteAdapter
 import com.iwsocorp.vobynotes.ui.home.UiState
@@ -55,6 +58,11 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
         }
+
+        binding.toolbarTrash.apply {
+            setOnMenuItemClickListener(menuListener)
+            overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
+        }
     }
 
     private fun observeState() = viewModel.uiState.collectOnStarted { state ->
@@ -77,7 +85,6 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
         setNavigationOnClickListener {
             (requireActivity() as MainActivity).drawerLayout.openDrawer(GravityCompat.START)
         }
-        setOnMenuItemClickListener(menuListener)
         menu.clear()
         inflateMenu(R.menu.menu_trash)
     }
@@ -93,20 +100,48 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
         inflateMenu(R.menu.menu_trash_selection)
     }
 
-    private val menuListener = Toolbar.OnMenuItemClickListener {
+    private val menuListener = Toolbar.OnMenuItemClickListener { menuItem ->
         val items = adapter.getSelectedItems()
 
-        when (it.itemId) {
+        when (menuItem.itemId) {
             R.id.action_restore -> {
+                viewModel.restoreNotes(items)
+                adapter.clearSelection()
 
+                Snackbar.make(
+                    binding.root,
+                    "Restored ${items.size} notes",
+                    Snackbar.LENGTH_SHORT
+                ).setAction("Undo") {
+                    viewModel.moveNotesToTrash(items)
+                }.show()
             }
 
             R.id.action_delete_forever -> {
-
+                showAlertDialog(
+                    requireContext(),
+                    "Delete ${items.size} Notes Forever",
+                    "Delete notes and their content forever?",
+                    "Delete Forever",
+                    "Cancel",
+                ) {
+                    viewModel.deleteNotes(items)
+                    adapter.clearSelection()
+                }
             }
 
             R.id.action_empty_trash -> {
-
+                showAlertDialog(
+                    requireContext(),
+                    "Empty Trash",
+                    "All notes in trash will be permanently deleted.",
+                    "Empty Trash",
+                    "Cancel",
+                ) {
+                    val allTrashIds = adapter.currentList.map { it.note.id }
+                    viewModel.deleteNotes(allTrashIds)
+                    adapter.clearSelection()
+                }
             }
         }
 

@@ -23,14 +23,15 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMainBinding
-    private val navController by lazy {
-        findNavController(R.id.nav_host_fragment_content_main)
-    }
+    lateinit var binding: ActivityMainBinding
+        private set
     lateinit var drawerLayout: DrawerLayout
         private set
     lateinit var toolbar: Toolbar
         private set
+    private val navController by lazy {
+        findNavController(R.id.nav_host_fragment_content_main)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

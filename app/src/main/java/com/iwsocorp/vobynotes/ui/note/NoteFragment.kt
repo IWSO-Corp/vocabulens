@@ -34,6 +34,7 @@ import com.iwsocorp.vobynotes.core.model.SortOrder
 import com.iwsocorp.vobynotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
+import com.iwsocorp.vobynotes.ui.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -51,6 +52,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
 
     private var mediaPlayer: MediaPlayer? = null
     private val viewModel: NoteViewModel by viewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(true, object : WordAdapter.ClickListener {
@@ -278,13 +280,14 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
 
             R.id.action_move -> {
-                viewModel.notes.observe(viewLifecycleOwner) { list ->
-                    NoteBottomSheet(list.filter { it.id != viewModel.noteId.value }, { note ->
+                val notes = viewModel.notes.value
+                notes?.let { list ->
+                    NoteBottomSheet(list.filterNot { it.id == viewModel.noteId.value }, { note ->
                         requireContext().alertInputDialog(note.title) {
                             val newNote = if (note.title == it) note else note.copy(title = it)
                             viewModel.createNote(newNote)
                             viewModel.moveCorpusToNote(selectedItemIds, newNote.id)
-                            setNormalToolbar()
+                            wordAdapter.clearSelection()
                         }
                     }) { note ->
                         showAlertDialog(
@@ -295,7 +298,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                             "Cancel"
                         ) {
                             viewModel.moveCorpusToNote(selectedItemIds, note.id)
-                            setNormalToolbar()
+                            wordAdapter.clearSelection()
                         }
                     }.show(childFragmentManager, null)
                 }
@@ -349,10 +352,11 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     "Move to Trash",
                     "Cancel"
                 ) {
-                    viewModel.noteId.observe(viewLifecycleOwner) {
-                        it?.let { noteId -> viewModel.moveNotesToTrash(listOf(noteId)) }
+                    val id = viewModel.noteId.value
+                    id?.let { noteId ->
+                        homeViewModel.moveNotesToTrash(listOf(noteId))
+                        findNavController().popBackStack()
                     }
-                    parentFragmentManager.popBackStack()
                 }
             }
         }

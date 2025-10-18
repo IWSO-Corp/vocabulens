@@ -40,8 +40,10 @@ class NoteRepositoryImpl @Inject constructor(
         return noteDao.getNoteById(id).asExternalModel()
     }
 
-    override suspend fun getNoteList(): List<Note> {
-        return noteDao.getNoteList().map { it.asExternalModel() }
+    override fun getNotesFlow(): Flow<List<Note>> {
+        return noteDao.getNotesFlow().map { list ->
+            list.map { it.asExternalModel() }
+        }
     }
 
     override fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>> = combine(
@@ -113,8 +115,8 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.moveNotesToTrash(ids)
     }
 
-    override suspend fun restoreNoteFromTrash(id: String) {
-        noteDao.restoreNoteFromTrash(id)
+    override suspend fun restoreNotesFromTrash(ids: List<String>) {
+        noteDao.restoreNotesFromTrash(ids)
     }
 
 }
@@ -126,11 +128,11 @@ interface NoteRepository {
     suspend fun decrementContentSize(id: String, count: Int)
     suspend fun deleteNotes(ids: List<String>)
     suspend fun getNoteById(id: String): Note
-    suspend fun getNoteList(): List<Note>
+    fun getNotesFlow(): Flow<List<Note>>
     fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>>
     fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>>
     suspend fun moveNotesToTrash(ids: List<String>)
-    suspend fun restoreNoteFromTrash(id: String)
+    suspend fun restoreNotesFromTrash(ids: List<String>)
 }
 
 data class NoteWithCorpus(

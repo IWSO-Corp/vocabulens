@@ -71,7 +71,9 @@ class NoteViewModel @Inject constructor(
     val notes: LiveData<List<Note>> get() = _notes
 
     fun getNotes() = viewModelScope.launch {
-        _notes.value = noteRepository.getNoteList()
+        noteRepository.getNotesFlow().collect {
+            _notes.value = it
+        }
     }
 
     private val _note = MutableLiveData<Note>()
@@ -133,10 +135,6 @@ class NoteViewModel @Inject constructor(
 
     fun updateNote(note: Note) = viewModelScope.launch {
         noteRepository.updateNote(note)
-    }
-
-    fun moveNotesToTrash(noteIds: List<String>) = viewModelScope.launch {
-        noteRepository.moveNotesToTrash(noteIds)
     }
 
     fun deleteCorpusBatch(ids: List<String>) = viewModelScope.launch {

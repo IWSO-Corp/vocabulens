@@ -71,6 +71,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE deletedAt IS NULL ORDER BY updatedAt DESC")
     suspend fun getNoteList(): List<NoteEntity>
 
+    @Query("SELECT * FROM notes WHERE deletedAt IS NULL ORDER BY updatedAt DESC")
+    fun getNotesFlow(): Flow<List<NoteEntity>>
+
     @Query("UPDATE notes SET contentSize = contentSize + :count, updatedAt = :time WHERE id = :noteId")
     suspend fun incrementContentSize(
         noteId: String,
@@ -111,25 +114,25 @@ interface NoteDao {
         markExampleDeletedByNoteId(noteIds, deletedAt)
     }
 
-    @Query("UPDATE notes SET deletedAt = NULL WHERE id = :noteId")
-    suspend fun markNoteRestored(noteId: String)
+    @Query("UPDATE notes SET deletedAt = NULL WHERE id IN (:noteIds)")
+    suspend fun markNoteRestored(noteIds: List<String>)
 
-    @Query("UPDATE corpus SET deletedAt = NULL WHERE noteId = :noteId")
-    suspend fun markCorpusRestoredByNoteId(noteId: String)
+    @Query("UPDATE corpus SET deletedAt = NULL WHERE noteId IN (:noteIds)")
+    suspend fun markCorpusRestoredByNoteId(noteIds: List<String>)
 
     @Query(
         """
             UPDATE examples SET deletedAt = NULL
-            WHERE corpusId IN (SELECT id FROM corpus WHERE noteId = :noteId)
+            WHERE corpusId IN (SELECT id FROM corpus WHERE noteId = :noteIds)
     """
     )
-    suspend fun markExampleRestoredByNoteId(noteId: String)
+    suspend fun markExampleRestoredByNoteId(noteIds: List<String>)
 
     @Transaction
-    suspend fun restoreNoteFromTrash(noteId: String) {
-        markNoteRestored(noteId)
-        markCorpusRestoredByNoteId(noteId)
-        markExampleRestoredByNoteId(noteId)
+    suspend fun restoreNotesFromTrash(noteIds: List<String>) {
+        markNoteRestored(noteIds)
+        markCorpusRestoredByNoteId(noteIds)
+        markExampleRestoredByNoteId(noteIds)
     }
 
     @Query("DELETE FROM examples WHERE deletedAt IS NOT NULL AND deletedAt <= :expiredTime")
