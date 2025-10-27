@@ -14,6 +14,7 @@ class NoteEntity(
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long?,
+    val shared: Boolean,
 )
 
 fun NoteEntity.asExternalModel() = Note(
@@ -25,4 +26,5 @@ fun NoteEntity.asExternalModel() = Note(
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt,
+    shared = shared,
 )

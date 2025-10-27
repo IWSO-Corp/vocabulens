@@ -35,6 +35,19 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="cerulean-hummingbird-a1ac12.netlify.app"
+                    android:pathPrefix="/sharedNote"
+                    android:scheme="https" />
+            </intent-filter>
+
         </activity>
 
         <receiver

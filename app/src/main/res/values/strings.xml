@@ -15,6 +15,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="action_import">Import</string>
     <string name="word_amount">%1$d words</string>
+    <string name="example_amount">%1$d examples</string>
     <string name="action_search">Search</string>
     <string name="action_delete">Delete</string>
     <string name="action_share">Share</string>
@@ -48,4 +49,7 @@
     <string name="action_empty_trash">Empty Trash</string>
     <string name="action_delete_forever">Delete Forever</string>
     <string name="export">Export</string>
+    <string name="shared_notes">Shared Notes</string>
+    <string name="shared_note_lang">%1$s - %2$s</string>
+    <string name="shared_note_updated_at">Updated at %1$s</string>
 </resources>

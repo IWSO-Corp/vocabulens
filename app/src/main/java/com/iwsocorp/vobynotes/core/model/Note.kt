@@ -11,7 +11,8 @@ data class Note(
     val contentSize: Int,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val shared: Boolean = false,
 )
 
 fun Note.asEntity() = NoteEntity(
@@ -23,4 +24,5 @@ fun Note.asEntity() = NoteEntity(
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt,
+    shared = shared,
 )

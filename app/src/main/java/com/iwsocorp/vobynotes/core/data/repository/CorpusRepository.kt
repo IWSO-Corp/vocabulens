@@ -88,6 +88,10 @@ class CorpusRepositoryImpl @Inject constructor(
         corpusDao.getCorpusByNoteId(noteId)
     }
 
+    override suspend fun getCorpusListByNoteId(noteId: String): List<Corpus> {
+        return corpusDao.getCorpusListByNoteId(noteId).map { it.asExternalModel() }
+    }
+
     override suspend fun deleteCorpusByNoteId(noteId: String) {
         corpusDao.deleteCorpusByNoteId(noteId)
     }
@@ -144,6 +148,7 @@ interface CorpusRepository {
 
     fun allCorpusFlow(): Flow<List<Corpus>>
     fun getCorpusByNoteId(noteId: String): Flow<PagingData<Corpus>>
+    suspend fun getCorpusListByNoteId(noteId: String): List<Corpus>
     suspend fun deleteCorpusByNoteId(noteId: String)
     suspend fun countExisting(words: List<String>): Int
     suspend fun moveCorpusToNote(corpusIds: List<String>, newNoteId: String)

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.model.Note
@@ -11,7 +12,7 @@ import com.iwsocorp.vobynotes.databinding.BottomSheetListBinding
 
 class NoteBottomSheet(
     private val notes: List<Note>,
-    private val onNewNote: (Note) -> Unit,
+    private val onNewNote: ((Note) -> Unit)? = null,
     private val onItemClick: (Note) -> Unit,
 ) : BottomSheetDialogFragment() {
 
@@ -25,8 +26,9 @@ class NoteBottomSheet(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val binding = BottomSheetListBinding.bind(view)
 
+        binding.cardNewNote.isVisible = onNewNote != null
         binding.cardNewNote.setOnClickListener {
-            onNewNote(
+            onNewNote?.invoke(
                 Note(
                     title = "New Note",
                     contentSize = 0,

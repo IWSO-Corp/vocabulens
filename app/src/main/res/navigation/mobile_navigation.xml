@@ -134,4 +134,14 @@
         android:label="fragment_trash_note"
         tools:layout="@layout/fragment_trash_note" />
 
+    <fragment
+        android:id="@+id/nav_share"
+        android:name="com.iwsocorp.vobynotes.ui.share.ShareFragment"
+        android:label="fragment_share"
+        tools:layout="@layout/fragment_share" >
+        <action
+            android:id="@+id/action_nav_share_to_authFragment"
+            app:destination="@id/authFragment" />
+    </fragment>
+
 </navigation>

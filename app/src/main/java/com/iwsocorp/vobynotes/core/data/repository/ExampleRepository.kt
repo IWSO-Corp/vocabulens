@@ -26,6 +26,10 @@ class ExampleRepositoryImpl @Inject constructor(
             it.map { entity -> entity.asExternalModel() }
         }
 
+    override suspend fun getExamplesForWord(word: String): List<Example> {
+        return exampleDao.getExamplesForWord(word).map { it.asExternalModel() }
+    }
+
     override fun getExamplesForQuiz(
         noteId: String?,
         mark: Mark?,
@@ -50,6 +54,7 @@ interface ExampleRepository {
     suspend fun insertExampleSentence(example: Example)
     suspend fun getAll(): List<Example>
     fun getExamplesByWord(word: String): Flow<List<Example>>
+    suspend fun getExamplesForWord(word: String): List<Example>
     fun getExamplesForQuiz(
         noteId: String? = null,
         mark: Mark? = null,

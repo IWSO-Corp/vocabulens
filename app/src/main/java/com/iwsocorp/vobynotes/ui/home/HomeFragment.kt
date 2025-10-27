@@ -119,6 +119,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         }
         menu.clear()
         inflateMenu(R.menu.home_selection)
+        if (size > 1) menu.apply {
+            removeItem(R.id.action_share)
+            removeItem(R.id.action_export)
+        }
     }
 
     private val menuListener = Toolbar.OnMenuItemClickListener {

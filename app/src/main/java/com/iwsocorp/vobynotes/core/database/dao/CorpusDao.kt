@@ -84,6 +84,9 @@ interface CorpusDao {
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY word ASC")
     fun getCorpusByNoteId(noteId: String): PagingSource<Int, CorpusEntity>
 
+    @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY word ASC")
+    suspend fun getCorpusListByNoteId(noteId: String): List<CorpusEntity>
+
     @Query("DELETE FROM corpus WHERE noteId = :noteId")
     suspend fun deleteCorpusByNoteId(noteId: String)
 

@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.text.recognition)
     implementation(libs.language.id)
     implementation(libs.translate)
+    implementation(libs.glide)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

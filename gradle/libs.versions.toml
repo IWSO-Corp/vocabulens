@@ -4,6 +4,7 @@ cameraCore = "1.5.0"
 credentials = "1.6.0-beta01"
 datastorePreferences = "1.1.7"
 firebaseBom = "34.3.0"
+glide = "5.0.5"
 googleid = "1.1.1"
 gsonVersion = "2.11.0"
 kotlin = "2.0.21"
@@ -50,6 +51,7 @@ firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

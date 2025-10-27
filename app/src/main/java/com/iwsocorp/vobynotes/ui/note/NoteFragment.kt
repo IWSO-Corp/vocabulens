@@ -137,7 +137,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                 viewModel.getPagedCorpus(noteId).collectOnStarted { corpusPagingData ->
                     Timber.d("corpusPagingData: $corpusPagingData")
                     withContext(Dispatchers.Main) {
-                        wordAdapter.submitData(corpusPagingData)
+                        wordAdapter.submitData(lifecycle, corpusPagingData)
                     }
                 }
             }

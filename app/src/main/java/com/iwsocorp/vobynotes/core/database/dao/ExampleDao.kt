@@ -14,8 +14,11 @@ interface ExampleDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExampleSentence(exampleEntity: ExampleEntity)
 
-    @Query("SELECT * FROM examples WHERE LOWER(sentence) AND deletedAt IS NULL LIKE LOWER('%' || :word || '%') OR forWord = :word")
+    @Query("SELECT * FROM examples WHERE deletedAt IS NULL AND (LOWER(sentence) LIKE LOWER('%' || :word || '%') OR forWord = :word)")
     fun getExamplesByWord(word: String): Flow<List<ExampleEntity>>
+
+    @Query("SELECT * FROM examples WHERE deletedAt IS NULL AND forWord = :word")
+    suspend fun getExamplesForWord(word: String): List<ExampleEntity>
 
     @Query("SELECT * FROM examples WHERE deletedAt IS NULL")
     suspend fun getAll(): List<ExampleEntity>

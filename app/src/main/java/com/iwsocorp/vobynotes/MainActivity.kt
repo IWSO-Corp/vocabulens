@@ -61,7 +61,12 @@ class MainActivity : AppCompatActivity() {
     private fun setupNavigation() {
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_scan, R.id.nav_practice, R.id.nav_trash, R.id.nav_settings
+                R.id.nav_home,
+                R.id.nav_scan,
+                R.id.nav_practice,
+                R.id.nav_share,
+                R.id.nav_trash,
+                R.id.nav_settings
             ), drawerLayout
         )
 
@@ -81,6 +86,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_home,
+                R.id.nav_share,
                 R.id.nav_trash -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                     setupDrawer()
