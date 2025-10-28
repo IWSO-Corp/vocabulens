@@ -5,22 +5,8 @@
     <item
         android:id="@+id/action_share"
         android:icon="@drawable/outline_upload_24"
-        android:orderInCategory="1"
-        android:title="@string/action_share"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_filter"
-        android:icon="@drawable/outline_filter_alt_24"
         android:orderInCategory="11"
-        android:title="@string/action_filter"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_sort"
-        android:icon="@drawable/baseline_sort_24"
-        android:orderInCategory="12"
-        android:title="@string/action_sort"
+        android:title="@string/action_share"
         app:showAsAction="ifRoom" />
 
 </menu>

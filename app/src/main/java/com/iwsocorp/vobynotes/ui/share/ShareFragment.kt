@@ -2,6 +2,7 @@ package com.iwsocorp.vobynotes.ui.share
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
@@ -36,22 +37,28 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
         super.onViewCreated(view, savedInstanceState)
 
         setupToolbar()
+        setupDropdowns()
+        setupUI()
         observeState()
-        setupRecyclerview()
+        onSearch()
     }
 
-    private fun setupRecyclerview() {
-        binding.rvSharedNote.adapter = adapter
-        viewModel.getSharedNotes().collectOnStarted {
+    private fun setupUI() = with(binding) {
+        rvSharedNote.adapter = adapter
+        floatingActionButton.setOnClickListener {
+            onSearch()
+            adapter.refresh()
+        }
+
+        viewModel.sharedNotes.collectOnStarted {
             Timber.d("Paging data: $it")
             adapter.submitData(viewLifecycleOwner.lifecycle, it)
-            viewModel.setLoaded()
         }
         adapter.addLoadStateListener { loadState ->
             Timber.d("Item count: ${adapter.itemCount}")
             val isEmpty = adapter.itemCount == 0 && loadState.refresh is LoadState.NotLoading
-            binding.tvEmpty.isVisible = isEmpty
-            binding.rvSharedNote.isVisible = !isEmpty
+            tvEmpty.isVisible = isEmpty
+            rvSharedNote.isVisible = !isEmpty
         }
     }
 
@@ -90,9 +97,6 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
             R.id.action_share -> {
                 onShare()
             }
-
-            R.id.action_filter -> {}
-            R.id.action_sort -> {}
         }
         true
     }
@@ -146,6 +150,55 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
             }
         }
 
+    }
+
+    private fun setupDropdowns() = with(binding) {
+        val filterOptions = listOf("All", "English", "Indonesian", "Japanese")
+        val sortOptions = listOf("Latest", "Popular")
+
+        filterDropdown.setAdapter(
+            ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                filterOptions
+            )
+        )
+        sortDropdown.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sortOptions)
+        )
+
+        filterDropdown.setText(viewModel.filter.ifEmpty { filterOptions.first() }, false)
+        sortDropdown.setText(viewModel.sort.ifEmpty { sortOptions.first() }, false)
+    }
+
+    private fun onSearch() {
+        val filter = binding.filterDropdown.text.toString()
+        val sort = binding.sortDropdown.text.toString()
+
+        val filterWordLang = when (filter) {
+            "All" -> null
+            "English" -> "EN"
+            "Indonesian" -> "ID"
+            "Japanese" -> "JP"
+            else -> null
+        }
+        val sortBy = when (sort) {
+            "Latest" -> "updatedAt"
+            "Popular" -> "savedCount"
+            else -> "updatedAt"
+        }
+
+        viewModel.getSharedNotes(
+            filterWordLang = filterWordLang,
+            sortBy = sortBy,
+        )
+        viewModel.updateFilter(filter)
+        viewModel.updateSort(sort)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupDropdowns()
     }
 
 }

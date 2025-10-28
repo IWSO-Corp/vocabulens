@@ -13,9 +13,9 @@ import com.iwsocorp.vobynotes.core.model.SharedCorpus
 import com.iwsocorp.vobynotes.core.model.SharedNote
 import com.iwsocorp.vobynotes.core.model.asSharedCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -66,23 +66,36 @@ class ShareViewModel @Inject constructor(
         }
     }
 
+    private val _sharedNotes = MutableStateFlow<PagingData<SharedNote>>(PagingData.empty())
+    val sharedNotes: StateFlow<PagingData<SharedNote>> = _sharedNotes
+
     fun getSharedNotes(
         filterWordLang: String? = null,
         filterMeaningLang: String? = null,
         sortBy: String = "updatedAt",
         sortDirection: Query.Direction = Query.Direction.DESCENDING
-    ): Flow<PagingData<SharedNote>> {
+    ) = viewModelScope.launch {
         _shareState.value = ShareState.Loading
-        return shareRepository.getPagedSharedNotes(
+        shareRepository.getPagedSharedNotes(
             filterWordLang,
             filterMeaningLang,
             sortBy,
             sortDirection
-        ).cachedIn(viewModelScope)
+        ).cachedIn(viewModelScope).collectLatest {
+            _sharedNotes.value = it
+            _shareState.value = ShareState.Loaded
+        }
     }
 
-    fun setLoaded() {
-        _shareState.value = ShareState.Loaded
+    var filter = ""
+    var sort = ""
+
+    fun updateFilter(filterData: String) {
+        filter = filterData
+    }
+
+    fun updateSort(sortData: String) {
+        sort = sortData
     }
 
 }

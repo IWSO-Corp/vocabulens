@@ -22,10 +22,15 @@ class SharedNotesPagingSource(
 
     override suspend fun load(params: LoadParams<DocumentSnapshot>): LoadResult<DocumentSnapshot, SharedNote> {
         Timber.d("load() called with: params = ${params.loadSize}")
+        Timber.d("filterWordLang: ${filterWordLang?.lowercase()}")
+        Timber.d("filterMeaningLang: $filterMeaningLang")
+        Timber.d("sortBy: $sortBy")
+        Timber.d("sortDirection: $sortDirection")
+
         return try {
             // ✅ Filter dinamis
             if (!filterWordLang.isNullOrEmpty()) {
-                query = query.whereEqualTo("wordLang", filterWordLang)
+                query = query.whereEqualTo("wordLang", filterWordLang.lowercase())
             }
             if (!filterMeaningLang.isNullOrEmpty()) {
                 query = query.whereEqualTo("meaningLang", filterMeaningLang)
@@ -42,6 +47,8 @@ class SharedNotesPagingSource(
             if (params.key != null) {
                 query = query.startAfter(params.key!!)
             }
+
+            Timber.d("Query: ${query.firestore}")
 
             val snapshot = query.get().await()
             val lastVisible = snapshot.documents.lastOrNull()

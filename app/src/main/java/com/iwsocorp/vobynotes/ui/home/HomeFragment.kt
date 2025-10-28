@@ -62,6 +62,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             setOnMenuItemClickListener(menuListener)
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
         }
+        binding.rvNote.adapter = adapter
 
         viewModel.deletedNoteId.collectOnStarted { ids ->
             Snackbar.make(
@@ -80,9 +81,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         binding.progressBar.isVisible = it is UiState.Loading
 
         if (it is UiState.Loaded) with(binding) {
-            adapter.submitList(it.notes)
-            rvNote.adapter = adapter
-            tvEmpty.isVisible = it.notes.isEmpty()
+            if (it.notes.size > 1) adapter.submitList(it.notes)
+            tvEmpty.isVisible = it.notes.size == 1
         }
     }
 

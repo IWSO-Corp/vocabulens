@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.VocabNotes" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.VocabNotes" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/teal</item>
         <item name="colorPrimaryVariant">@color/blue</item>
