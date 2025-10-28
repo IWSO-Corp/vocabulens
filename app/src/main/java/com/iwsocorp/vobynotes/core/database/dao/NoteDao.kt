@@ -26,6 +26,9 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: NoteEntity)
 
+    @Query("UPDATE notes SET shared = :shared WHERE id = :noteId")
+    suspend fun updateNoteSharedStatus(noteId: String, shared: Boolean)
+
     @Query("DELETE FROM notes WHERE id IN (:ids)")
     suspend fun deleteNoteByIds(ids: List<String>)
 

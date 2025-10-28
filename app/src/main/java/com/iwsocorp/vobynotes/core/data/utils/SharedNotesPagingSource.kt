@@ -2,8 +2,12 @@ package com.iwsocorp.vobynotes.core.data.utils
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.iwsocorp.vobynotes.core.model.SharedCorpus
 import com.iwsocorp.vobynotes.core.model.SharedNote
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -28,7 +32,11 @@ class SharedNotesPagingSource(
             }
 
             // ✅ Sorting
-            query = query.orderBy(sortBy, sortDirection).limit(params.loadSize.toLong())
+            query = if (sortBy.isNotEmpty()) {
+                query.orderBy(sortBy, sortDirection)
+            } else {
+                query.orderBy("updatedAt", Query.Direction.DESCENDING)
+            }.limit(params.loadSize.toLong())
 
             // ✅ Paging
             if (params.key != null) {
@@ -36,10 +44,30 @@ class SharedNotesPagingSource(
             }
 
             val snapshot = query.get().await()
-            val notes = snapshot.toObjects(SharedNote::class.java)
             val lastVisible = snapshot.documents.lastOrNull()
+            val notes = mutableListOf<SharedNote>()
 
-            Timber.d("load() called with: notes = $notes")
+            snapshot.documents.forEach { document ->
+                val corpusJson = document.getString("content")
+                val corpusType = object : TypeToken<List<SharedCorpus>>() {}.type
+                val corpusList: List<SharedCorpus> = Gson().fromJson(corpusJson, corpusType)
+                val note = SharedNote(
+                    id = document.getString("id") ?: "",
+                    ownerId = document.getString("ownerId") ?: "",
+                    ownerAvatar = document.getString("ownerAvatar"),
+                    ownerName = document.getString("ownerName"),
+                    title = document.getString("title") ?: "",
+                    wordLang = document.getString("wordLang") ?: "",
+                    meaningLang = document.getString("meaningLang") ?: "",
+                    content = corpusList,
+                    savedCount = (document.getLong("savedCount") ?: 0).toInt(),
+                    uploadedAt = document.getTimestamp("uploadedAt") ?: Timestamp.now(),
+                    updatedAt = document.getTimestamp("updatedAt") ?: Timestamp.now(),
+                )
+                notes.add(note)
+            }
+
+            Timber.d("load() called with: notes = ${notes.size}")
 
             LoadResult.Page(
                 data = notes,

@@ -43,9 +43,12 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
     private fun setupRecyclerview() {
         binding.rvSharedNote.adapter = adapter
         viewModel.getSharedNotes().collectOnStarted {
-            adapter.submitData(it)
+            Timber.d("Paging data: $it")
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
+            viewModel.setLoaded()
         }
         adapter.addLoadStateListener { loadState ->
+            Timber.d("Item count: ${adapter.itemCount}")
             val isEmpty = adapter.itemCount == 0 && loadState.refresh is LoadState.NotLoading
             binding.tvEmpty.isVisible = isEmpty
             binding.rvSharedNote.isVisible = !isEmpty
@@ -59,6 +62,7 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
         when (state) {
             is ShareState.Shared -> {
                 Timber.d("Shared: ${state.link}")
+                Toast.makeText(requireContext(), state.link, Toast.LENGTH_SHORT).show()
             }
 
             is ShareState.Error -> {
@@ -95,6 +99,7 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
     private fun onShare() {
         val user = FirebaseAuth.getInstance().currentUser
+
         if (user == null) showAlertDialog(
             requireContext(),
             "You are not signed in",
@@ -103,25 +108,44 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
             "Cancel",
         ) {
             findNavController().navigate(R.id.action_nav_share_to_authFragment)
-        } else noteViewModel.notes.observe(viewLifecycleOwner) { notes ->
-            NoteBottomSheet(notes) { note ->
-                showAlertDialog(
-                    requireContext(),
-                    "Share ${note.title}",
-                    null,
-                    "Share",
-                    "Cancel",
-                ) {
-                    val sharedNote = note.asSharedNote(
-                        ownerId = user.uid,
-                        ownerAvatar = user.photoUrl.toString(),
-                        ownerName = user.displayName,
-                        content = emptyList()
-                    )
-                    viewModel.shareNote(sharedNote)
+        } else {
+            var isBottomSheetShown = false
+
+            noteViewModel.notes.observe(viewLifecycleOwner) { notes ->
+                if (!isBottomSheetShown) {
+                    isBottomSheetShown = true
+                    NoteBottomSheet(notes) { note ->
+                        showAlertDialog(
+                            requireContext(),
+                            (if (note.shared) "Update Shared " else "Share ") + note.title,
+                            null,
+                            "Share",
+                            "Cancel",
+                        ) {
+                            if (note.shared) {
+                                viewModel.updateSharedNote(
+                                    noteId = note.id,
+                                    title = note.title,
+                                    wordLang = note.wordLang,
+                                    meaningLang = note.meaningLang,
+                                )
+                            } else {
+                                val sharedNote = note.asSharedNote(
+                                    ownerId = user.uid,
+                                    ownerAvatar = user.photoUrl.toString(),
+                                    ownerName = user.displayName,
+                                    content = emptyList()
+                                )
+                                viewModel.shareNote(sharedNote)
+                            }
+                            isBottomSheetShown = false
+                            adapter.refresh()
+                        }
+                    }.show(childFragmentManager, null)
                 }
-            }.show(childFragmentManager, null)
+            }
         }
+
     }
 
 }

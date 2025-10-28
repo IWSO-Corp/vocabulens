@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.gson.Gson
 import com.iwsocorp.vobynotes.core.data.utils.SharedNotesPagingSource
+import com.iwsocorp.vobynotes.core.model.SharedCorpus
 import com.iwsocorp.vobynotes.core.model.SharedNote
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -18,15 +19,14 @@ import javax.inject.Singleton
 
 @Singleton
 class ShareRepository @Inject constructor(
-    private val firestore: FirebaseFirestore,
+    firestore: FirebaseFirestore,
 ) {
     private val collection = firestore.collection("shared_notes")
     private val query: Query = collection
 
     suspend fun shareNoteToPublic(sharedNote: SharedNote) {
         val corpusJson = Gson().toJson(sharedNote.content)
-        val docRef = collection
-            .document(sharedNote.id)
+        val docRef = collection.document(sharedNote.id)
         val data = hashMapOf(
             "id" to sharedNote.id,
             "ownerId" to sharedNote.ownerId,
@@ -35,7 +35,7 @@ class ShareRepository @Inject constructor(
             "title" to sharedNote.title,
             "wordLang" to sharedNote.wordLang,
             "meaningLang" to sharedNote.meaningLang,
-            "content" to sharedNote.content,
+            "content" to corpusJson,
             "savedCount" to sharedNote.savedCount,
             "uploadedAt" to FieldValue.serverTimestamp(),
             "updatedAt" to FieldValue.serverTimestamp()
@@ -48,6 +48,33 @@ class ShareRepository @Inject constructor(
             }.addOnFailureListener {
                 cont.resumeWith(Result.failure(it))
                 Timber.e("Share note gagal: $it")
+            }
+        }
+    }
+
+    suspend fun updateSharedNote(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String,
+        content: List<SharedCorpus>,
+    ) {
+        val docRef = collection.document(noteId)
+        val updateData = hashMapOf(
+            "title" to title,
+            "wordLang" to wordLang,
+            "meaningLang" to meaningLang,
+            "content" to Gson().toJson(content),
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+
+        suspendCancellableCoroutine { cont ->
+            docRef.update(updateData).addOnSuccessListener {
+                cont.resumeWith(Result.success(Unit))
+                Timber.d("Update shared note berhasil")
+            }.addOnFailureListener {
+                cont.resumeWith(Result.failure(it))
+                Timber.e("Update shared note gagal: $it")
             }
         }
     }
@@ -92,12 +119,13 @@ class ShareRepository @Inject constructor(
 
         firestore.runTransaction { transaction ->
             val noteSnapshot = transaction.get(noteRef)
+            val noteOwner = noteSnapshot.getString("ownerId") ?: ""
             val currentSavedCount = noteSnapshot.getLong("savedCount") ?: 0L
 
             val userSaveSnapshot = transaction.get(userSaveRef)
             val alreadySaved = userSaveSnapshot.exists()
 
-            if (!alreadySaved) {
+            if (noteOwner != userId && !alreadySaved) {
                 // 🔹 Tambah save baru
                 transaction.set(
                     userSaveRef,

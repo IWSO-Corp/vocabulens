@@ -52,6 +52,7 @@ fun Corpus.asSharedCorpus(examples: List<String>) = SharedCorpus(
 
 fun SharedNote.asNote() = Note(
     id = id,
+    ownerId = ownerId,
     title = title,
     wordLang = wordLang,
     meaningLang = meaningLang,

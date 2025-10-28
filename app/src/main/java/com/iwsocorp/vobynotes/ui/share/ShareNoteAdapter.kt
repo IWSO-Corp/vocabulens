@@ -22,10 +22,11 @@ class ShareNoteAdapter(
             Glide.with(itemView.context).load(sharedNote.ownerAvatar).into(imgAvatar)
             tvOwner.text = sharedNote.ownerName
             tvDate.text = sharedNote.uploadedAt.asDateString()
-            tvUpdate.text = itemView.context.getString(
-                R.string.shared_note_updated_at,
-                sharedNote.updatedAt.asDateString()
-            )
+            if (sharedNote.updatedAt.asDateString() != sharedNote.uploadedAt.asDateString()) tvUpdate.text =
+                itemView.context.getString(
+                    R.string.shared_note_updated_at,
+                    sharedNote.updatedAt.asDateString()
+                )
             tvTitle.text = sharedNote.title
             tvWordCount.text = itemView.context.getString(
                 R.string.word_amount,

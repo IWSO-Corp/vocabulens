@@ -33,7 +33,6 @@ import com.iwsocorp.vobynotes.ui.scan.ScanViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_SEARCH_WORD = "searchWordParam"
@@ -111,9 +110,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             is SearchUiState.Idle -> {}
             is SearchUiState.Loading -> {}
             is SearchUiState.LocalLoaded -> {
-                withContext(Dispatchers.Main) {
-                    wordAdapter.submitData(state.corpusPagingData)
-                }
+                wordAdapter.submitData(viewLifecycleOwner.lifecycle, state.corpusPagingData)
                 wordAdapter.addLoadStateListener {
                     if (it.refresh is LoadState.NotLoading) binding.rvSearch.scrollToPosition(0)
                     binding.tvEmpty.isVisible = wordAdapter.itemCount == 0
@@ -125,14 +122,16 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             }
         }
 
-        Timber.d("State: ${
-            when (state) {
-                is SearchUiState.Idle -> "Idle"
-                is SearchUiState.Loading -> "Loading"
-                is SearchUiState.LocalLoaded -> "LocalLoaded: ${state.corpusPagingData}"
-                is SearchUiState.ApiLoaded -> "ApiLoaded: ${state.corpus}"
-            }
-        }")
+        Timber.d(
+            "State: ${
+                when (state) {
+                    is SearchUiState.Idle -> "Idle"
+                    is SearchUiState.Loading -> "Loading"
+                    is SearchUiState.LocalLoaded -> "LocalLoaded: ${state.corpusPagingData}"
+                    is SearchUiState.ApiLoaded -> "ApiLoaded: ${state.corpus}"
+                }
+            }"
+        )
     }
 
     private fun setupUI() {
@@ -145,7 +144,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             isIconified = false
             requestFocus()
             setOnCloseListener {
-                wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
+                wordAdapter.submitData(viewLifecycleOwner.lifecycle, PagingData.from(emptyList()))
                 setQuery("", false)
 
                 binding.itemDetail.contentDetail.visibility = View.GONE
@@ -259,7 +258,10 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
                 if (q.isNotEmpty()) {
                     viewModel.searchWord(q)
                 } else {
-                    wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
+                    wordAdapter.submitData(
+                        viewLifecycleOwner.lifecycle,
+                        PagingData.from(emptyList())
+                    )
                     viewModel.setIdleState()
                 }
 
@@ -270,7 +272,10 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
                 binding.btnSearch.text = q.trim()
                 binding.btnSearch.setOnClickListener {
                     onSearch(q)
-                    wordAdapter.submitData(lifecycle, PagingData.from(emptyList()))
+                    wordAdapter.submitData(
+                        viewLifecycleOwner.lifecycle,
+                        PagingData.from(emptyList())
+                    )
                 }
             }
             return true

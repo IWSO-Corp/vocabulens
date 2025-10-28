@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/action_share"
-        android:icon="@drawable/baseline_share_24"
+        android:icon="@drawable/outline_upload_24"
         android:orderInCategory="1"
         android:title="@string/action_share"
         app:showAsAction="ifRoom" />

@@ -14,11 +14,13 @@ class NoteEntity(
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long?,
+    val ownerId: String?,
     val shared: Boolean,
 )
 
 fun NoteEntity.asExternalModel() = Note(
     id = id,
+    ownerId = ownerId,
     title = title,
     wordLang = wordLang,
     meaningLang = meaningLang,

@@ -12,11 +12,13 @@ data class Note(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val deletedAt: Long? = null,
+    val ownerId: String? = null,
     val shared: Boolean = false,
 )
 
 fun Note.asEntity() = NoteEntity(
     id = id,
+    ownerId = ownerId,
     title = title,
     wordLang = wordLang,
     meaningLang = meaningLang,
