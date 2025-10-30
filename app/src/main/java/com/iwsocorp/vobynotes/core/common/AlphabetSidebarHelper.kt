@@ -27,7 +27,6 @@ class AlphabetSidebarHelper(
             textView.apply {
                 setTextColor(ContextCompat.getColor(context, R.color.grey))
                 setTypeface(null, Typeface.NORMAL)
-                textSize = 16f
             }
         }
 
@@ -46,6 +45,7 @@ class AlphabetSidebarHelper(
 
     private fun extractAvailableLettersFromLoadedPages(currentList: List<Corpus>): List<Char> {
         val letters = currentList.mapNotNull {
+            if (it.word.isEmpty()) return emptyList()
             it.word.firstOrNull()?.uppercaseChar()
         }.distinct().sorted()
         return letters

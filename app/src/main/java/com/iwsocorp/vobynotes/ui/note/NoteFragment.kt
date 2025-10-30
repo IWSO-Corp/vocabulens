@@ -1,11 +1,9 @@
 package com.iwsocorp.vobynotes.ui.note
 
-import android.graphics.Typeface
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
@@ -22,6 +20,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
@@ -39,7 +38,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_NOTE_ID = "noteIdParam"
@@ -101,6 +99,13 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
         })
     }
+    private val alphabetSidebarHelper: AlphabetSidebarHelper by lazy {
+        AlphabetSidebarHelper(
+            requireContext(),
+            binding.alphabetSidebar,
+            binding.rvCorpus,
+        )
+    }
 
     @OptIn(FlowPreview::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -136,9 +141,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             id?.let { noteId ->
                 viewModel.getPagedCorpus(noteId).collectOnStarted { corpusPagingData ->
                     Timber.d("corpusPagingData: $corpusPagingData")
-                    withContext(Dispatchers.Main) {
-                        wordAdapter.submitData(viewLifecycleOwner.lifecycle, corpusPagingData)
-                    }
+                    wordAdapter.submitData(viewLifecycleOwner.lifecycle, corpusPagingData)
                 }
             }
             binding.iconSwitch.isVisible = id == null
@@ -152,8 +155,9 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         }
 
         wordAdapter.loadStateFlow.collectOnStarted {
-            val alphabetSet = extractAvailableLettersFromLoadedPages()
-            populateAlphabetSidebar(alphabetSet)
+            val currentList = wordAdapter.snapshot().items
+            detailViewModel.setCorpusList(currentList)
+            alphabetSidebarHelper.updateSidebarFromData(currentList)
             updateUI(it)
         }
 
@@ -414,73 +418,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
 
                 val firstLetter = firstCorpus.word.first().uppercaseChar()
 
-                highlightCurrentLetterInSidebar(firstLetter)
+                alphabetSidebarHelper.highlightCurrentLetter(firstLetter)
             }
-        }
-    }
-
-    private fun highlightCurrentLetterInSidebar(currentLetter: Char) {
-        // Reset all letters to normal
-        for (i in 0 until binding.alphabetSidebar.childCount) {
-            val textView = binding.alphabetSidebar.getChildAt(i) as TextView
-            textView.apply {
-                setTextColor(resources.getColor(R.color.grey, null))
-                setTypeface(null, Typeface.NORMAL)
-            }
-        }
-
-        // Find the matching letter in the sidebar and make it bold
-        for (i in 0 until binding.alphabetSidebar.childCount) {
-            val textView = binding.alphabetSidebar.getChildAt(i) as TextView
-            if (textView.text.toString() == currentLetter.toString()) {
-                textView.apply {
-                    textSize = 20f
-                    setTextColor(resources.getColor(R.color.black, null))
-                    setTypeface(null, Typeface.BOLD)
-                }
-                break
-            }
-        }
-    }
-
-    // Function to extract available letters from currently loaded pages
-    private fun extractAvailableLettersFromLoadedPages(): List<Char> {
-        val currentList = wordAdapter.snapshot().items
-
-        detailViewModel.setCorpusList(currentList)
-        Timber.d("currentList size: ${currentList.size}")
-
-        val letters = currentList.map {
-            if (it.word.isEmpty()) return emptyList()
-            it.word.first().uppercaseChar()
-        }.distinct().sorted()
-
-        return letters
-    }
-
-    // Populate the sidebar dynamically with the available letters
-    private fun populateAlphabetSidebar(alphabetSet: List<Char>) {
-        binding.alphabetSidebar.removeAllViews()
-        alphabetSet.forEach { letter ->
-            val textView = TextView(requireContext()).apply {
-                text = letter.toString()
-                textSize = 20f
-                setOnClickListener {
-                    scrollToLetter(letter)
-                }
-            }
-            binding.alphabetSidebar.addView(textView)
-        }
-    }
-
-    // Scroll to the first item starting with the selected letter
-    private fun scrollToLetter(letter: Char) {
-        val position = wordAdapter.snapshot().items.indexOfFirst {
-            it.word.first().uppercaseChar() == letter
-        }
-        if (position != -1) {
-            val layoutManager = binding.rvCorpus.layoutManager as LinearLayoutManager
-            layoutManager.scrollToPositionWithOffset(position, 0)
         }
     }
 

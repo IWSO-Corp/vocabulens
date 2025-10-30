@@ -1,8 +1,10 @@
 package com.iwsocorp.vobynotes.core.common
 
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.system.Os.link
 import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
@@ -126,4 +128,15 @@ object Utils {
 
     fun Toolbar.setIconColor(context: Context) =
         this.overflowIcon?.setTint(ContextCompat.getColor(context, R.color.black))
+
+    fun Context.sharePublicNoteLink(noteTitle: String, link: String) {
+        val shareText = "Check this vocabulary: $noteTitle on Voby Notes! \n$link"
+        val intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+
+        startActivity(Intent.createChooser(intent, "Share via"))
+    }
 }

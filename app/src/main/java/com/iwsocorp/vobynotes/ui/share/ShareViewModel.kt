@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+const val shareLink = "https://cerulean-hummingbird-a1ac12.netlify.app/shared-note/"
+
 @HiltViewModel
 class ShareViewModel @Inject constructor(
     private val shareRepository: ShareRepository,
@@ -30,7 +32,6 @@ class ShareViewModel @Inject constructor(
     private val _shareState = MutableStateFlow<ShareState>(ShareState.Loading)
     val shareState: StateFlow<ShareState> = _shareState
 
-    val shareLink = "https://cerulean-hummingbird-a1ac12.netlify.app/sharedNote/"
 
     fun shareNote(sharedNote: SharedNote) = viewModelScope.launch {
         _shareState.value = ShareState.Loading
@@ -38,7 +39,7 @@ class ShareViewModel @Inject constructor(
             val content = getNoteCorpus(sharedNote.id)
             shareRepository.shareNoteToPublic(sharedNote.copy(content = content))
             noteRepository.updateNoteSharedStatus(sharedNote.id, true)
-            _shareState.value = ShareState.Shared("${shareLink}${sharedNote.id}")
+            _shareState.value = ShareState.Shared(sharedNote.title, "${shareLink}${sharedNote.id}")
         } catch (e: Exception) {
             _shareState.value = ShareState.Error(e.message ?: "Unknown error")
         }
@@ -60,7 +61,7 @@ class ShareViewModel @Inject constructor(
         try {
             val content = getNoteCorpus(noteId)
             shareRepository.updateSharedNote(noteId, title, wordLang, meaningLang, content)
-            _shareState.value = ShareState.Shared("${shareLink}${noteId}")
+            _shareState.value = ShareState.Shared(title, "${shareLink}${noteId}")
         } catch (e: Exception) {
             _shareState.value = ShareState.Error(e.message ?: "Unknown error")
         }
@@ -103,6 +104,6 @@ class ShareViewModel @Inject constructor(
 sealed class ShareState {
     object Loading : ShareState()
     object Loaded : ShareState()
-    data class Shared(val link: String) : ShareState()
+    data class Shared(val noteTitle: String, val link: String) : ShareState()
     data class Error(val message: String) : ShareState()
 }

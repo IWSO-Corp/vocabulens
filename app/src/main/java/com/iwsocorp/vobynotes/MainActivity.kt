@@ -8,6 +8,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -15,6 +16,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
+import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
 import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
 import com.iwsocorp.vobynotes.ui.widget.SEARCH
 import dagger.hilt.android.AndroidEntryPoint
@@ -51,11 +53,11 @@ class MainActivity : AppCompatActivity() {
         toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.black))
 
         binding.appBarMain.fab.setOnClickListener {
-            findNavController(R.id.nav_host_fragment_content_main)
-                .navigate(R.id.action_nav_home_to_noteFragment)
+            navController.navigate(R.id.action_nav_home_to_noteFragment)
         }
 
         setupNavigation()
+        handleDeepLink(intent)
     }
 
     private fun setupNavigation() {
@@ -138,8 +140,19 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
 
         setIntent(intent)
+        handleDeepLink(intent)
 
         if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        val noteId = data.lastPathSegment
+
+        navController.navigate(
+            R.id.shareDetailFragment,
+            bundleOf(ShareDetailFragment.NOTE_ID to noteId)
+        )
     }
 
 }

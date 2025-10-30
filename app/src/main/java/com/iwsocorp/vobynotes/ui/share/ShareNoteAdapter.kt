@@ -2,6 +2,7 @@ package com.iwsocorp.vobynotes.ui.share
 
 import android.icu.text.SimpleDateFormat
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -42,6 +43,10 @@ class ShareNoteAdapter(
                 sharedNote.meaningLang
             )
             tvSaveCount.text = sharedNote.savedCount.toString()
+
+            val icon = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_file_download_24)
+            icon?.setBounds(0, 0, 48, 48)
+            tvSaveCount.setCompoundDrawables(icon, null, null, null)
 
             itemView.setOnClickListener { onClick(sharedNote) }
         }

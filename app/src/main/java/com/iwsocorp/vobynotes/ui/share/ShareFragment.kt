@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentShareBinding
@@ -68,12 +69,23 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
     private fun observeState() = viewModel.shareState.collectOnStarted { state ->
         binding.progressBar.isVisible = state is ShareState.Loading
-        Timber.d("State: $state")
+        Timber.d(
+            "State: ${
+                when (state) {
+                    is ShareState.Loading -> "Loading"
+                    is ShareState.Loaded -> "Loaded"
+                    is ShareState.Shared -> "Shared"
+                    is ShareState.Error -> "Error"
+                }
+            }"
+        )
 
         when (state) {
             is ShareState.Shared -> {
+                requireContext().sharePublicNoteLink(state.noteTitle, state.link)
+
                 Timber.d("Shared: ${state.link}")
-                Toast.makeText(requireContext(), state.link, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Note shared", Toast.LENGTH_SHORT).show()
             }
 
             is ShareState.Error -> {

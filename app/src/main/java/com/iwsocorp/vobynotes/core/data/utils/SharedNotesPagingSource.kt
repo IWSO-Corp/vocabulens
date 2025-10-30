@@ -33,11 +33,7 @@ class SharedNotesPagingSource(
             }
 
             // ✅ Sorting
-            query = if (sortBy.isNotEmpty()) {
-                query.orderBy(sortBy, sortDirection)
-            } else {
-                query.orderBy("updatedAt", Query.Direction.DESCENDING)
-            }.limit(params.loadSize.toLong())
+            query = query.orderBy(sortBy, sortDirection).limit(params.loadSize.toLong())
 
             // ✅ Paging
             if (params.key != null) {

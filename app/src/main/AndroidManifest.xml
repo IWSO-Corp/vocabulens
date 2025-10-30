@@ -44,7 +44,7 @@
 
                 <data
                     android:host="cerulean-hummingbird-a1ac12.netlify.app"
-                    android:pathPrefix="/sharedNote"
+                    android:pathPrefix="/shared-note"
                     android:scheme="https" />
             </intent-filter>
 

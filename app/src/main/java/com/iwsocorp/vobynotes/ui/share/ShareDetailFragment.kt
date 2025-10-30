@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.SharedNote
@@ -21,8 +22,6 @@ import com.iwsocorp.vobynotes.core.model.asCorpus
 import com.iwsocorp.vobynotes.databinding.FragmentShareDetailBinding
 import com.iwsocorp.vobynotes.ui.note.WordAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -45,7 +44,13 @@ class ShareDetailFragment :
 
         })
     }
-    private lateinit var alphabetSidebarHelper: AlphabetSidebarHelper
+    private val alphabetSidebarHelper: AlphabetSidebarHelper by lazy {
+        AlphabetSidebarHelper(
+            requireContext(),
+            binding.alphabetSidebar,
+            binding.rvCorpus,
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,12 +60,6 @@ class ShareDetailFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        alphabetSidebarHelper = AlphabetSidebarHelper(
-            requireContext(),
-            binding.alphabetSidebar,
-            binding.rvCorpus,
-        )
 
         viewModel.sharedNoteState.collectOnStarted { state ->
             binding.progressBar.isVisible = state is SharedNoteState.Loading
@@ -83,6 +82,12 @@ class ShareDetailFragment :
         viewModel.saveState.collectOnStarted {
             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
         }
+
+        adapter.addOnPagesUpdatedListener {
+            val items = adapter.snapshot().items
+            Timber.d("items1: ${items.size}")
+            alphabetSidebarHelper.updateSidebarFromData(items)
+        }
     }
 
     private fun setupUI(sharedNote: SharedNote) {
@@ -90,9 +95,10 @@ class ShareDetailFragment :
             title = sharedNote.title
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener { findNavController().navigateUp() }
+            menu.clear()
             inflateMenu(R.menu.menu_share_detail)
             setOnMenuItemClickListener(menuListener)
-            if (firebaseUser?.uid == sharedNote.ownerId) menu.clear()
+            if (firebaseUser?.uid == sharedNote.ownerId) menu.removeItem(R.id.action_save)
         }
 
         binding.rvCorpus.adapter = adapter
@@ -108,9 +114,7 @@ class ShareDetailFragment :
         adapter.loadStateFlow.collectOnStarted {
             val items = adapter.snapshot().items
             Timber.d("items: ${items.size}")
-            withContext(Dispatchers.Main) {
-                alphabetSidebarHelper.updateSidebarFromData(items)
-            }
+            alphabetSidebarHelper.updateSidebarFromData(items)
         }
     }
 
@@ -172,6 +176,18 @@ class ShareDetailFragment :
                         "Cancel",
                     ) {
                         findNavController().navigate(R.id.action_shareDetailFragment_to_authFragment)
+                    }
+                }
+                true
+            }
+
+            R.id.action_share -> {
+                viewModel.sharedNoteState.collectOnStarted { state ->
+                    if (state is SharedNoteState.Loaded) {
+                        requireContext().sharePublicNoteLink(
+                            state.sharedNote.title,
+                            "${shareLink}${state.sharedNote.id}"
+                        )
                     }
                 }
                 true
