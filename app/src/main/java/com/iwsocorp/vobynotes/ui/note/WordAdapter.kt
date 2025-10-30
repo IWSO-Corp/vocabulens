@@ -51,6 +51,7 @@ class WordAdapter(
                     listener.onPlay(corpus.audio)
                 }
             }
+            iconMark.isVisible = isNote
             iconMark.setOnClickListener {
                 listener.onMark(corpus)
             }

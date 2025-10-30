@@ -3,10 +3,12 @@ package com.iwsocorp.vobynotes.core.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.iwsocorp.vobynotes.core.data.utils.SharedNotesPagingSource
 import com.iwsocorp.vobynotes.core.model.SharedCorpus
 import com.iwsocorp.vobynotes.core.model.SharedNote
@@ -103,8 +105,25 @@ class ShareRepository @Inject constructor(
 
     suspend fun getSharedNoteById(id: String): SharedNote? {
         val docRef = collection.document(id)
-        val snapshot = docRef.get().await()
-        return snapshot.toObject(SharedNote::class.java)
+        val document = docRef.get().await()
+        if (!document.exists()) return null
+
+        val corpusJson = document.getString("content")
+        val corpusType = object : TypeToken<List<SharedCorpus>>() {}.type
+        val corpusList: List<SharedCorpus> = Gson().fromJson(corpusJson, corpusType)
+        return SharedNote(
+            id = document.getString("id") ?: "",
+            ownerId = document.getString("ownerId") ?: "",
+            ownerAvatar = document.getString("ownerAvatar"),
+            ownerName = document.getString("ownerName"),
+            title = document.getString("title") ?: "",
+            wordLang = document.getString("wordLang") ?: "",
+            meaningLang = document.getString("meaningLang") ?: "",
+            content = corpusList,
+            savedCount = (document.getLong("savedCount") ?: 0).toInt(),
+            uploadedAt = document.getTimestamp("uploadedAt") ?: Timestamp.now(),
+            updatedAt = document.getTimestamp("updatedAt") ?: Timestamp.now(),
+        )
     }
 
     fun saveSharedNoteTransaction(

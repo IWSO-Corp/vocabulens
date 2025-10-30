@@ -142,6 +142,19 @@
         <action
             android:id="@+id/action_nav_share_to_authFragment"
             app:destination="@id/authFragment" />
+        <action
+            android:id="@+id/action_nav_share_to_shareDetailFragment"
+            app:destination="@id/shareDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/shareDetailFragment"
+        android:name="com.iwsocorp.vobynotes.ui.share.ShareDetailFragment"
+        android:label="fragment_share_detail"
+        tools:layout="@layout/fragment_share_detail" >
+        <action
+            android:id="@+id/action_shareDetailFragment_to_authFragment"
+            app:destination="@id/authFragment" />
     </fragment>
 
 </navigation>

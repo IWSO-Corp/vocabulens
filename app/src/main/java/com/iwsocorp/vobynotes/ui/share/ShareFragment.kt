@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
+import androidx.core.os.bundleOf
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -29,7 +30,10 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
     private val noteViewModel: NoteViewModel by activityViewModels()
     private val adapter: ShareNoteAdapter by lazy {
         ShareNoteAdapter { sharedNote ->
-            Timber.d("Clicked: $sharedNote")
+            findNavController().navigate(
+                R.id.action_nav_share_to_shareDetailFragment,
+                bundleOf(ShareDetailFragment.NOTE_ID to sharedNote.id)
+            )
         }
     }
 
