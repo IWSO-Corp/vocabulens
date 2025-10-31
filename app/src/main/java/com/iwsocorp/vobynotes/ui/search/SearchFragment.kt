@@ -3,11 +3,14 @@ package com.iwsocorp.vobynotes.ui.search
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -158,6 +161,19 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             setNavigationOnClickListener {
                 parentFragmentManager.popBackStack()
             }
+        }
+        binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text).apply {
+            setHintTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            filters = arrayOf(
+                InputFilter.LengthFilter(30),
+                InputFilter { source, _, _, _, _, _ ->
+                    if (source != null && source.contains(" ")) "" else source
+                }
+            )
+        }
+        binding.searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn).apply {
+            setColorFilter(ContextCompat.getColor(requireContext(), R.color.black))
         }
     }
 

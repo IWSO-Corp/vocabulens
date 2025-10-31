@@ -8,6 +8,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -137,9 +138,9 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
         binding.toolbarDetail.apply {
             title = (position + 1).toString()
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
-            setNavigationOnClickListener {
-                onBackPressed(position)
-            }
+            setNavigationOnClickListener { onBackPressed(position) }
+            menu.clear()
+            inflateMenu(R.menu.menu_detail)
             setIconColor(requireContext())
             setOnMenuItemClickListener(menuListener)
         }
@@ -154,11 +155,8 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
     }
 
     private fun onBackPressed(position: Int) {
-        val result = Bundle().apply {
-            putInt(ARG_POSITION, position)
-        }
         parentFragmentManager.apply {
-            setFragmentResult("requestKey", result)
+            setFragmentResult("requestKey", bundleOf(ARG_POSITION to position))
             popBackStack()
         }
         viewModel.resetCorpus()
@@ -220,12 +218,8 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                 }
         }
 
-        binding.toolbarDetail.apply {
-            menu.clear()
-            inflateMenu(R.menu.menu_detail)
-        }
         val menuMark = binding.toolbarDetail.menu.findItem(R.id.action_mark)
-        menuMark.setIcon(
+        menuMark?.setIcon(
             when (corpus.mark) {
                 Mark.FAMILIAR,
                 Mark.UNFAMILIAR,
@@ -234,7 +228,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                 Mark.UNMARKED -> R.drawable.outline_star_border_24
             }
         )
-        menuMark.icon?.let {
+        menuMark?.icon?.let {
             DrawableCompat.setTint(
                 it,
                 ContextCompat.getColor(

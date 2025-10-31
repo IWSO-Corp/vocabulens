@@ -47,7 +47,8 @@
         android:layout_marginBottom="166dp"
         android:backgroundTint="@color/white"
         android:contentDescription="@string/scan"
-        app:elevation="8dp" />
+        app:elevation="8dp"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Fab.Circle" />
 
     <!-- ========================= -->
     <!-- 📄 PANEL HASIL (BOTTOM SHEET) -->

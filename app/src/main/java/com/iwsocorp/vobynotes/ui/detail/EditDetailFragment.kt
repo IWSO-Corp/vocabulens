@@ -53,11 +53,11 @@ class EditDetailFragment : Fragment() {
         }
 
         binding.toolbarEdit.apply {
+            title = "Edit"
             menu.clear()
             inflateMenu(R.menu.menu_edit)
             setOnMenuItemClickListener(menuListener)
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
-            title = "Edit"
         }
     }
 

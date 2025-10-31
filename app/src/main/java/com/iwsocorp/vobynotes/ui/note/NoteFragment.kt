@@ -106,6 +106,9 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             binding.rvCorpus,
         )
     }
+    private val argNoteId: String? by lazy {
+        arguments?.getString(ARG_NOTE_ID)
+    }
 
     @OptIn(FlowPreview::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -118,20 +121,22 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             )
         }
 
-        val argNoteId = arguments?.getString(ARG_NOTE_ID)
         Timber.d("argNoteId: $argNoteId")
         argNoteId?.let {
             viewModel.updateNoteId(it)
             if (it.isNotEmpty()) {
                 viewModel.getNote(it)
             } else {
-                binding.tvToolbarTitle.text = "All Vocabulary"
+                binding.tvToolbarTitle.apply {
+                    text = "All Vocabulary"
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+                }
             }
         } ?: run {
-            binding.tvToolbarTitle.text = "Untitled"
-            binding.tvToolbarTitle.setTextColor(
-                resources.getColor(R.color.grey, null)
-            )
+            binding.tvToolbarTitle.apply {
+                text = "Untitled"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
+            }
             binding.tvEmpty.visibility = View.VISIBLE
         }
 
@@ -205,11 +210,14 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     }
 
     private fun setNormalToolbar() = with(binding) {
-        tvToolbarTitle.text = viewModel.note.value?.title ?: ""
-        tvToolbarTitle.setOnClickListener {
+        viewModel.note.observe(viewLifecycleOwner) {
+            tvToolbarTitle.text = it.title
+        }
+        if (argNoteId?.isNotEmpty() == true || argNoteId == null) tvToolbarTitle.setOnClickListener {
             tvToolbarTitle.visibility = View.GONE
             etToolbarTitle.visibility = View.VISIBLE
             etToolbarTitle.setText(tvToolbarTitle.text)
+            etToolbarTitle.requestFocus()
         }
         toolbarNote.apply {
             setIconColor(requireContext())
@@ -219,6 +227,12 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
             menu.clear()
             inflateMenu(R.menu.menu_note)
+            argNoteId?.let {
+                if (it.isEmpty()) {
+                    menu.removeItem(R.id.action_share)
+                    menu.removeItem(R.id.action_delete_note)
+                }
+            }
         }
     }
 
@@ -324,9 +338,18 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     requireContext(),
                     binding.toolbarNote.findViewById(R.id.action_mark),
                     listOf(
-                        "Familiar" to { markWords(Mark.FAMILIAR) },
-                        "Unfamiliar" to { markWords(Mark.UNFAMILIAR) },
-                        "Unmark" to { markWords(Mark.UNMARKED) }
+                        "Familiar" to {
+                            markWords(Mark.FAMILIAR)
+                            wordAdapter.clearSelection()
+                        },
+                        "Unfamiliar" to {
+                            markWords(Mark.UNFAMILIAR)
+                            wordAdapter.clearSelection()
+                        },
+                        "Unmark" to {
+                            markWords(Mark.UNMARKED)
+                            wordAdapter.clearSelection()
+                        }
                     )
                 )
             }
