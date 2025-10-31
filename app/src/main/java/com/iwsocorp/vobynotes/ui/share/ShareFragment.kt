@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.os.bundleOf
 import androidx.core.view.GravityCompat
@@ -30,7 +31,9 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
     private val viewModel: ShareViewModel by activityViewModels()
     private val noteViewModel: NoteViewModel by activityViewModels()
     private val adapter: ShareNoteAdapter by lazy {
-        ShareNoteAdapter { sharedNote ->
+        ShareNoteAdapter { sharedNote, view ->
+            viewModel.updateRecyclerPosition(binding.rvSharedNote.getChildAdapterPosition(view))
+
             findNavController().navigate(
                 R.id.action_nav_share_to_shareDetailFragment,
                 bundleOf(ShareDetailFragment.NOTE_ID to sharedNote.id)
@@ -50,6 +53,13 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
     private fun setupUI() = with(binding) {
         rvSharedNote.adapter = adapter
+        binding.nestedScroll.post {
+            val topView = binding.rvSharedNote.getChildAt(viewModel.recyclerPosition)
+            topView?.let {
+                binding.nestedScroll.smoothScrollTo(0, it.top)
+            }
+        }
+
         floatingActionButton.setOnClickListener {
             onSearch()
             adapter.refresh()
@@ -97,15 +107,27 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
         }
     }
 
-    private fun setupToolbar() = binding.toolbarShare.apply {
-        title = getString(R.string.shared_notes)
-        setNavigationIcon(R.drawable.baseline_menu_24)
-        setNavigationOnClickListener {
-            (requireActivity() as MainActivity).drawerLayout.openDrawer(GravityCompat.START)
+    private fun setupToolbar() {
+        binding.toolbarShare.apply {
+            title = getString(R.string.shared_notes)
+            setNavigationIcon(R.drawable.baseline_menu_24)
+            setNavigationOnClickListener {
+                viewModel.updateRecyclerPosition(0)
+                (requireActivity() as MainActivity).drawerLayout.openDrawer(GravityCompat.START)
+            }
+            menu.clear()
+            inflateMenu(R.menu.menu_share)
+            setOnMenuItemClickListener(menuListener)
         }
-        menu.clear()
-        inflateMenu(R.menu.menu_share)
-        setOnMenuItemClickListener(menuListener)
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    viewModel.updateRecyclerPosition(0)
+                }
+            }
+        )
     }
 
     private val menuListener = Toolbar.OnMenuItemClickListener {

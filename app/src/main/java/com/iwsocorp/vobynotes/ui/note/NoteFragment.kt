@@ -19,21 +19,27 @@ import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
+import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.common.Utils.showPopupMenu
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.SortBy
 import com.iwsocorp.vobynotes.core.model.SortOrder
+import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
+import com.iwsocorp.vobynotes.ui.share.ShareState
+import com.iwsocorp.vobynotes.ui.share.ShareViewModel
+import com.iwsocorp.vobynotes.ui.share.shareLink
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -52,6 +58,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     private val viewModel: NoteViewModel by viewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
+    private val sharedViewModel: ShareViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(true, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
@@ -175,6 +182,14 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
         }
 
+        sharedViewModel.shareState.collectOnStarted { state ->
+            binding.progressBar.isVisible = state is ShareState.Loading
+
+            if (state is ShareState.Shared) requireContext().sharePublicNoteLink(
+                state.noteTitle,
+                state.link
+            )
+        }
     }
 
     private fun setupUI(argNoteId: String?) = with(binding) {
@@ -368,7 +383,36 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
 
             R.id.action_share -> {
-                Toast.makeText(requireContext(), "Share", Toast.LENGTH_SHORT).show()
+                val user = FirebaseAuth.getInstance().currentUser
+                if (user == null) showAlertDialog(
+                    requireContext(),
+                    "You are not logged in",
+                    "You must be logged in to share note",
+                    "Login",
+                    "Cancel"
+                ) {
+                    findNavController().navigate(R.id.action_noteFragment_to_authFragment)
+                } else viewModel.note.observe(viewLifecycleOwner) { note ->
+                    if (note.shared) requireContext().sharePublicNoteLink(
+                        note.title,
+                        shareLink + note.id
+                    ) else showAlertDialog(
+                        requireContext(),
+                        "This note is not shared",
+                        "Share this note to public?",
+                        "Share",
+                        "Cancel"
+                    ) {
+                        sharedViewModel.shareNote(
+                            note.asSharedNote(
+                                user.uid,
+                                user.photoUrl.toString(),
+                                user.displayName,
+                                emptyList()
+                            )
+                        )
+                    }
+                }
             }
 
             R.id.action_delete_note -> {

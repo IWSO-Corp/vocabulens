@@ -11,6 +11,7 @@ import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
@@ -98,7 +99,21 @@ class ShareDetailFragment :
             menu.clear()
             inflateMenu(R.menu.menu_share_detail)
             setOnMenuItemClickListener(menuListener)
-            if (firebaseUser?.uid == sharedNote.ownerId) menu.removeItem(R.id.action_save)
+            viewModel.isSaved.collectOnStarted {
+                firebaseUser?.let { user ->
+                    if (user.uid == sharedNote.ownerId) menu.removeItem(R.id.action_save)
+                    viewModel.isSaved.collectOnStarted {
+                        if (it) menu.findItem(R.id.action_save)
+                            .setIcon(R.drawable.baseline_download_done_24)
+                    }
+                }
+            }
+        }
+
+        firebaseUser?.let { user ->
+            viewModel.checkNoteSavedStatus(user.uid, sharedNote.id) {
+                viewModel.setIsSaved(it)
+            }
         }
 
         binding.rvCorpus.adapter = adapter
@@ -141,32 +156,7 @@ class ShareDetailFragment :
         when (menuItem.itemId) {
             R.id.action_save -> {
                 firebaseUser?.let { user ->
-                    viewModel.sharedNoteState.collectOnStarted { state ->
-                        if (state is SharedNoteState.Loaded) showAlertDialog(
-                            requireContext(),
-                            "Save Shared Note",
-                            "Save ${state.sharedNote.title} note?",
-                            "Save",
-                        ) {
-                            viewModel.saveSharedNote(
-                                user.uid,
-                                state.sharedNote,
-                                {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        "Existing $it",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
-                            ) {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Imported ${it.successCount} items, duplicate ${it.failedCount}",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                    }
+                    onSave(user)
                 } ?: run {
                     showAlertDialog(
                         requireContext(),
@@ -194,6 +184,55 @@ class ShareDetailFragment :
             }
 
             else -> false
+        }
+    }
+
+    private fun onSave(user: FirebaseUser) = viewModel.sharedNoteState.collectOnStarted { state ->
+        if (state is SharedNoteState.Loaded) viewModel.isSaved.collectOnStarted { isSaved ->
+            if (isSaved) showAlertDialog(
+                requireContext(),
+                "Update Saved Note",
+                "Do you want to update ${state.sharedNote.title}",
+                "Update",
+                "Cancel",
+            ) {
+                viewModel.refreshSavedNote(state.sharedNote, {
+                    Toast.makeText(
+                        requireContext(),
+                        "Existing $it",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Imported ${it.successCount} items, duplicate $it",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } else showAlertDialog(
+                requireContext(),
+                "Save Shared Note",
+                "Save ${state.sharedNote.title} note?",
+                "Save",
+            ) {
+                viewModel.saveSharedNote(
+                    user.uid,
+                    state.sharedNote,
+                    {
+                        Toast.makeText(
+                            requireContext(),
+                            "Existing $it",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                ) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Imported ${it.successCount} items, duplicate ${it.failedCount}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 

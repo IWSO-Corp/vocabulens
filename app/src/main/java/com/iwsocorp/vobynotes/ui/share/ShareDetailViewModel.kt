@@ -60,6 +60,45 @@ class ShareDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun refreshSavedNote(
+        sharedNote: SharedNote,
+        existingCount: (existingCount: Int) -> Unit,
+        insertResult: (result: InsertResult) -> Unit,
+    ) = viewModelScope.launch {
+        val existCount = corpusRepository.countExisting(sharedNote.content.map { it.word })
+        existingCount(existCount)
+
+        if (existCount == sharedNote.content.size) {
+            _saveState.emit("Note already up to date")
+            return@launch
+        }
+
+        noteRepository.refreshSavedNote(
+            sharedNote.id,
+            sharedNote.title,
+            sharedNote.wordLang,
+            sharedNote.meaningLang,
+            sharedNote.content.size,
+        )
+
+        val result = corpusRepository.insertCorpusList(sharedNote.content.map { it.asCorpus() })
+        insertResult(result)
+
+        _saveState.emit(if (result.successCount > 0) "Updated" else "Note already up to date")
+    }
+
+    private val _isSaved = MutableStateFlow(false)
+    val isSaved: StateFlow<Boolean> = _isSaved
+
+    fun setIsSaved(isSaved: Boolean) {
+        _isSaved.value = isSaved
+    }
+
+    fun checkNoteSavedStatus(userId: String, noteId: String, callback: (Boolean) -> Unit) =
+        viewModelScope.launch {
+            callback(shareRepository.checkNoteSavedStatus(userId, noteId))
+        }
 }
 
 sealed class SharedNoteState {

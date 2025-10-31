@@ -123,6 +123,22 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.restoreNotesFromTrash(ids)
     }
 
+    override suspend fun refreshSavedNote(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String,
+        contentSize: Int
+    ) {
+        noteDao.refreshSavedNote(
+            noteId,
+            title,
+            wordLang,
+            meaningLang,
+            contentSize
+        )
+    }
+
 }
 
 interface NoteRepository {
@@ -138,6 +154,13 @@ interface NoteRepository {
     fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>>
     suspend fun moveNotesToTrash(ids: List<String>)
     suspend fun restoreNotesFromTrash(ids: List<String>)
+    suspend fun refreshSavedNote(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String,
+        contentSize: Int,
+    )
 }
 
 data class NoteWithCorpus(

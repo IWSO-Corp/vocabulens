@@ -26,6 +26,16 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: NoteEntity)
 
+    @Query("UPDATE notes SET title = :title, wordLang = :wordLang, meaningLang = :meaningLang, contentSize = :contentSize, updatedAt = :updatedAt WHERE id = :noteId")
+    suspend fun refreshSavedNote(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String,
+        contentSize: Int,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
+
     @Query("UPDATE notes SET shared = :shared WHERE id = :noteId")
     suspend fun updateNoteSharedStatus(noteId: String, shared: Boolean)
 

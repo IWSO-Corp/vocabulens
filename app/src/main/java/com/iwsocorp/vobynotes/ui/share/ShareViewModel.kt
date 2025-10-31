@@ -32,7 +32,6 @@ class ShareViewModel @Inject constructor(
     private val _shareState = MutableStateFlow<ShareState>(ShareState.Loading)
     val shareState: StateFlow<ShareState> = _shareState
 
-
     fun shareNote(sharedNote: SharedNote) = viewModelScope.launch {
         _shareState.value = ShareState.Loading
         try {
@@ -97,6 +96,12 @@ class ShareViewModel @Inject constructor(
 
     fun updateSort(sortData: String) {
         sort = sortData
+    }
+
+    var recyclerPosition = 0
+
+    fun updateRecyclerPosition(position: Int) {
+        recyclerPosition = position
     }
 
 }

@@ -21,7 +21,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ShareRepository @Inject constructor(
-    firestore: FirebaseFirestore,
+    private val firestore: FirebaseFirestore,
 ) {
     private val collection = firestore.collection("shared_notes")
     private val query: Query = collection
@@ -162,6 +162,16 @@ class ShareRepository @Inject constructor(
         }.addOnFailureListener { e ->
             callback(Result.failure(e))
         }
+    }
+
+    suspend fun checkNoteSavedStatus(userId: String, noteId: String): Boolean {
+        val userSaveRef = firestore.collection("user_saves")
+            .document(userId)
+            .collection("notes")
+            .document(noteId)
+            .get()
+            .await()
+        return userSaveRef.exists()
     }
 
 }

@@ -12,13 +12,19 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentHomeBinding
 import com.iwsocorp.vobynotes.ui.note.ARG_NOTE_ID
+import com.iwsocorp.vobynotes.ui.share.ShareState
+import com.iwsocorp.vobynotes.ui.share.ShareViewModel
+import com.iwsocorp.vobynotes.ui.share.shareLink
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -26,6 +32,7 @@ import timber.log.Timber
 class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::inflate) {
 
     private val viewModel: HomeViewModel by activityViewModels()
+    private val sharedViewModel: ShareViewModel by activityViewModels()
     private val adapter: NoteAdapter by lazy {
         NoteAdapter(
             object : NoteAdapter.ClickListener {
@@ -74,6 +81,14 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             }.setAnchorView(
                 (requireActivity() as MainActivity).binding.appBarMain.fab
             ).show()
+        }
+        sharedViewModel.shareState.collectOnStarted { state ->
+            binding.progressBar.isVisible = state is ShareState.Loading
+
+            if (state is ShareState.Shared) requireContext().sharePublicNoteLink(
+                state.noteTitle,
+                state.link
+            )
         }
     }
 
@@ -125,8 +140,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         }
     }
 
-    private val menuListener = Toolbar.OnMenuItemClickListener {
-        when (it.itemId) {
+    private val menuListener = Toolbar.OnMenuItemClickListener { menuItem ->
+        when (menuItem.itemId) {
             R.id.action_search -> {
                 findNavController().navigate(R.id.action_nav_home_to_searchFragment)
             }
@@ -135,7 +150,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 pickExcelFile()
             }
 
-            R.id.action_share -> {}
+            R.id.action_share -> {
+                onShare()
+            }
+
             R.id.action_export -> {}
             R.id.action_delete -> {
                 val items = adapter.getSelectedItems()
@@ -153,6 +171,50 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             }
         }
         true
+    }
+
+    private fun onShare() {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) showAlertDialog(
+            requireContext(),
+            "You are not logged in",
+            "You must be logged in to share note",
+            "Login",
+            "Cancel"
+        ) {
+            findNavController().navigate(R.id.action_nav_home_to_authFragment)
+        } else {
+            val noteId = adapter.getSelectedItems().firstOrNull()
+            noteId?.let { id ->
+                viewModel.uiState.collectOnStarted { state ->
+                    if (state is UiState.Loaded) {
+                        val item = state.notes.firstOrNull { it.note.id == id }?.note
+                        item?.let { note ->
+                            if (note.shared) requireContext().sharePublicNoteLink(
+                                note.title,
+                                shareLink + note.id
+                            ) else showAlertDialog(
+                                requireContext(),
+                                "This note is not shared",
+                                "Share this note to public?",
+                                "Share",
+                                "Cancel"
+                            ) {
+                                sharedViewModel.shareNote(
+                                    note.asSharedNote(
+                                        user.uid,
+                                        user.photoUrl.toString(),
+                                        user.displayName,
+                                        emptyList()
+                                    )
+                                )
+                                adapter.clearSelection()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private val openDocumentLauncher = registerForActivityResult(

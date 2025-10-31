@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_nav_home_to_searchFragment"
             app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_nav_home_to_authFragment"
+            app:destination="@id/authFragment" />
     </fragment>
 
     <fragment
@@ -49,6 +52,9 @@
         <action
             android:id="@+id/action_noteFragment_to_editDetailFragment"
             app:destination="@id/editDetailFragment" />
+        <action
+            android:id="@+id/action_noteFragment_to_authFragment"
+            app:destination="@id/authFragment" />
     </fragment>
 
     <fragment

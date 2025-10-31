@@ -1,6 +1,7 @@
 package com.iwsocorp.vobynotes.ui.share
 
 import android.icu.text.SimpleDateFormat
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
@@ -14,7 +15,7 @@ import com.iwsocorp.vobynotes.databinding.ItemSharedNoteBinding
 import java.util.Locale
 
 class ShareNoteAdapter(
-    private val onClick: (SharedNote) -> Unit
+    private val onClick: (SharedNote, View) -> Unit
 ) : PagingDataAdapter<SharedNote, ShareNoteAdapter.ViewHolder>(DiffCallback) {
 
     inner class ViewHolder(private val binding: ItemSharedNoteBinding) :
@@ -48,7 +49,7 @@ class ShareNoteAdapter(
             icon?.setBounds(0, 0, 48, 48)
             tvSaveCount.setCompoundDrawables(icon, null, null, null)
 
-            itemView.setOnClickListener { onClick(sharedNote) }
+            itemView.setOnClickListener { onClick(sharedNote, it) }
         }
 
         private fun Timestamp.asDateString(): String =
