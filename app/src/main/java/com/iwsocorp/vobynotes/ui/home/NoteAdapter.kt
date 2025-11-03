@@ -7,8 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.Utils.asString
@@ -19,12 +19,13 @@ import com.iwsocorp.vobynotes.databinding.ItemWordPreviewBinding
 
 class NoteAdapter(
     private val listener: ClickListener,
-) : ListAdapter<NoteWithCorpus, NoteAdapter.ViewHolder>(DIFF_CALLBACK) {
+) : PagingDataAdapter<NoteWithCorpus, NoteAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     interface ClickListener {
         fun onClick(pos: Int, noteId: String)
         fun getAllCorpusSize(callback: (Int) -> Unit)
         fun onSelectionChanged(size: Int)
+        fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit)
     }
 
     private val selectedIds = mutableSetOf<String>()
@@ -32,9 +33,11 @@ class NoteAdapter(
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(noteWithCorpus: NoteWithCorpus) = with(binding) {
+        fun bind(noteWithCorpus: NoteWithCorpus, pos: Int) = with(binding) {
             val note = noteWithCorpus.note
 
+            tvFamiliar.isVisible = pos != 0
+            tvUnfamiliar.isVisible = pos != 0
             tvTitle.apply {
                 text = note.title
                 visibility = if (note.title.isEmpty()) View.GONE else View.VISIBLE
@@ -78,18 +81,20 @@ class NoteAdapter(
             )
 
             rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
-            rvPreview.adapter = PreviewAdapter(
-                corpusList = noteWithCorpus.corpus,
-                noteId = note.id,
-                onClick = {
-                    if (!isSelectionMode) listener.onClick(
-                        absoluteAdapterPosition,
-                        note.id
-                    ) else toggleSelection(note.id)
-                },
-            ) {
-                if (!isSelectionMode) isSelectionMode = true
-                toggleSelection(note.id)
+            listener.getLastFiveCorpus(note.id) {
+                rvPreview.adapter = PreviewAdapter(
+                    corpusList = it,
+                    noteId = note.id,
+                    onClick = {
+                        if (!isSelectionMode) listener.onClick(
+                            absoluteAdapterPosition,
+                            note.id
+                        ) else toggleSelection(note.id)
+                    },
+                ) {
+                    if (!isSelectionMode) isSelectionMode = true
+                    toggleSelection(note.id)
+                }
             }
         }
 
@@ -171,7 +176,7 @@ class NoteAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        getItem(position)?.let { holder.bind(it, position) }
     }
 
     companion object {

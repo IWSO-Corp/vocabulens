@@ -65,10 +65,6 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
             adapter.refresh()
         }
 
-        viewModel.sharedNotes.collectOnStarted {
-            Timber.d("Paging data: $it")
-            adapter.submitData(viewLifecycleOwner.lifecycle, it)
-        }
         adapter.addLoadStateListener { loadState ->
             Timber.d("Item count: ${adapter.itemCount}")
             val isEmpty = adapter.itemCount == 0 && loadState.refresh is LoadState.NotLoading
@@ -79,18 +75,12 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
     private fun observeState() = viewModel.shareState.collectOnStarted { state ->
         binding.progressBar.isVisible = state is ShareState.Loading
-        Timber.d(
-            "State: ${
-                when (state) {
-                    is ShareState.Loading -> "Loading"
-                    is ShareState.Loaded -> "Loaded"
-                    is ShareState.Shared -> "Shared"
-                    is ShareState.Error -> "Error"
-                }
-            }"
-        )
 
         when (state) {
+            is ShareState.Loaded -> {
+                adapter.submitData(viewLifecycleOwner.lifecycle, state.notes)
+            }
+
             is ShareState.Shared -> {
                 requireContext().sharePublicNoteLink(state.noteTitle, state.link)
 
@@ -105,6 +95,18 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
             else -> {}
         }
+
+        Timber.d(
+            "State: ${
+                when (state) {
+                    is ShareState.Idle -> "Idle"
+                    is ShareState.Loading -> "Loading"
+                    is ShareState.Loaded -> "Loaded"
+                    is ShareState.Shared -> "Shared"
+                    is ShareState.Error -> "Error"
+                }
+            }"
+        )
     }
 
     private fun setupToolbar() {

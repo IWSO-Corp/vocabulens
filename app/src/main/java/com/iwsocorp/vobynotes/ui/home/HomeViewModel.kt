@@ -5,6 +5,9 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.insertHeaderItem
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vobynotes.core.data.repository.NoteRepository
 import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
@@ -17,6 +20,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -35,7 +40,27 @@ class HomeViewModel @Inject constructor(
     fun getNotesWithCorpusFlow() {
         _uiState.value = UiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            noteRepository.getNotesWithCorpusFlow().collect {
+            noteRepository.getNotesPagingFlow()
+                .map { pagingData ->
+                    pagingData.insertHeaderItem(
+                        item = NoteWithCorpus(
+                            note = Note(
+                                id = "",
+                                title = "All Vocabulary",
+                                wordLang = "",
+                                meaningLang = "",
+                                contentSize = 0,
+                                createdAt = 0L,
+                                updatedAt = 0L
+                            ),
+                            familiarCount = 0,
+                            unfamiliarCount = 0,
+                            corpus = emptyList()
+                        )
+                    )
+                }
+                .cachedIn(viewModelScope)
+                .collectLatest {
                 withContext(Dispatchers.Main) {
                     _uiState.value = UiState.Loaded(it)
                 }
@@ -43,11 +68,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit) = viewModelScope.launch {
+        callback(noteRepository.getLastFiveCorpus(noteId))
+    }
+
     private val _allCorpus = MutableStateFlow<List<Corpus>>(emptyList())
     val allCorpus: StateFlow<List<Corpus>> get() = _allCorpus
 
     fun allCorpus() = viewModelScope.launch(Dispatchers.IO) {
-        corpusRepository.allCorpusFlow().collect {
+        corpusRepository.allCorpusFlow().collectLatest {
             withContext(Dispatchers.Main) {
                 _allCorpus.value = it
             }
@@ -150,5 +179,5 @@ class HomeViewModel @Inject constructor(
 sealed class UiState {
     object Idle : UiState()
     object Loading : UiState()
-    data class Loaded(val notes: List<NoteWithCorpus>) : UiState()
+    data class Loaded(val notesPaging: PagingData<NoteWithCorpus>) : UiState()
 }

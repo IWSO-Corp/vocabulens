@@ -29,7 +29,7 @@ class ShareViewModel @Inject constructor(
     private val exampleRepository: ExampleRepository,
 ) : ViewModel() {
 
-    private val _shareState = MutableStateFlow<ShareState>(ShareState.Loading)
+    private val _shareState = MutableStateFlow<ShareState>(ShareState.Idle)
     val shareState: StateFlow<ShareState> = _shareState
 
     fun shareNote(sharedNote: SharedNote) = viewModelScope.launch {
@@ -66,9 +66,6 @@ class ShareViewModel @Inject constructor(
         }
     }
 
-    private val _sharedNotes = MutableStateFlow<PagingData<SharedNote>>(PagingData.empty())
-    val sharedNotes: StateFlow<PagingData<SharedNote>> = _sharedNotes
-
     fun getSharedNotes(
         filterWordLang: String? = null,
         filterMeaningLang: String? = null,
@@ -82,8 +79,7 @@ class ShareViewModel @Inject constructor(
             sortBy,
             sortDirection
         ).cachedIn(viewModelScope).collectLatest {
-            _sharedNotes.value = it
-            _shareState.value = ShareState.Loaded
+            _shareState.value = ShareState.Loaded(it)
         }
     }
 
@@ -107,8 +103,9 @@ class ShareViewModel @Inject constructor(
 }
 
 sealed class ShareState {
+    object Idle : ShareState()
     object Loading : ShareState()
-    object Loaded : ShareState()
+    data class Loaded(val notes: PagingData<SharedNote>) : ShareState()
     data class Shared(val noteTitle: String, val link: String) : ShareState()
     data class Error(val message: String) : ShareState()
 }

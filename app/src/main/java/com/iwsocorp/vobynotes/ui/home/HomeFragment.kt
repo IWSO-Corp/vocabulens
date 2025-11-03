@@ -26,6 +26,7 @@ import com.iwsocorp.vobynotes.ui.share.ShareState
 import com.iwsocorp.vobynotes.ui.share.ShareViewModel
 import com.iwsocorp.vobynotes.ui.share.shareLink
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -54,6 +55,13 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                     }
                 }
 
+                override fun getLastFiveCorpus(
+                    noteId: String,
+                    callback: (List<Corpus>) -> Unit
+                ) {
+                    viewModel.getLastFiveCorpus(noteId, callback)
+                }
+
             }
         )
     }
@@ -70,6 +78,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
         }
         binding.rvNote.adapter = adapter
+        adapter.loadStateFlow.collectOnStarted {
+            binding.tvEmpty.isVisible = adapter.itemCount == 0
+        }
 
         viewModel.deletedNoteId.collectOnStarted { ids ->
             Snackbar.make(
@@ -82,23 +93,46 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 (requireActivity() as MainActivity).binding.appBarMain.fab
             ).show()
         }
-        sharedViewModel.shareState.collectOnStarted { state ->
-            binding.progressBar.isVisible = state is ShareState.Loading
-
-            if (state is ShareState.Shared) requireContext().sharePublicNoteLink(
-                state.noteTitle,
-                state.link
-            )
-        }
     }
 
-    private fun observeState() = viewModel.uiState.collectOnStarted {
-        binding.progressBar.isVisible = it is UiState.Loading
+    private fun observeState() = combine(
+        viewModel.uiState,
+        sharedViewModel.shareState
+    ) { uiState, shareState ->
+        uiState to shareState
+    }.collectOnStarted { (uiState, shareState) ->
+        binding.progressBar.isVisible =
+            uiState is UiState.Loading || shareState is ShareState.Loading
 
-        if (it is UiState.Loaded) with(binding) {
-            if (it.notes.size > 1) adapter.submitList(it.notes)
-            tvEmpty.isVisible = it.notes.size == 1
+        if (uiState is UiState.Loaded) with(binding) {
+            adapter.submitData(viewLifecycleOwner.lifecycle, uiState.notesPaging)
         }
+
+        if (shareState is ShareState.Shared) requireContext().sharePublicNoteLink(
+            shareState.noteTitle,
+            shareState.link
+        )
+
+        Timber.d(
+            "UiState: ${
+                when (uiState) {
+                    is UiState.Idle -> "Idle"
+                    is UiState.Loading -> "Loading"
+                    is UiState.Loaded -> "Loaded"
+                }
+            }"
+        )
+        Timber.d(
+            "ShareState: ${
+                when (shareState) {
+                    is ShareState.Idle -> "Idle"
+                    is ShareState.Loading -> "Loading"
+                    is ShareState.Shared -> "Shared"
+                    is ShareState.Error -> "Error"
+                    is ShareState.Loaded -> "Loaded"
+                }
+            }"
+        )
     }
 
     private fun setOnBack() = requireActivity().onBackPressedDispatcher.addCallback(
@@ -186,32 +220,26 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         } else {
             val noteId = adapter.getSelectedItems().firstOrNull()
             noteId?.let { id ->
-                viewModel.uiState.collectOnStarted { state ->
-                    if (state is UiState.Loaded) {
-                        val item = state.notes.firstOrNull { it.note.id == id }?.note
-                        item?.let { note ->
-                            if (note.shared) requireContext().sharePublicNoteLink(
-                                note.title,
-                                shareLink + note.id
-                            ) else showAlertDialog(
-                                requireContext(),
-                                "This note is not shared",
-                                "Share this note to public?",
-                                "Share",
-                                "Cancel"
-                            ) {
-                                sharedViewModel.shareNote(
-                                    note.asSharedNote(
-                                        user.uid,
-                                        user.photoUrl.toString(),
-                                        user.displayName,
-                                        emptyList()
-                                    )
-                                )
-                                adapter.clearSelection()
-                            }
-                        }
-                    }
+                val note = adapter.snapshot().items.find { it.note.id == id }!!.note
+                if (note.shared) requireContext().sharePublicNoteLink(
+                    note.title,
+                    shareLink + note.id
+                ) else showAlertDialog(
+                    requireContext(),
+                    "This note is not shared",
+                    "Share this note to public?",
+                    "Share",
+                    "Cancel"
+                ) {
+                    sharedViewModel.shareNote(
+                        note.asSharedNote(
+                            user.uid,
+                            if (user.photoUrl != null) user.photoUrl.toString() else null,
+                            user.displayName,
+                            emptyList()
+                        )
+                    )
+                    adapter.clearSelection()
                 }
             }
         }

@@ -14,6 +14,7 @@ import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.databinding.FragmentTrashBinding
 import com.iwsocorp.vobynotes.ui.home.NoteAdapter
 import com.iwsocorp.vobynotes.ui.home.UiState
@@ -40,6 +41,13 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
                         setNormalToolbar()
                     }
                 }
+
+                override fun getLastFiveCorpus(
+                    noteId: String,
+                    callback: (List<Corpus>) -> Unit
+                ) {
+                    viewModel.getLastFiveCorpus(noteId, callback)
+                }
             }
         )
     }
@@ -63,18 +71,16 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             setOnMenuItemClickListener(menuListener)
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
         }
+        adapter.loadStateFlow.collectOnStarted {
+            binding.tvEmpty.isVisible = adapter.itemCount == 0
+        }
     }
 
     private fun observeState() = viewModel.uiState.collectOnStarted { state ->
         binding.progressBar.isVisible = state is UiState.Loading
 
         if (state is UiState.Loaded) with(binding) {
-            val isEmpty = state.notes.isEmpty()
-
-            rvNote.isVisible = !isEmpty
-            tvEmpty.isVisible = isEmpty
-
-            adapter.submitList(state.notes)
+            adapter.submitData(viewLifecycleOwner.lifecycle, state.notesPaging)
             rvNote.adapter = adapter
         }
     }
@@ -138,7 +144,7 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
                     "Empty Trash",
                     "Cancel",
                 ) {
-                    val allTrashIds = adapter.currentList.map { it.note.id }
+                    val allTrashIds = adapter.snapshot().items.map { it.note.id }
                     viewModel.deleteNotes(allTrashIds)
                     adapter.clearSelection()
                 }

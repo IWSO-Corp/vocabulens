@@ -1,14 +1,15 @@
 package com.iwsocorp.vobynotes.core.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.iwsocorp.vobynotes.core.database.dao.NoteDao
-import com.iwsocorp.vobynotes.core.database.dao.NoteWithLatestCorpus
 import com.iwsocorp.vobynotes.core.database.model.asExternalModel
 import com.iwsocorp.vobynotes.core.model.Corpus
-import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -50,67 +51,34 @@ class NoteRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>> = combine(
-        noteDao.getNotesWithCorpusCountFlow(),
-        noteDao.getAllCorpusFlow()
-    ) { notes, _ ->
-        notes.map { partial ->
-            NoteWithLatestCorpus(
-                partial.note,
-                partial.corpusCount,
-                noteDao.countNoteContentMark(partial.note.id, Mark.FAMILIAR),
-                noteDao.countNoteContentMark(partial.note.id, Mark.UNFAMILIAR),
-                noteDao.getLastFiveCorpusByNoteIdSuspend(partial.note.id)
-            )
-        }
-    }.map { list ->
-        list.map {
+    override fun getNotesPagingFlow(): Flow<PagingData<NoteWithCorpus>> = Pager(
+        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
+        pagingSourceFactory = { noteDao.getPagedNotesWithAggregate() }
+    ).flow.map { pagingData ->
+        pagingData.map { entity ->
             NoteWithCorpus(
-                note = it.note.asExternalModel(),
-                familiarCount = it.familiarCount,
-                unfamiliarCount = it.unfamiliarCount,
-                corpus = it.corpus.map { entity -> entity.asExternalModel() }
-            )
-        }
-    }.map { list ->
-        listOf(
-            NoteWithCorpus(
-                note = Note(
-                    id = "",
-                    title = "All Vocabulary",
-                    wordLang = "",
-                    meaningLang = "",
-                    contentSize = 0,
-                    createdAt = 0L,
-                    updatedAt = 0L
-                ),
-                familiarCount = 0,
-                unfamiliarCount = 0,
+                note = entity.note.asExternalModel(),
+                familiarCount = entity.familiarCount,
+                unfamiliarCount = entity.unfamiliarCount,
                 corpus = emptyList()
             )
-        ) + list
+        }
     }
 
-    override fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>> = combine(
-        noteDao.getTrashNotesFlow(),
-        noteDao.getAllTrashCorpusFlow()
-    ) { notes, _ ->
-        notes.map { partial ->
-            NoteWithLatestCorpus(
-                partial.note,
-                partial.corpusCount,
-                noteDao.countNoteContentMark(partial.note.id, Mark.FAMILIAR),
-                noteDao.countNoteContentMark(partial.note.id, Mark.UNFAMILIAR),
-                noteDao.getLastFiveCorpusByNoteIdSuspend(partial.note.id)
-            )
-        }
-    }.map { list ->
-        list.map {
+    override suspend fun getLastFiveCorpus(noteId: String): List<Corpus> =
+        noteDao.getLastFiveCorpusByNoteId(noteId)
+            .map { it.asExternalModel() }
+
+    override fun getTrashNotesFlow(): Flow<PagingData<NoteWithCorpus>> = Pager(
+        config = PagingConfig(pageSize = 10, enablePlaceholders = false),
+        pagingSourceFactory = { noteDao.getTrashNotesFlow() }
+    ).flow.map { pagingData ->
+        pagingData.map {
             NoteWithCorpus(
                 note = it.note.asExternalModel(),
                 familiarCount = it.familiarCount,
                 unfamiliarCount = it.unfamiliarCount,
-                corpus = it.corpus.map { entity -> entity.asExternalModel() }
+                corpus = emptyList()
             )
         }
     }
@@ -150,8 +118,9 @@ interface NoteRepository {
     suspend fun deleteNotes(ids: List<String>)
     suspend fun getNoteById(id: String): Note
     fun getNotesFlow(): Flow<List<Note>>
-    fun getNotesWithCorpusFlow(): Flow<List<NoteWithCorpus>>
-    fun getTrashNotesFlow(): Flow<List<NoteWithCorpus>>
+    fun getNotesPagingFlow(): Flow<PagingData<NoteWithCorpus>>
+    suspend fun getLastFiveCorpus(noteId: String): List<Corpus>
+    fun getTrashNotesFlow(): Flow<PagingData<NoteWithCorpus>>
     suspend fun moveNotesToTrash(ids: List<String>)
     suspend fun restoreNotesFromTrash(ids: List<String>)
     suspend fun refreshSavedNote(

@@ -12,6 +12,7 @@ import com.google.firebase.Timestamp
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.model.SharedNote
 import com.iwsocorp.vobynotes.databinding.ItemSharedNoteBinding
+import timber.log.Timber
 import java.util.Locale
 
 class ShareNoteAdapter(
@@ -20,9 +21,14 @@ class ShareNoteAdapter(
 
     inner class ViewHolder(private val binding: ItemSharedNoteBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
         fun bind(sharedNote: SharedNote) = with(binding) {
-            Glide.with(itemView.context).load(sharedNote.ownerAvatar).into(imgAvatar)
-            tvOwner.text = sharedNote.ownerName
+            Timber.d("sharedNote: $sharedNote")
+            Glide.with(imgAvatar).load(
+                if (sharedNote.ownerAvatar.isNullOrEmpty()) R.drawable.baseline_person_24 else sharedNote.ownerAvatar
+            ).into(imgAvatar)
+            tvOwner.text =
+                if (sharedNote.ownerName.isNullOrEmpty()) "Anonymous" else sharedNote.ownerName
             tvDate.text = sharedNote.uploadedAt.asDateString()
             if (sharedNote.updatedAt.asDateString() != sharedNote.uploadedAt.asDateString()) tvUpdate.text =
                 itemView.context.getString(
@@ -45,7 +51,8 @@ class ShareNoteAdapter(
             )
             tvSaveCount.text = sharedNote.savedCount.toString()
 
-            val icon = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_file_download_24)
+            val icon =
+                ContextCompat.getDrawable(itemView.context, R.drawable.baseline_file_download_24)
             icon?.setBounds(0, 0, 48, 48)
             tvSaveCount.setCompoundDrawables(icon, null, null, null)
 

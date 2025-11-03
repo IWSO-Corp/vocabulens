@@ -1,12 +1,12 @@
 package com.iwsocorp.vobynotes.core.database.dao
 
+import androidx.paging.PagingSource
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Relation
 import androidx.room.Transaction
 import androidx.room.Update
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
@@ -45,17 +45,29 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: String): NoteEntity
 
-    @Query(
-        """
-        SELECT n.*, COUNT(c.id) AS corpus_count
-        FROM notes AS n
-        LEFT JOIN corpus AS c ON n.id = c.noteId
+    @Query("""
+        SELECT 
+            n.*,
+            COUNT(c.id) AS corpusCount,
+            SUM(CASE WHEN c.mark = :familiar THEN 1 ELSE 0 END) AS familiarCount,
+            SUM(CASE WHEN c.mark = :unfamiliar THEN 1 ELSE 0 END) AS unfamiliarCount
+        FROM notes n
+        LEFT JOIN corpus c ON n.id = c.noteId
         WHERE n.deletedAt IS NULL
         GROUP BY n.id
         ORDER BY n.updatedAt DESC
-    """
-    )
-    fun getNotesWithCorpusCountFlow(): Flow<List<NoteWithCorpusCount>>
+    """)
+    fun getPagedNotesWithAggregate(
+        familiar: String = "FAMILIAR",
+        unfamiliar: String = "UNFAMILIAR"
+    ): PagingSource<Int, NoteAggregateEntity>
+
+    @Query("""
+        SELECT * FROM corpus
+        WHERE noteId = :noteId
+        ORDER BY createdAt DESC LIMIT 5
+    """)
+    suspend fun getLastFiveCorpusByNoteId(noteId: String): List<CorpusEntity>
 
     @Query("SELECT * FROM corpus WHERE deletedAt IS NULL")
     fun getAllCorpusFlow(): Flow<List<CorpusEntity>>
@@ -63,17 +75,22 @@ interface NoteDao {
     @Query("SELECT * FROM corpus WHERE deletedAt IS NOT NULL")
     fun getAllTrashCorpusFlow(): Flow<List<CorpusEntity>>
 
-    @Query(
-        """
-        SELECT n.*, COUNT(c.id) AS corpus_count
-        FROM notes AS n
-        LEFT JOIN corpus AS c ON n.id = c.noteId
+    @Query("""
+        SELECT 
+            n.*,
+            COUNT(c.id) AS corpusCount,
+            SUM(CASE WHEN c.mark = :familiar THEN 1 ELSE 0 END) AS familiarCount,
+            SUM(CASE WHEN c.mark = :unfamiliar THEN 1 ELSE 0 END) AS unfamiliarCount
+        FROM notes n
+        LEFT JOIN corpus c ON n.id = c.noteId
         WHERE n.deletedAt IS NOT NULL
         GROUP BY n.id
         ORDER BY n.updatedAt DESC
-    """
-    )
-    fun getTrashNotesFlow(): Flow<List<NoteWithCorpusCount>>
+    """)
+    fun getTrashNotesFlow(
+        familiar: String = "FAMILIAR",
+        unfamiliar: String = "UNFAMILIAR"
+    ): PagingSource<Int, NoteAggregateEntity>
 
     @Query("SELECT * FROM corpus WHERE noteId = :noteId ORDER BY updatedAt DESC LIMIT 5")
     suspend fun getLastFiveCorpusByNoteIdSuspend(noteId: String): List<CorpusEntity>
@@ -166,19 +183,10 @@ interface NoteDao {
     }
 }
 
-data class NoteWithCorpusCount(
+data class NoteAggregateEntity(
     @Embedded val note: NoteEntity,
-    @ColumnInfo(name = "corpus_count") val corpusCount: Int,
-)
 
-data class NoteWithLatestCorpus(
-    @Embedded val note: NoteEntity,
-    @ColumnInfo(name = "corpus_count") val corpusCount: Int,
-    @ColumnInfo(name = "familiar_count") val familiarCount: Int,
-    @ColumnInfo(name = "unfamiliar_count") val unfamiliarCount: Int,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "noteId",
-        entity = CorpusEntity::class
-    ) val corpus: List<CorpusEntity>
+    @ColumnInfo(name = "familiarCount") val familiarCount: Int,
+    @ColumnInfo(name = "unfamiliarCount") val unfamiliarCount: Int,
+    @ColumnInfo(name = "corpusCount") val corpusCount: Int,
 )
