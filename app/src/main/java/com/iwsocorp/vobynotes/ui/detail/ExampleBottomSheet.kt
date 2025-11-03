@@ -30,5 +30,6 @@ class ExampleBottomSheet(
             onSubmit(sentence)
             dismiss()
         }
+        binding.closeBtn.setOnClickListener { dismiss() }
     }
 }

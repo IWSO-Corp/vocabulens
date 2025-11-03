@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Voby Notes</string>
+    <string name="app_name">Vocabulens</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -34,7 +34,8 @@
     <string name="start">Start</string>
     <string name="next">Continue</string>
     <string name="correct_d">Correct: %1$d</string>
-    <string name="wrong_d">Wrong: %1$d</string>
+    <string name="wrong_d">Incorrect: %1$d</string>
+    <string name="correct_answer_s">Correct answer: %1$s</string>
     <string name="your_answer_s">Your answer: %1$s</string>
     <string name="quiz_completed">Quiz Completed</string>
     <string name="scan">Scan</string>

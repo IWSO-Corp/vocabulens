@@ -14,12 +14,22 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="1" />
 
+    <TextView
+        android:id="@+id/tv_number_bg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="99"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_answer"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tv_sentence"
         tools:src="@drawable/baseline_check_24" />
 
     <TextView
@@ -27,18 +37,26 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
+        android:paddingBottom="4dp"
         app:layout_constraintEnd_toStartOf="@id/icon"
-        app:layout_constraintStart_toEndOf="@id/tv_number"
+        app:layout_constraintStart_toEndOf="@id/tv_number_bg"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="vreturn Scaffold( appBar: AppBar( title: const Text( shsh sjdnso dsa" />
+
+    <TextView
+        android:id="@+id/tv_correct_answer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@+id/tv_sentence"
+        app:layout_constraintTop_toBottomOf="@+id/tv_sentence"
+        tools:text="@string/correct_answer_s" />
 
     <TextView
         android:id="@+id/tv_answer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintStart_toStartOf="@+id/tv_sentence"
-        app:layout_constraintTop_toBottomOf="@+id/tv_sentence"
+        app:layout_constraintStart_toStartOf="@+id/tv_correct_answer"
+        app:layout_constraintTop_toBottomOf="@+id/tv_correct_answer"
         tools:text="@string/your_answer_s" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

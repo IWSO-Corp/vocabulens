@@ -32,7 +32,9 @@
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="16dp"
         android:contentDescription="New note"
-        app:srcCompat="@drawable/baseline_add_24"
+        android:foregroundTint="@color/white"
+        android:src="@drawable/baseline_add_white_24"
+        android:tint="@color/white"
         tools:ignore="HardcodedText" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

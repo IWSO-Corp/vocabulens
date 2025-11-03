@@ -19,7 +19,7 @@ class QuizViewModel @Inject constructor(
     private val _quizState = MutableStateFlow<QuizState>(QuizState.Idle)
     val state: StateFlow<QuizState> = _quizState.asStateFlow()
     private var currentIndex = 0
-    private val _result = mutableListOf<Triple<String, Boolean, String>>()
+    private val _result = mutableListOf<Triple<String, String, String>>()
 
     fun startQuiz(examples: List<Example>) {
         _quizState.value = QuizState.ShowQuestion(
@@ -30,10 +30,7 @@ class QuizViewModel @Inject constructor(
 
     fun answerQuestion(selected: String, examples: List<Example>) {
         val currentExample = examples[currentIndex]
-        val isCorrect = selected == currentExample.forWord
-
         _quizState.value = QuizState.ShowResult(
-            isCorrect = isCorrect,
             correctAnswer = currentExample.forWord,
             selectedAnswer = selected,
             sentence = currentExample.sentence
@@ -52,8 +49,8 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    fun saveResult(sentence: String, isCorrect: Boolean, selectedAnswer: String) = _result.add(
-        Triple(sentence, isCorrect, selectedAnswer)
+    fun saveResult(sentence: String, correctAnswer: String, selectedAnswer: String) = _result.add(
+        Triple(sentence, correctAnswer, selectedAnswer)
     )
 
     fun incrementQuizCount(ids: List<String>) = viewModelScope.launch {
@@ -69,13 +66,12 @@ sealed class QuizState {
     ) : QuizState()
 
     data class ShowResult(
-        val isCorrect: Boolean,
         val correctAnswer: String,
         val selectedAnswer: String,
         val sentence: String,
     ) : QuizState()
 
     data class Finished(
-        val result: List<Triple<String, Boolean, String>>,
+        val result: List<Triple<String, String, String>>,
     ) : QuizState()
 }

@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:background="@drawable/bg_bottomsheet"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
@@ -21,6 +22,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
+            android:id="@+id/close_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/baseline_close_24"
@@ -36,9 +38,10 @@
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_example"
             android:layout_width="match_parent"
-            android:inputType="textCapSentences|text"
             android:layout_height="wrap_content"
+            android:hint="This is example sentence for word"
             android:imeOptions="actionDone"
+            android:inputType="textCapSentences|text"
             android:maxLines="3" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -49,6 +52,8 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="16dp"
-        android:text="Add" />
+        android:backgroundTint="@color/blue"
+        android:text="Add"
+        android:textColor="@color/white" />
 
 </LinearLayout>

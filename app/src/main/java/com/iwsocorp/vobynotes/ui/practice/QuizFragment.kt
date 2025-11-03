@@ -81,6 +81,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
         )
         binding.tvSentence.text =
             HtmlCompat.fromHtml(blankSentence, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        binding.nextButton.setTextColor(resources.getColor(R.color.black, null))
         binding.optionsGrid.removeAllViews()
         optionButtons.clear()
 
@@ -94,8 +95,9 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
                 text = word
                 textSize = 16f
                 setPadding(24, 12, 24, 12)
+                setTextColor(resources.getColor(R.color.black, null))
                 backgroundTintList = ColorStateList.valueOf(
-                    resources.getColor(R.color.white, null)
+                    resources.getColor(R.color.light_grey, null)
                 )
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = 0
@@ -110,12 +112,21 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
     }
 
     private fun showResultUI(state: QuizState.ShowResult, examples: List<Example>) {
+        val isCorrect = state.correctAnswer == state.selectedAnswer
         optionButtons.forEach { button ->
             button.backgroundTintList = ColorStateList.valueOf(
                 resources.getColor(
                     when (button.text) {
-                        state.selectedAnswer -> if (state.isCorrect) R.color.green else R.color.red
-                        else -> R.color.white
+                        state.selectedAnswer -> if (isCorrect) R.color.green else R.color.red
+                        else -> R.color.light_grey
+                    }, null
+                )
+            )
+            button.setTextColor(
+                resources.getColor(
+                    when (button.text) {
+                        state.selectedAnswer -> R.color.white
+                        else -> R.color.black
                     }, null
                 )
             )
@@ -128,15 +139,16 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
             ignoreCase = true
         )
 
-        viewModel.saveResult(styledSentence, state.isCorrect, state.selectedAnswer)
+        viewModel.saveResult(styledSentence, state.correctAnswer, state.selectedAnswer)
 
         binding.tvSentence.text =
             HtmlCompat.fromHtml(styledSentence, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        binding.nextButton.setTextColor(resources.getColor(R.color.white, null))
         binding.nextButton.setOnClickListener { viewModel.nextQuestion(examples) }
     }
 
     private fun showFinishedUI(
-        result: List<Triple<String, Boolean, String>>,
+        result: List<Triple<String, String, String>>,
         examples: List<Example>
     ) {
         binding.optionsGrid.removeAllViews()
@@ -148,8 +160,8 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
             }
         }
 
-        val correct = result.count { it.second }
-        val wrong = result.count { !it.second }
+        val correct = result.count { it.second == it.third }
+        val wrong = result.count { it.second != it.third }
         binding.tvCorrect.text = getString(R.string.correct_d, correct)
         binding.tvWrong.text = getString(R.string.wrong_d, wrong)
 

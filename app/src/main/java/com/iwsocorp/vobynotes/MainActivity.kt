@@ -16,6 +16,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
+import com.iwsocorp.vobynotes.databinding.NavHeaderMainBinding
 import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
 import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
 import com.iwsocorp.vobynotes.ui.widget.SEARCH
@@ -52,9 +53,11 @@ class MainActivity : AppCompatActivity() {
         toolbar.title = getString(R.string.app_name)
         toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.black))
 
-        binding.appBarMain.fab.setOnClickListener {
-            navController.navigate(R.id.action_nav_home_to_noteFragment)
-        }
+        val icon = ContextCompat.getDrawable(this, R.drawable.vocabulens_logo)
+        icon?.setBounds(0, 0, 72, 72)
+        val headerBinding = NavHeaderMainBinding.bind(binding.navView.getHeaderView(0))
+        headerBinding.headerTitle.setCompoundDrawables(icon, null, null, null)
+        headerBinding.headerTitle.compoundDrawablePadding = 8
 
         setupNavigation()
         handleDeepLink(intent)
@@ -77,7 +80,18 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setupWithNavController(navController)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            if (destination.id == R.id.nav_home) binding.appBarMain.fab.show() else binding.appBarMain.fab.hide()
+            binding.appBarMain.fab.apply {
+                if (destination.id == R.id.nav_home) {
+                    show()
+                    setOnClickListener {
+                        navController.navigate(R.id.action_nav_home_to_noteFragment)
+                    }
+                } else {
+                    hide()
+                    setOnClickListener(null)
+                }
+            }
+
             when (destination.id) {
                 R.id.nav_scan,
                 R.id.nav_practice,

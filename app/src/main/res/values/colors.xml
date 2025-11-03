@@ -12,9 +12,16 @@
     <color name="grey">#989898</color>
     <color name="light_pink">#FFF5FE</color>
     <color name="blue">#448AFF</color>
+    <color name="light_blue">#DDE7FF</color>
     <color name="green">#4DFF97</color>
     <color name="red">#FF5252</color>
     <color name="yellow">#FFFF00</color>
     <color name="dark_red">#D84646</color>
     <color name="dark_green">#3CC676</color>
+    <color name="md_theme_light_primary">#83C1FF</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_secondary">#625B71</color>
+    <color name="md_theme_light_background">#FFFBFE</color>
+    <color name="md_theme_light_surface">#FFFBFE</color>
+    <color name="md_theme_light_error">#B3261E</color>
 </resources>

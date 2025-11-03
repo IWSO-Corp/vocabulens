@@ -2,15 +2,34 @@
     <!-- Base application theme. -->
     <style name="Theme.VocabNotes" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/teal</item>
+        <item name="colorPrimary">@color/blue</item>
         <item name="colorPrimaryVariant">@color/blue</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/blue</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorSurfaceContainer">@color/light_blue</item>
+        <item name="android:colorBackground">@color/white</item>
+
+        <item name="colorTertiaryContainer">@color/yellow</item>
+        <item name="colorContainer">@color/yellow</item>
+        <item name="android:progressTint">@color/blue</item>
+        <item name="android:colorPrimary">@color/yellow</item>
+        <item name="colorScheme">@color/green</item>
+        <item name="colorSecondaryContainer">@color/light_blue</item>
+
+        <item name="colorPrimarySurface">@color/green</item>
+
+        <!--        <item name="backgroundTint">@color/white</item>-->
+        <!--        <item name="background">@color/white</item>-->
+        <!--        <item name="containerColor">@color/white</item>-->
+
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@color/md_theme_light_background</item>
         <!-- Customize your theme here. -->
         <item name="android:windowLightStatusBar">true</item>
         <item name="colorOnContainer">@color/black</item>
