@@ -129,7 +129,7 @@ object Utils {
         this.overflowIcon?.setTint(ContextCompat.getColor(context, R.color.black))
 
     fun Context.sharePublicNoteLink(noteTitle: String, link: String) {
-        val shareText = "Check this vocabulary: $noteTitle on Voby Notes! \n$link"
+        val shareText = "Check this vocabulary: $noteTitle on Vocabulens! \n$link"
         val intent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, shareText)

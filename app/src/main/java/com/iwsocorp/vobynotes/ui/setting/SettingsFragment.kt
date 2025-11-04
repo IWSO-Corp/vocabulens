@@ -66,7 +66,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             title = "Settings"
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
-                parentFragmentManager.popBackStack()
+                findNavController().navigateUp()
             }
         }
         tvAccount.text = user?.email

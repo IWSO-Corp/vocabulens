@@ -30,7 +30,7 @@ class ShareDetailFragment :
     BaseFragment<FragmentShareDetailBinding>(FragmentShareDetailBinding::inflate) {
 
     private val viewModel: ShareDetailViewModel by viewModels()
-    private val firebaseUser = FirebaseAuth.getInstance().currentUser
+    private var firebaseUser: FirebaseUser? = null
     private val adapter: WordAdapter by lazy {
         WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {}
@@ -62,6 +62,8 @@ class ShareDetailFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        firebaseUser = FirebaseAuth.getInstance().currentUser
+
         viewModel.sharedNoteState.collectOnStarted { state ->
             binding.progressBar.isVisible = state is SharedNoteState.Loading
             binding.tvEmpty.isVisible = state is SharedNoteState.Error
@@ -83,6 +85,10 @@ class ShareDetailFragment :
         viewModel.saveState.collectOnStarted {
             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
         }
+        viewModel.isSaved.collectOnStarted {
+            if (it) binding.toolbarNote.menu.findItem(R.id.action_save)
+                .setIcon(R.drawable.baseline_download_done_24)
+        }
 
         adapter.addOnPagesUpdatedListener {
             val items = adapter.snapshot().items
@@ -99,22 +105,12 @@ class ShareDetailFragment :
             menu.clear()
             inflateMenu(R.menu.menu_share_detail)
             setOnMenuItemClickListener(menuListener)
-            viewModel.isSaved.collectOnStarted {
-                firebaseUser?.let { user ->
-                    if (user.uid == sharedNote.ownerId) menu.removeItem(R.id.action_save)
-                    viewModel.isSaved.collectOnStarted {
-                        if (it) menu.findItem(R.id.action_save)
-                            .setIcon(R.drawable.baseline_download_done_24)
-                    }
-                }
+            firebaseUser?.let { user ->
+                if (user.uid == sharedNote.ownerId) menu.removeItem(R.id.action_save)
             }
         }
 
-        firebaseUser?.let { user ->
-            viewModel.checkNoteSavedStatus(user.uid, sharedNote.id) {
-                viewModel.setIsSaved(it)
-            }
-        }
+        checkNoteSavedStatus(sharedNote)
 
         binding.rvCorpus.adapter = adapter
         binding.rvCorpus.addOnScrollListener(scrollListener)
@@ -130,6 +126,12 @@ class ShareDetailFragment :
             val items = adapter.snapshot().items
             Timber.d("items: ${items.size}")
             alphabetSidebarHelper.updateSidebarFromData(items)
+        }
+    }
+
+    private fun checkNoteSavedStatus(sharedNote: SharedNote) = firebaseUser?.let { user ->
+        viewModel.checkNoteSavedStatus(user.uid, sharedNote.id) {
+            viewModel.setIsSaved(it)
         }
     }
 
@@ -188,7 +190,8 @@ class ShareDetailFragment :
     }
 
     private fun onSave(user: FirebaseUser) = viewModel.sharedNoteState.collectOnStarted { state ->
-        if (state is SharedNoteState.Loaded) viewModel.isSaved.collectOnStarted { isSaved ->
+        val isSaved = viewModel.isSaved.value
+        if (state is SharedNoteState.Loaded) {
             if (isSaved) showAlertDialog(
                 requireContext(),
                 "Update Saved Note",
@@ -232,6 +235,7 @@ class ShareDetailFragment :
                         Toast.LENGTH_LONG
                     ).show()
                 }
+                viewModel.setIsSaved(true)
             }
         }
     }

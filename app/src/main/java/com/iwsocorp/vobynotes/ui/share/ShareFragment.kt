@@ -176,7 +176,7 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
                             } else {
                                 val sharedNote = note.asSharedNote(
                                     ownerId = user.uid,
-                                    ownerAvatar = user.photoUrl.toString(),
+                                    ownerAvatar = if (user.photoUrl != null) user.photoUrl.toString() else null,
                                     ownerName = user.displayName,
                                     content = emptyList()
                                 )

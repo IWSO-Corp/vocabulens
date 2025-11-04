@@ -166,15 +166,20 @@
         </LinearLayout>
 
         <!-- Google Sign-in button (MaterialButton with icon) -->
-        <com.google.android.gms.common.SignInButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_google"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:backgroundTint="@color/white"
             android:contentDescription="Google"
+            android:text="Sign in with Google"
+            android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ll_divider" />
+            app:layout_constraintTop_toBottomOf="@id/ll_divider"
+            app:strokeColor="@color/black"
+            app:strokeWidth="1dp" />
 
         <!-- Progress bar overlay (hidden by default) -->
         <ProgressBar

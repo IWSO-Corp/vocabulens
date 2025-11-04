@@ -72,7 +72,9 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
         }
         adapter.loadStateFlow.collectOnStarted {
-            binding.tvEmpty.isVisible = adapter.itemCount == 0
+            val isNotEmpty = adapter.itemCount > 0
+            binding.tvEmpty.isVisible = !isNotEmpty
+            if (isNotEmpty) binding.toolbarTrash.inflateMenu(R.menu.menu_trash)
         }
     }
 
@@ -92,7 +94,6 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             (requireActivity() as MainActivity).drawerLayout.openDrawer(GravityCompat.START)
         }
         menu.clear()
-        inflateMenu(R.menu.menu_trash)
     }
 
     private fun setSelectionToolbar(size: Int) = binding.toolbarTrash.apply {

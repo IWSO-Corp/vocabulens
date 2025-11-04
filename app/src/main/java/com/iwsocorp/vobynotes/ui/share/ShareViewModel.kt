@@ -32,6 +32,10 @@ class ShareViewModel @Inject constructor(
     private val _shareState = MutableStateFlow<ShareState>(ShareState.Idle)
     val shareState: StateFlow<ShareState> = _shareState
 
+    fun setIdle() {
+        _shareState.value = ShareState.Idle
+    }
+
     fun shareNote(sharedNote: SharedNote) = viewModelScope.launch {
         _shareState.value = ShareState.Loading
         try {

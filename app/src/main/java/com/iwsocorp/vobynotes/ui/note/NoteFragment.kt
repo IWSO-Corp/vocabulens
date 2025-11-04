@@ -182,6 +182,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
         }
 
+        sharedViewModel.setIdle()
         sharedViewModel.shareState.collectOnStarted { state ->
             binding.progressBar.isVisible = state is ShareState.Loading
 
@@ -406,7 +407,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                         sharedViewModel.shareNote(
                             note.asSharedNote(
                                 user.uid,
-                                user.photoUrl.toString(),
+                                if (user.photoUrl != null) user.photoUrl.toString() else null,
                                 user.displayName,
                                 emptyList()
                             )
@@ -447,14 +448,14 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             btnScrollToTop.isVisible = state.sortBy == SortBy.UPDATED_AT
 
             val menuFilter = toolbarNote.menu.findItem(R.id.action_filter)
-            menuFilter.setIcon(
+            menuFilter?.setIcon(
                 if (state.mark != null) {
                     R.drawable.baseline_filter_alt_24
                 } else {
                     R.drawable.outline_filter_alt_24
                 }
             )
-            val drawable = menuFilter.icon
+            val drawable = menuFilter?.icon
             drawable?.let {
                 DrawableCompat.setTint(
                     it,
@@ -551,5 +552,6 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     override fun onDestroyView() {
         super.onDestroyView()
         resetMediaPlayer()
+        sharedViewModel.setIdle()
     }
 }

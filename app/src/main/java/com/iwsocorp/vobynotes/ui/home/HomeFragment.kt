@@ -93,6 +93,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 (requireActivity() as MainActivity).binding.appBarMain.fab
             ).show()
         }
+        sharedViewModel.setIdle()
     }
 
     private fun observeState() = combine(
@@ -216,6 +217,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             "Login",
             "Cancel"
         ) {
+            adapter.clearSelection()
             findNavController().navigate(R.id.action_nav_home_to_authFragment)
         } else {
             val noteId = adapter.getSelectedItems().firstOrNull()
@@ -281,6 +283,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
 
     private fun pickExcelFile() {
         openDocumentLauncher.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        sharedViewModel.setIdle()
     }
 
 }

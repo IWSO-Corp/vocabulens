@@ -1,13 +1,17 @@
 package com.iwsocorp.vobynotes.ui.scan
 
 import android.Manifest
+import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -40,17 +44,20 @@ import java.util.concurrent.Executors
 @AndroidEntryPoint
 class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::inflate) {
 
-    private lateinit var cameraExecutor: ExecutorService
-
     private val viewModel: ScanViewModel by activityViewModels()
     private val notesViewModel: NoteViewModel by activityViewModels()
     private var imageCapture: ImageCapture? = null
     private var cameraProvider: ProcessCameraProvider? = null
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) startCamera()
-        else Toast.makeText(requireContext(), "Izin kamera ditolak", Toast.LENGTH_SHORT).show()
+    private val permissionLauncher: ActivityResultLauncher<String> by lazy {
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                startCamera()
+                Toast.makeText(requireContext(), "Permission Granted", Toast.LENGTH_SHORT).show()
+            } else {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
+                    showRationaleDialog() else showPermanentlyDeniedDialog()
+            }
+        }
     }
     private val bottomSheetBehavior: BottomSheetBehavior<View> by lazy {
         BottomSheetBehavior.from(binding.bottomSheetContainer)
@@ -62,6 +69,8 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             else getString(R.string.save_s, it)
         }
     }
+
+    private lateinit var cameraExecutor: ExecutorService
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -304,12 +313,36 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    private fun checkCameraPermission() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
-        ) startCamera()
-        else permissionLauncher.launch(Manifest.permission.CAMERA)
+    private fun checkCameraPermission() = when {
+        ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED -> startCamera()
+
+        shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showRationaleDialog()
+
+        else -> permissionLauncher.launch(Manifest.permission.CAMERA)
     }
+
+    private fun showRationaleDialog() = AlertDialog.Builder(requireContext())
+        .setTitle("Permission Required")
+        .setMessage("The app needs this permission to continue.")
+        .setPositiveButton("Try Again") { _, _ ->
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+        .setNegativeButton("Cancel", null)
+        .show()
+
+    private fun showPermanentlyDeniedDialog() = AlertDialog.Builder(requireContext())
+        .setTitle("Permission Required")
+        .setMessage("Permission has been permanently denied. Enable it via app settings.")
+        .setPositiveButton("Open Settings") { _, _ ->
+            val intent = Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", requireContext().packageName, null)
+            )
+            startActivity(intent)
+        }
+        .setNegativeButton("Cancel", null)
+        .show()
 
     private fun captureImageForProcessing() {
         val imageCapture = imageCapture ?: return
