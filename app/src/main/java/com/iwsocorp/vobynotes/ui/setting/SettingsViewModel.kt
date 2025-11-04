@@ -3,10 +3,14 @@ package com.iwsocorp.vobynotes.ui.setting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vobynotes.core.data.repository.BackupRepository
+import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
+import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
+import com.iwsocorp.vobynotes.core.database.model.NoteEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -17,26 +21,66 @@ class SettingsViewModel @Inject constructor(
     private val _backupState = MutableStateFlow<BackupState>(BackupState.Idle)
     val backupState: StateFlow<BackupState> = _backupState
 
-    fun backupToFirestore(userId: String) {
-        viewModelScope.launch {
-            _backupState.value = BackupState.Loading
-            try {
-                backupRepository.backupToFirestore(userId)
-                _backupState.value = BackupState.Success
-            } catch (e: Exception) {
-                _backupState.value = BackupState.Error(e.message ?: "Unknown error")
-            }
+    fun setIdle() {
+        _backupState.value = BackupState.Idle
+    }
+
+    fun backupToFirestore(userId: String) = viewModelScope.launch {
+        _backupState.value = BackupState.Loading
+        try {
+            backupRepository.backupToFirestore(userId)
+            _backupState.value = BackupState.Success
+        } catch (e: Exception) {
+            _backupState.value = BackupState.Error(e.message ?: "Unknown error")
         }
     }
 
-    fun restoreFromFirestoreAndInsertToDatabase(userId: String) = viewModelScope.launch {
+    fun insertToDatabase(backupData: BackupData) = viewModelScope.launch {
         _backupState.value = BackupState.Loading
         try {
-            backupRepository.restoreFromFirestoreAndInsertToDatabase(userId)
+            backupRepository.insertToDatabase(backupData)
             _backupState.value = BackupState.Restored
         } catch (e: Exception) {
             _backupState.value = BackupState.Error(e.message ?: "Unknown error")
         }
+    }
+
+    private val _backupData = MutableStateFlow<BackupData?>(null)
+    val backupData: StateFlow<BackupData?> = _backupData
+
+    fun resetBackupData() {
+        _backupData.value = null
+    }
+
+    fun getBackupData(userId: String) = viewModelScope.launch {
+        try {
+            val notes = backupRepository.restoreAllNotes(userId)
+            val corpus = backupRepository.restoreAllCorpus(userId)
+            val examples = backupRepository.restoreAllExamples(userId)
+            Timber.d("Backup data vm: notes=${notes.size}, corpus=${corpus.size}, examples=${examples.size}")
+            _backupData.value = BackupData(notes, corpus, examples)
+        } catch (e: Exception) {
+            _backupData.value = null
+            Timber.e(e)
+        }
+    }
+
+    private val _localData = MutableStateFlow<BackupData?>(null)
+    val localData: StateFlow<BackupData?> = _localData
+
+    fun getLocalData() = viewModelScope.launch {
+        try {
+            val localData = backupRepository.getLocalData()
+            Timber.d("Local data vm: notes=${localData.notes.size}, corpus=${localData.corpus.size}, examples=${localData.examples.size}")
+            _localData.value = localData
+        } catch (e: Exception) {
+            _localData.value = null
+            Timber.e(e)
+        }
+    }
+
+    init {
+        getLocalData()
     }
 
 }
@@ -48,3 +92,9 @@ sealed class BackupState {
     object Restored : BackupState()
     data class Error(val message: String) : BackupState()
 }
+
+data class BackupData(
+    val notes: List<NoteEntity>,
+    val corpus: List<CorpusEntity>,
+    val examples: List<ExampleEntity>
+)

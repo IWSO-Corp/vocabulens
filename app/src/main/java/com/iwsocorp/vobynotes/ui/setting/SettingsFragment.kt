@@ -3,9 +3,9 @@ package com.iwsocorp.vobynotes.ui.setting
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
@@ -19,7 +19,7 @@ import timber.log.Timber
 @AndroidEntryPoint
 class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsBinding::inflate) {
 
-    private val viewModel: SettingsViewModel by viewModels()
+    private val viewModel: SettingsViewModel by activityViewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -29,10 +29,15 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     }
 
     private fun observeState() {
-        authViewModel.authState.collectOnStarted {
-            it.onSuccess { user ->
+        authViewModel.authState.collectOnStarted { result ->
+            result.onSuccess { user ->
                 setupUI(user)
                 Timber.d("Firebase user: ${user?.uid}")
+
+                user?.let {
+                    val backupData = viewModel.backupData.value
+                    if (backupData == null) viewModel.getBackupData(it.uid)
+                }
             }.onFailure { error ->
                 setupUI(null)
                 Timber.e(error)
@@ -81,40 +86,70 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             )
         )
         tvSignin.setOnClickListener {
-            user?.let {
-                showAlertDialog(
-                    requireContext(),
-                    "Sign Out",
-                    "Are you sure you want to sign out?",
-                    "Sign Out",
-                    "Cancel",
-                ) {
-                    authViewModel.signOut()
-                    Toast.makeText(requireContext(), "Signed out", Toast.LENGTH_SHORT).show()
-                }
-            } ?: run {
-                findNavController().navigate(R.id.action_nav_settings_to_authFragment)
-            }
+            onSignIn(user)
         }
         btnBackup.setOnClickListener {
-            user?.let {
-                viewModel.backupToFirestore(it.uid)
-                Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT).show()
-            } ?: run {
-                signInFirst()
-            }
+            onBackup(user)
         }
         btnRestore.setOnClickListener {
-            user?.let {
-                viewModel.restoreFromFirestoreAndInsertToDatabase(it.uid)
-                Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT).show()
-            } ?: run {
-                signInFirst()
-            }
+            onRestore(user)
         }
         btnImport.setOnClickListener {
 
         }
+    }
+
+    private fun onSignIn(user: FirebaseUser?) = user?.let {
+        showAlertDialog(
+            requireContext(),
+            "Sign Out",
+            "Are you sure you want to sign out?",
+            "Sign Out",
+            "Cancel",
+        ) {
+            authViewModel.signOut()
+            viewModel.resetBackupData()
+            Toast.makeText(requireContext(), "Signed out", Toast.LENGTH_SHORT).show()
+        }
+    } ?: run {
+        findNavController().navigate(R.id.action_nav_settings_to_authFragment)
+    }
+
+    private fun onRestore(user: FirebaseUser?) = user?.let {
+        val backupData = viewModel.backupData.value
+        backupData?.let {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Restore Data")
+                .setMessage("Are you sure want to restore data?")
+                .setPositiveButton("Restore") { _, _ ->
+                    viewModel.insertToDatabase(backupData)
+                    Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT).show()
+                    viewModel.getLocalData()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        } ?: run {
+            Toast.makeText(requireContext(), "No backup data", Toast.LENGTH_SHORT).show()
+        }
+        Timber.d("Restore data: notes=${backupData?.notes?.size}, corpus=${backupData?.corpus?.size}, examples=${backupData?.examples}")
+    } ?: run {
+        signInFirst()
+    }
+
+    private fun onBackup(user: FirebaseUser?) = user?.let {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Backup Data")
+            .setMessage("This will overwrite your current data. Are you sure want to backup?")
+            .setPositiveButton("Backup") { _, _ ->
+                viewModel.backupToFirestore(user.uid)
+                Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT)
+                    .show()
+                viewModel.getBackupData(user.uid)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    } ?: run {
+        signInFirst()
     }
 
     private fun signInFirst() = showAlertDialog(
@@ -126,4 +161,10 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     ) {
         findNavController().navigate(R.id.action_nav_settings_to_authFragment)
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.setIdle()
+    }
+
 }

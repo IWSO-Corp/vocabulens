@@ -4,23 +4,30 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MotionEvent
+import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
 import com.iwsocorp.vobynotes.databinding.NavHeaderMainBinding
+import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
 import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
 import com.iwsocorp.vobynotes.ui.widget.SEARCH
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -35,6 +42,8 @@ class MainActivity : AppCompatActivity() {
     private val navController by lazy {
         findNavController(R.id.nav_host_fragment_content_main)
     }
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,8 +68,40 @@ class MainActivity : AppCompatActivity() {
         headerBinding.headerTitle.setCompoundDrawables(icon, null, null, null)
         headerBinding.headerTitle.compoundDrawablePadding = 8
 
+        setupTable()
         setupNavigation()
         handleDeepLink(intent)
+    }
+
+    private fun setupTable() {
+        FirebaseAuth.getInstance().currentUser?.let {
+            settingsViewModel.getBackupData(it.uid)
+        }
+
+        lifecycleScope.launch {
+            settingsViewModel.backupData.collectLatest {
+                it?.let {
+                    binding.tvNotesCloud.text = it.notes.size.toString()
+                    binding.tvWordsCloud.text = it.corpus.size.toString()
+                    binding.tvExamplesCloud.text = it.examples.size.toString()
+                } ?: run {
+                    binding.tvNotesCloud.text = "-"
+                    binding.tvWordsCloud.text = "-"
+                    binding.tvExamplesCloud.text = "-"
+                }
+                Timber.d("Backup data: notes=${it?.notes?.size}, corpus=${it?.corpus?.size}, examples=${it?.examples?.size}")
+            }
+        }
+        lifecycleScope.launch {
+            settingsViewModel.localData.collectLatest {
+                it?.let {
+                    binding.tvNotesLocal.text = it.notes.size.toString()
+                    binding.tvWordsLocal.text = it.corpus.size.toString()
+                    binding.tvExamplesLocal.text = it.examples.size.toString()
+                }
+                Timber.d("DB data: notes=${it?.notes?.size}, corpus=${it?.corpus?.size}, examples=${it?.examples?.size}")
+            }
+        }
     }
 
     private fun setupNavigation() {

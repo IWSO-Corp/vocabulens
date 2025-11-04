@@ -11,6 +11,7 @@ import com.iwsocorp.vobynotes.core.database.dao.NoteDao
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
 import com.iwsocorp.vobynotes.core.database.model.NoteEntity
+import com.iwsocorp.vobynotes.ui.setting.BackupData
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -31,11 +32,7 @@ class BackupRepository @Inject constructor(
         backupExamples(userId)
     }
 
-    suspend fun restoreFromFirestoreAndInsertToDatabase(userId: String) {
-        val notes = restoreAllNotes(userId)
-        val corpus = restoreAllCorpus(userId)
-        val examples = restoreAllExamples(userId)
-
+    suspend fun insertToDatabase(backupData: BackupData) = with(backupData) {
         if (notes.isNotEmpty()) noteDao.insertNoteList(notes)
         if (corpus.isNotEmpty()) corpusDao.insertCorpusList(corpus)
         if (examples.isNotEmpty()) exampleDao.insertExampleList(examples)
@@ -49,8 +46,6 @@ class BackupRepository @Inject constructor(
         val allNotes = noteDao.getNoteList()
         if (allNotes.isEmpty()) return
         val json = Gson().toJson(allNotes)
-        val lastBackupData = restoreAllNotes(userId)
-        if (allNotes.size < lastBackupData.size) return
 
         val docRef = userBackupPath(userId)
             .collection("notes")
@@ -76,8 +71,6 @@ class BackupRepository @Inject constructor(
         val allExamples = exampleDao.getAll()
         if (allExamples.isEmpty()) return
         val json = Gson().toJson(allExamples)
-        val lastBackupJson = restoreAllExamples(userId)
-        if (allExamples.size < lastBackupJson.size) return
 
         val docRef = userBackupPath(userId)
             .collection("examples")
@@ -102,8 +95,6 @@ class BackupRepository @Inject constructor(
     private suspend fun syncCorpusGrouped(userId: String) {
         val allData = corpusDao.getAll()
         if (allData.isEmpty()) return
-        val lastBackupJson = restoreAllCorpus(userId)
-        if (allData.size < lastBackupJson.size) return
         val grouped = allData.groupBy { it.noteId }
 
         grouped.forEach { (noteId, list) ->
@@ -129,7 +120,7 @@ class BackupRepository @Inject constructor(
         }
     }
 
-    private suspend fun restoreAllNotes(userId: String): List<NoteEntity> {
+    suspend fun restoreAllNotes(userId: String): List<NoteEntity> {
         val docRef = userBackupPath(userId)
             .collection("notes")
             .document("notes_data")
@@ -141,7 +132,7 @@ class BackupRepository @Inject constructor(
         return Gson().fromJson(json, type)
     }
 
-    private suspend fun restoreAllExamples(userId: String): List<ExampleEntity> {
+    suspend fun restoreAllExamples(userId: String): List<ExampleEntity> {
         val snapshot = userBackupPath(userId)
             .collection("examples")
             .get()
@@ -152,7 +143,7 @@ class BackupRepository @Inject constructor(
         return Gson().fromJson(json, type)
     }
 
-    private suspend fun restoreAllCorpus(userId: String): List<CorpusEntity> {
+    suspend fun restoreAllCorpus(userId: String): List<CorpusEntity> {
         val snapshot = userBackupPath(userId)
             .collection("corpus")
             .get()
@@ -167,6 +158,13 @@ class BackupRepository @Inject constructor(
         }
 
         return allEntities
+    }
+
+    suspend fun getLocalData(): BackupData {
+        val notes = noteDao.getNoteList()
+        val corpus = corpusDao.getAll()
+        val examples = exampleDao.getAll()
+        return BackupData(notes, corpus, examples)
     }
 
 }
