@@ -1,5 +1,6 @@
 package com.iwsocorp.vobynotes
 
+import android.app.ComponentCaller
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -47,8 +48,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
 
@@ -112,7 +111,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_practice,
                 R.id.nav_share,
                 R.id.nav_trash,
-                R.id.nav_settings
             ), drawerLayout
         )
 
@@ -191,17 +189,21 @@ class MainActivity : AppCompatActivity() {
         return super.dispatchTouchEvent(ev)
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
+    override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
+        super.onNewIntent(intent, caller)
 
         setIntent(intent)
         handleDeepLink(intent)
-
-        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
     }
 
-    private fun handleDeepLink(intent: Intent?) {
-        val data = intent?.data ?: return
+    private fun handleDeepLink(intent: Intent) {
+        Timber.d("Intent action: ${intent.action}")
+        Timber.d("Intent search: ${intent.getStringExtra(OPEN_FRAGMENT)}")
+        Timber.d("Handle deep link: ${intent.data}")
+
+        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
+
+        val data = intent.data ?: return
         val noteId = data.lastPathSegment
 
         navController.navigate(

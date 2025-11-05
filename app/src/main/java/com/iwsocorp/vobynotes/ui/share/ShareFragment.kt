@@ -193,7 +193,7 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
     }
 
     private fun setupDropdowns() = with(binding) {
-        val filterOptions = listOf("All", "English", "Indonesian", "Japanese")
+        val filterOptions = listOf("All", "English", "Indonesian")
         val sortOptions = listOf("Latest", "Popular")
 
         filterDropdown.setAdapter(

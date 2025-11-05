@@ -54,4 +54,6 @@
     <string name="shared_note_lang">%1$s - %2$s</string>
     <string name="shared_note_updated_at">Updated at %1$s</string>
     <string name="action_save">Save</string>
+    <string name="backup_amp_restore"><![CDATA[Backup & Restore]]></string>
+    <string name="export_amp_import"><![CDATA[Export & Import]]></string>
 </resources>

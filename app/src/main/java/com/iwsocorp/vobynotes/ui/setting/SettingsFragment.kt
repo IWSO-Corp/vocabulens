@@ -7,10 +7,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.databinding.BottomSheetBackupBinding
 import com.iwsocorp.vobynotes.databinding.FragmentSettingsBinding
 import com.iwsocorp.vobynotes.ui.auth.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -88,15 +90,71 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         tvSignin.setOnClickListener {
             onSignIn(user)
         }
-        btnBackup.setOnClickListener {
-            onBackup(user)
+
+        csAccount.setOnClickListener {
+            user?.let {
+
+            }
         }
-        btnRestore.setOnClickListener {
-            onRestore(user)
+        btnBackupRestore.setOnClickListener {
+            showBackupDialog(user)
         }
-        btnImport.setOnClickListener {
+        btnExportImport.setOnClickListener {
+            showExportDialog(user)
+        }
+        btnImportFileFormat.setOnClickListener {
 
         }
+        btnVersion.setOnClickListener {
+
+        }
+    }
+
+    private fun showBackupDialog(user: FirebaseUser?) {
+        val binding = BottomSheetBackupBinding.inflate(layoutInflater)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(binding.root)
+
+        binding.cardBackup.setOnClickListener {
+            onBackup(user)
+            dialog.dismiss()
+        }
+        binding.cardRestore.setOnClickListener {
+            onRestore(user)
+            dialog.dismiss()
+        }
+        binding.iconClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun showExportDialog(user: FirebaseUser?) {
+        val binding = BottomSheetBackupBinding.inflate(layoutInflater)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(binding.root)
+
+        with(binding) {
+            iconBackup.setImageResource(R.drawable.baseline_ios_share_24)
+            iconRestore.setImageResource(R.drawable.baseline_file_download_24)
+            tvBackup.text = "Export"
+            tvRestore.text = "Import"
+
+            cardBackup.setOnClickListener {
+
+                dialog.dismiss()
+            }
+            cardRestore.setOnClickListener {
+
+                dialog.dismiss()
+            }
+            iconClose.setOnClickListener {
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
     }
 
     private fun onSignIn(user: FirebaseUser?) = user?.let {

@@ -40,7 +40,7 @@ class SearchWidget : AppWidgetProvider() {
             }
 
             val pendingIntent = PendingIntent.getActivity(
-                context, 0, intent,
+                context, appWidgetId, intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 

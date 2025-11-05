@@ -31,6 +31,7 @@
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cs_account"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
@@ -67,30 +68,56 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
-            android:id="@+id/btn_backup"
+            android:id="@+id/btn_backup_restore"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="2dp"
             android:background="@color/white"
             android:padding="16dp"
-            android:text="Backup Data" />
+            android:text="@string/backup_amp_restore" />
 
         <TextView
-            android:id="@+id/btn_restore"
+            android:id="@+id/btn_export_import"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="2dp"
             android:background="@color/white"
             android:padding="16dp"
-            android:text="Restore Data" />
+            android:text="@string/export_amp_import" />
 
         <TextView
-            android:id="@+id/btn_import"
+            android:id="@+id/btn_import_file_format"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
             android:background="@color/white"
             android:padding="16dp"
-            android:text="How to use import" />
+            android:text="Import file format" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/btn_version"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="Version"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="v1.0.1" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 

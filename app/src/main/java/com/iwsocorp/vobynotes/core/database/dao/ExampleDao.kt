@@ -36,7 +36,7 @@ interface ExampleDao {
         AND (:wordLang IS NULL OR c.wordLang = :wordLang)
         AND (:meaningLang IS NULL OR c.meaningLang = :meaningLang)
         AND e.deletedAt IS NULL
-        ORDER BY RANDOM()
+        ORDER BY quizCount ASC
     """
     )
     fun getExamplesForQuiz(

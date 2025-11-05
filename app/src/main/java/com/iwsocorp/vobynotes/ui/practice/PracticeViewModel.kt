@@ -22,14 +22,14 @@ class PracticeViewModel @Inject constructor(
     private val _noteId = MutableStateFlow<String?>(null)
     val noteId: StateFlow<String?> = _noteId
 
-    fun setNoteId(noteId: String?) = viewModelScope.launch {
+    fun setNoteId(noteId: String?) {
         _noteId.value = noteId
     }
 
     private val _mark = MutableStateFlow<Mark?>(null)
     val mark: StateFlow<Mark?> = _mark
 
-    fun setMark(mark: Mark?) = viewModelScope.launch {
+    fun setMark(mark: Mark?) {
         _mark.value = mark
     }
 
@@ -42,7 +42,7 @@ class PracticeViewModel @Inject constructor(
     private val _amount = MutableStateFlow(1)
     val amount: StateFlow<Int> = _amount
 
-    fun setAmount(amount: Int) = viewModelScope.launch {
+    fun setAmount(amount: Int) {
         _amount.value = amount
     }
 
@@ -65,7 +65,7 @@ class PracticeViewModel @Inject constructor(
             wordLang,
             meaningLang,
         ).collectLatest {
-            _quizList.value = it
+            _quizList.value = it.shuffled()
             _isExampleEnough.emit(it.size >= amount)
         }
     }
