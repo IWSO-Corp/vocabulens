@@ -267,13 +267,10 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                         uri
                     ),
                     corpusBatch = data,
-                    existingCount = {
-                        Toast.makeText(requireContext(), "Existing $it", Toast.LENGTH_SHORT).show()
-                    }
                 ) {
                     Toast.makeText(
                         requireContext(),
-                        "Imported ${it.successCount} items, duplicate ${it.failedCount}",
+                        "Imported ${it.successCount} items, ${it.failedCount} duplicate items skipped",
                         Toast.LENGTH_LONG
                     ).show()
                 }

@@ -96,29 +96,24 @@ class NoteViewModel @Inject constructor(
     }
 
     fun insertCorpus(corpus: Corpus, callback: (result: Long) -> Unit) = viewModelScope.launch {
-        val existingCorpus = corpusRepository.getCorpusByWord(corpus.word)
-        Timber.d("existingCorpus: $existingCorpus")
-        if (existingCorpus != null) {
-            callback(-1L)
-            return@launch
-        } else {
-            Timber.d("noteId.value: ${noteId.value}")
-            if (noteId.value == null) {
-                val newNote = Note(
-                    title = noteTitle.value ?: "Untitled",
-                    wordLang = corpus.wordLang,
-                    meaningLang = corpus.meaningLang,
-                    contentSize = 1,
-                )
-                noteRepository.addNote(newNote)
-                _noteId.value = newNote.id
+        Timber.d("noteId.value: ${noteId.value}")
+        if (noteId.value == null) {
+            val newNote = Note(
+                title = noteTitle.value ?: "Untitled",
+                wordLang = corpus.wordLang,
+                meaningLang = corpus.meaningLang,
+                contentSize = 1,
+            )
+            noteRepository.addNote(newNote)
+            _noteId.value = newNote.id
+            _note.value = newNote
 
-                val corpusNew = corpus.copy(noteId = newNote.id)
-                callback(corpusRepository.addCorpus(corpusNew))
-            } else {
-                noteRepository.incrementContentSize(noteId.value!!, 1)
-                callback(corpusRepository.addCorpus(corpus))
-            }
+            val corpusNew = corpus.copy(noteId = newNote.id)
+            Timber.d("corpusNew: $corpusNew")
+            callback(corpusRepository.addCorpus(corpusNew))
+        } else {
+            noteRepository.incrementContentSize(noteId.value!!, 1)
+            callback(corpusRepository.addCorpus(corpus))
         }
     }
 

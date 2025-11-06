@@ -130,7 +130,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
 
             Toast.makeText(
                 requireContext(),
-                "${it.successCount} items saved to ${note.title.ifEmpty { "Untitled" }}, ${it.failedCount} failed",
+                "${it.successCount} items saved to ${note.title.ifEmpty { "Untitled" }}, ${it.failedCount} duplicate items skipped",
                 Toast.LENGTH_LONG
             ).show()
         }

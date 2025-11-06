@@ -74,7 +74,10 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
         adapter.loadStateFlow.collectOnStarted {
             val isNotEmpty = adapter.itemCount > 0
             binding.tvEmpty.isVisible = !isNotEmpty
-            if (isNotEmpty) binding.toolbarTrash.inflateMenu(R.menu.menu_trash)
+            if (isNotEmpty) binding.toolbarTrash.apply {
+                menu.clear()
+                inflateMenu(R.menu.menu_trash)
+            }
         }
     }
 

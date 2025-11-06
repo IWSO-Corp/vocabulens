@@ -227,7 +227,14 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
 
     private fun setNormalToolbar() = with(binding) {
         viewModel.note.observe(viewLifecycleOwner) {
-            tvToolbarTitle.text = it.title
+            tvToolbarTitle.apply {
+                text = it.title
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            }
+            toolbarNote.apply {
+                menu.clear()
+                inflateMenu(R.menu.menu_note)
+            }
         }
         if (argNoteId?.isNotEmpty() == true || argNoteId == null) tvToolbarTitle.setOnClickListener {
             tvToolbarTitle.visibility = View.GONE
@@ -510,7 +517,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         viewModel.insertCorpus(corpus) {
             Toast.makeText(
                 requireContext(),
-                if (it == -1L) "The word already exists in all vocabulary" else "Added",
+                if (it == -1L) "The word already exists with same language" else "Added",
                 Toast.LENGTH_SHORT
             ).show()
         }

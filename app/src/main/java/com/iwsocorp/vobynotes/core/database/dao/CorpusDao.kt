@@ -39,7 +39,7 @@ interface CorpusDao {
     @Query("SELECT COUNT(*) FROM corpus WHERE word IN (:words)")
     suspend fun countExisting(words: List<String>): Int
 
-    @Insert(onConflict = OnConflictStrategy.NONE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertCorpus(corpus: CorpusEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

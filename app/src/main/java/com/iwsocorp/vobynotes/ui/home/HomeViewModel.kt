@@ -142,19 +142,12 @@ class HomeViewModel @Inject constructor(
     fun importCorpusBatch(
         fileName: String?,
         corpusBatch: List<Corpus>,
-        existingCount: (existingCount: Int) -> Unit,
         insertResult: (result: InsertResult) -> Unit,
     ) = viewModelScope.launch {
         if (corpusBatch.isEmpty()) return@launch
 
-        val words = corpusBatch.map { it.word }
         val wordLang = corpusBatch.first().wordLang
         val meaningLang = corpusBatch.first().meaningLang
-
-        // Hitung corpus yang sudah ada di DB
-        val existingCount = corpusRepository.countExisting(words)
-        existingCount(existingCount)
-        if (existingCount == words.size) return@launch
 
         // Buat Note baru
         val note = Note(
