@@ -24,6 +24,8 @@ import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
+import com.iwsocorp.vobynotes.core.common.Utils.loadLanguages
+import com.iwsocorp.vobynotes.core.common.Utils.normalizeLanguageCode
 import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
 import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
@@ -45,6 +47,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 
 const val ARG_NOTE_ID = "noteIdParam"
 const val ARG_POSITION = "positionRecyclerView"
@@ -153,8 +156,25 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             id?.let { noteId ->
                 viewModel.getPagedCorpus(noteId).collectOnStarted { corpusPagingData ->
                     Timber.d("corpusPagingData: $corpusPagingData")
-                    wordAdapter.submitData(viewLifecycleOwner.lifecycle, corpusPagingData)
+                    wordAdapter.submitData(corpusPagingData)
                 }
+                binding.tvWordLang.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+                binding.tvMeaningLang.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+                binding.tvWordLang.setOnClickListener(null)
+                binding.tvMeaningLang.setOnClickListener(null)
+            } ?: run {
+                binding.tvWordLang.setCompoundDrawablesWithIntrinsicBounds(
+                    0,
+                    0,
+                    R.drawable.baseline_arrow_drop_down_24,
+                    0
+                )
+                binding.tvMeaningLang.setCompoundDrawablesWithIntrinsicBounds(
+                    0,
+                    0,
+                    R.drawable.baseline_arrow_drop_down_24,
+                    0
+                )
             }
             binding.iconSwitch.isVisible = id == null
         }
@@ -222,6 +242,30 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         }
         btnScrollToTop.setOnClickListener {
             rvCorpus.scrollToPosition(0)
+        }
+
+        tvWordLang.text = getString(R.string.english)
+
+        val languages = loadLanguages(requireContext())
+        val locale = Locale.getDefault()
+        Timber.d("locale: $locale")
+        Timber.d("locale.language: ${locale.language}")
+        Timber.d("locale.isO3Language: ${locale.isO3Language}")
+        Timber.d("locale.country: ${locale.country}")
+        Timber.d("locale.displayName: ${locale.displayName}")
+        val localeCode = normalizeLanguageCode(locale.language)
+        val localeName = languages.find { it.code == localeCode }?.name ?: getString(R.string.english)
+        tvMeaningLang.text = localeName
+
+        tvWordLang.setOnClickListener {
+            LangBottomSheet("Word Language") {
+                tvWordLang.text = it.name
+            }.show(childFragmentManager, null)
+        }
+        tvMeaningLang.setOnClickListener {
+            LangBottomSheet("Meaning Language") {
+                tvMeaningLang.text = it.name
+            }.show(childFragmentManager, null)
         }
     }
 
@@ -499,12 +543,13 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     }
 
     private fun onSubmit() {
-        viewModel.updateNoteTitle(binding.tvToolbarTitle.text.toString())
         val worldLang = binding.tvWordLang.text.toString()
         val meaningLang = binding.tvMeaningLang.text.toString()
         val word = binding.edWord.text.toString().lowercase().trim()
         val meaning = binding.edMeaning.text.toString().lowercase().trim()
         if (word.isEmpty() || meaning.isEmpty()) return
+
+        viewModel.updateNoteTitle(binding.tvToolbarTitle.text.toString())
 
         val corpus = Corpus(
             noteId = viewModel.noteId.value ?: "",

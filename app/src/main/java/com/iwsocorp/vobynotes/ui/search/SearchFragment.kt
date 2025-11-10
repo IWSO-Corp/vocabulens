@@ -11,7 +11,9 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -27,6 +29,7 @@ import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.ARG_FROM
+import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.detail.MeaningAdapter
 import com.iwsocorp.vobynotes.ui.note.ARG_POSITION
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
@@ -46,16 +49,18 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
     private val viewModel: SearchViewModel by viewModels()
     private val noteViewModel: NoteViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
+    private val detailViewModel: DetailViewModel by activityViewModels()
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
+                detailViewModel.setCorpusList(emptyList())
                 findNavController().navigate(
                     R.id.action_searchFragment_to_corpusDetailFragment,
-                    Bundle().apply {
-                        putString(ARG_CORPUS_ID, corpus.id)
-                        putInt(ARG_POSITION, 0)
-                        putString(ARG_FROM, "searchFragment")
-                    }
+                    bundleOf(
+                        ARG_CORPUS_ID to corpus.id,
+                        ARG_POSITION to 0,
+                        ARG_FROM to "search"
+                    )
                 )
             }
 
@@ -213,7 +218,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             scanViewModel.translate(word) {
                 Snackbar.make(
                     requireView(),
-                    it,
+                    "$word: $it",
                     Snackbar.LENGTH_INDEFINITE,
                 ).setAction("OK") {}.show()
             }

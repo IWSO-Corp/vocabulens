@@ -17,6 +17,7 @@ import com.iwsocorp.vobynotes.core.model.SortBy
 import com.iwsocorp.vobynotes.core.model.SortOrder
 import com.iwsocorp.vobynotes.core.model.asEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -60,7 +61,7 @@ class CorpusRepositoryImpl @Inject constructor(
     }
 
     override fun getCorpusById(id: String): Flow<Corpus> {
-        return corpusDao.getCorpusById(id).map { it.asExternalModel() }
+        return corpusDao.getCorpusById(id).filterNotNull().map { it.asExternalModel() }
     }
 
     override fun searchCorpus(query: String): Flow<PagingData<Corpus>> {

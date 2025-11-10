@@ -56,4 +56,6 @@
     <string name="action_save">Save</string>
     <string name="backup_amp_restore"><![CDATA[Backup & Restore]]></string>
     <string name="export_amp_import"><![CDATA[Export & Import]]></string>
+    <string name="language">Language</string>
+    <string name="english">English</string>
 </resources>

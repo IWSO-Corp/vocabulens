@@ -195,7 +195,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                 scanViewModel.translate(word) {
                     Snackbar.make(
                         requireView(),
-                        it,
+                        "$word: $it",
                         Snackbar.LENGTH_INDEFINITE,
                     ).setAction("OK") {}.show()
                 }
@@ -272,12 +272,12 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                 showAlertDialog(
                     requireContext(),
                     "Delete Word",
-                    "Are you sure you want to delete this word?",
+                    "This action cannot be undone",
                     "Delete",
                     "Cancel"
                 ) {
                     viewModel.deleteCorpus(listOf(corpus.id))
-                    findNavController().popBackStack()
+                    findNavController().navigateUp()
                 }
             }
         }

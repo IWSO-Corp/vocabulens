@@ -122,13 +122,15 @@
 
         <TextView
             android:id="@+id/tv_word_lang"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="English"
             android:textSize="16sp"
+            app:drawableEndCompat="@drawable/baseline_arrow_drop_down_24"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout"
-            app:layout_constraintStart_toStartOf="@+id/textInputLayout" />
+            app:layout_constraintEnd_toStartOf="@+id/icon_switch"
+            app:layout_constraintStart_toStartOf="@+id/textInputLayout"
+            tools:text="@string/english" />
 
         <ImageView
             android:id="@+id/icon_switch"
@@ -140,13 +142,16 @@
 
         <TextView
             android:id="@+id/tv_meaning_lang"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_marginBottom="8dp"
-            android:text="Indonesian"
             android:textSize="16sp"
+            app:drawableEndCompat="@drawable/baseline_arrow_drop_down_24"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout2"
-            app:layout_constraintEnd_toEndOf="@+id/textInputLayout2" />
+            app:layout_constraintEnd_toEndOf="@+id/textInputLayout2"
+            app:layout_constraintStart_toEndOf="@+id/icon_switch"
+            tools:text="@string/english" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout"

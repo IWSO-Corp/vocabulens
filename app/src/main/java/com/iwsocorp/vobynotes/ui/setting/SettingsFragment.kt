@@ -136,7 +136,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         dialog.setContentView(binding.root)
 
         with(binding) {
-            iconBackup.setImageResource(R.drawable.baseline_ios_share_24)
+            iconBackup.setImageResource(R.drawable.baseline_upload_24)
             iconRestore.setImageResource(R.drawable.baseline_file_download_24)
             tvBackup.text = "Export"
             tvRestore.text = "Import"

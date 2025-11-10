@@ -14,7 +14,10 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
+import com.google.gson.Gson
 import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.model.Language
+import com.iwsocorp.vobynotes.core.model.SupportedLanguages
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -138,4 +141,18 @@ object Utils {
 
         startActivity(Intent.createChooser(intent, "Share via"))
     }
+
+    fun loadLanguages(context: Context): List<Language> {
+        val json = context.assets.open("languages.json").bufferedReader().use { it.readText() }
+        val wrapper = Gson().fromJson(json, SupportedLanguages::class.java)
+        return wrapper.supported_languages
+    }
+
+    fun normalizeLanguageCode(lang: String): String = when (lang.lowercase()) {
+        "in" -> "id"
+        "iw" -> "he"
+        "ji" -> "yi"
+        else -> lang.lowercase()
+    }
+
 }
