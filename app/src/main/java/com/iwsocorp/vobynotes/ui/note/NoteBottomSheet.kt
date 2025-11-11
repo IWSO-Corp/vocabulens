@@ -12,7 +12,7 @@ import com.iwsocorp.vobynotes.databinding.BottomSheetListBinding
 
 class NoteBottomSheet(
     private val notes: List<Note>,
-    private val onNewNote: ((Note) -> Unit)? = null,
+    private val onNewNote: (() -> Unit)? = null,
     private val onItemClick: (Note) -> Unit,
 ) : BottomSheetDialogFragment() {
 
@@ -28,14 +28,7 @@ class NoteBottomSheet(
 
         binding.cardNewNote.isVisible = onNewNote != null
         binding.cardNewNote.setOnClickListener {
-            onNewNote?.invoke(
-                Note(
-                    title = "New Note",
-                    contentSize = 0,
-                    wordLang = "en",
-                    meaningLang = "id",
-                )
-            )
+            onNewNote?.invoke()
             dismiss()
         }
         binding.rvBottomSheet.adapter = BottomSheetAdapter(notes) { note ->

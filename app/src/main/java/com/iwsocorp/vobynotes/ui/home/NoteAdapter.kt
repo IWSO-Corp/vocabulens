@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.Utils.asString
+import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.databinding.ItemNoteBinding
@@ -48,7 +49,11 @@ class NoteAdapter(
             }
             tvDate.text = note.updatedAt.asString()
             tvLang.text =
-                itemView.context.getString(R.string.note_lang, note.wordLang, note.meaningLang)
+                itemView.context.getString(
+                    R.string.note_lang,
+                    note.wordLang.langName(itemView.context),
+                    note.meaningLang.langName(itemView.context)
+                )
 
             if (note.id.isNotEmpty()) {
                 tvWordCount.text =

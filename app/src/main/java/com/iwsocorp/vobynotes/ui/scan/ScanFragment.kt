@@ -94,7 +94,13 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             val items: List<WordResult> = adapter.getSelectedItems()
 
             notesViewModel.notes.observe(viewLifecycleOwner) { notes ->
-                NoteBottomSheet(notes, { note ->
+                NoteBottomSheet(notes, {
+                    val note = Note(
+                        title = "New Note",
+                        wordLang = items.first().sourceLang,
+                        meaningLang = items.first().targetLang,
+                        contentSize = items.size
+                    )
                     requireContext().alertInputDialog(note.title) {
                         val newNote = if (note.title == it) note else note.copy(title = it)
                         notesViewModel.createNote(newNote)

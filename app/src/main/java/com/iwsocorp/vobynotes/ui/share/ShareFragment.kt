@@ -9,6 +9,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.os.bundleOf
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
@@ -16,6 +17,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.Utils.langCode
+import com.iwsocorp.vobynotes.core.common.Utils.loadLanguages
 import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.asSharedNote
@@ -193,22 +196,27 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
     }
 
     private fun setupDropdowns() = with(binding) {
-        val filterOptions = listOf("All", "English", "Indonesian")
+        val filterOptions = listOf("All") + loadLanguages(requireContext()).map { it.name }
         val sortOptions = listOf("Latest", "Popular")
 
-        filterDropdown.setAdapter(
-            ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                filterOptions
-            )
-        )
         sortDropdown.setAdapter(
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sortOptions)
         )
 
         filterDropdown.setText(viewModel.filter.ifEmpty { filterOptions.first() }, false)
         sortDropdown.setText(viewModel.sort.ifEmpty { sortOptions.first() }, false)
+
+        filterDropdown.addTextChangedListener { text ->
+            val filtered = filterOptions.filter { it.contains(text.toString(), ignoreCase = true) }
+            filterDropdown.setAdapter(
+                ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    if (text.toString().trim().isEmpty() || text.toString().lowercase() == "all") filterOptions else filtered
+                )
+            )
+            if (text.toString().trim().isEmpty()) filterDropdown.showDropDown()
+        }
     }
 
     private fun onSearch() {
@@ -217,10 +225,7 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
         val filterWordLang = when (filter) {
             "All" -> null
-            "English" -> "EN"
-            "Indonesian" -> "ID"
-            "Japanese" -> "JP"
-            else -> null
+            else -> filter.langCode(requireContext())
         }
         val sortBy = when (sort) {
             "Latest" -> "updatedAt"

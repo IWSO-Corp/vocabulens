@@ -24,6 +24,7 @@ import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
+import com.iwsocorp.vobynotes.core.common.Utils.langCode
 import com.iwsocorp.vobynotes.core.common.Utils.loadLanguages
 import com.iwsocorp.vobynotes.core.common.Utils.normalizeLanguageCode
 import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
@@ -32,6 +33,7 @@ import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.common.Utils.showPopupMenu
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
+import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.core.model.SortBy
 import com.iwsocorp.vobynotes.core.model.SortOrder
 import com.iwsocorp.vobynotes.core.model.asSharedNote
@@ -254,7 +256,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         Timber.d("locale.isO3Language: ${locale.isO3Language}")
         Timber.d("locale.country: ${locale.country}")
         Timber.d("locale.displayName: ${locale.displayName}")
-        val localeCode = normalizeLanguageCode(locale.language)
+        val localeCode = locale.language.normalizeLanguageCode()
         val localeName =
             languages.find { it.code == localeCode }?.name ?: getString(R.string.english)
         tvMeaningLang.text = localeName
@@ -369,7 +371,13 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             R.id.action_move -> {
                 val notes = viewModel.notes.value
                 notes?.let { list ->
-                    NoteBottomSheet(list.filterNot { it.id == viewModel.noteId.value }, { note ->
+                    NoteBottomSheet(list.filterNot { it.id == viewModel.noteId.value }, {
+                        val note = Note(
+                            title = "New Note",
+                            wordLang = wordAdapter.getSelectedItemLang(),
+                            meaningLang = wordAdapter.getSelectedItemMeaningLang(),
+                            contentSize = 0
+                        )
                         requireContext().alertInputDialog(note.title) {
                             val newNote = if (note.title == it) note else note.copy(title = it)
                             viewModel.createNote(newNote)
@@ -549,7 +557,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     }
 
     private fun onSubmit() {
-        val worldLang = binding.tvWordLang.text.toString()
+        val wordLang = binding.tvWordLang.text.toString()
         val meaningLang = binding.tvMeaningLang.text.toString()
         val word = binding.edWord.text.toString().lowercase().trim()
         val meaning = binding.edMeaning.text.toString().lowercase().trim()
@@ -561,8 +569,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             noteId = viewModel.noteId.value ?: "",
             word = word,
             meaning = meaning,
-            wordLang = worldLang,
-            meaningLang = meaningLang,
+            wordLang = wordLang.langCode(requireContext()),
+            meaningLang = meaningLang.langCode(requireContext()),
         )
 
         viewModel.insertCorpus(corpus) {

@@ -100,6 +100,9 @@
         <action
             android:id="@+id/action_nav_settings_to_authFragment"
             app:destination="@id/authFragment" />
+        <action
+            android:id="@+id/action_nav_settings_to_languageFragment"
+            app:destination="@id/languageFragment" />
     </fragment>
     
     <fragment
@@ -162,5 +165,10 @@
             android:id="@+id/action_shareDetailFragment_to_authFragment"
             app:destination="@id/authFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/languageFragment"
+        android:name="com.iwsocorp.vobynotes.ui.setting.LanguageFragment"
+        android:label="fragment_language"
+        tools:layout="@layout/fragment_language" />
 
 </navigation>

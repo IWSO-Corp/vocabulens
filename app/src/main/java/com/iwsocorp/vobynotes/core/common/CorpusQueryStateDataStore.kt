@@ -28,23 +28,47 @@ class CorpusQueryStateDataStore @Inject constructor(
         val MARK = stringPreferencesKey("mark")
         val SORT_BY = stringPreferencesKey("sort_by")
         val SORT_ORDER = stringPreferencesKey("sort_order")
+        val APP_LANG = stringPreferencesKey("app_lang")
+        val TRANSLATION_LANG = stringPreferencesKey("translation_lang")
+        val THEME = stringPreferencesKey("theme")
     }
 
-    val queryState: Flow<CorpusQueryState> = context.dataStore.data
-        .map { prefs ->
-            val mark = prefs[Keys.MARK]?.let { Mark.valueOf(it) }
-            val sortBy = prefs[Keys.SORT_BY]?.let { SortBy.valueOf(it) } ?: SortBy.WORD
-            val sortOrder = prefs[Keys.SORT_ORDER]?.let { SortOrder.valueOf(it) } ?: SortOrder.ASC
-            Timber.d("queryState: $mark, $sortBy, $sortOrder")
-            CorpusQueryState(mark, sortBy, sortOrder)
-        }
+    val appLang: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[Keys.APP_LANG]
+    }
 
-    suspend fun saveQueryState(state: CorpusQueryState) {
-        context.dataStore.edit { prefs ->
-            state.mark?.let { prefs[Keys.MARK] = it.name } ?: prefs.remove(Keys.MARK)
-            prefs[Keys.SORT_BY] = state.sortBy.name
-            prefs[Keys.SORT_ORDER] = state.sortOrder.name
-        }
+    suspend fun setAppLang(lang: String) = context.dataStore.edit { prefs ->
+        prefs[Keys.APP_LANG] = lang
+    }
+
+    val translationLang: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[Keys.TRANSLATION_LANG]
+    }
+
+    suspend fun setTranslationLang(lang: String) = context.dataStore.edit { prefs ->
+        prefs[Keys.TRANSLATION_LANG] = lang
+    }
+
+    val theme: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[Keys.THEME] ?: ""
+    }
+
+    suspend fun setTheme(theme: String) = context.dataStore.edit { prefs ->
+        prefs[Keys.THEME] = theme
+    }
+
+    val queryState: Flow<CorpusQueryState> = context.dataStore.data.map { prefs ->
+        val mark = prefs[Keys.MARK]?.let { Mark.valueOf(it) }
+        val sortBy = prefs[Keys.SORT_BY]?.let { SortBy.valueOf(it) } ?: SortBy.WORD
+        val sortOrder = prefs[Keys.SORT_ORDER]?.let { SortOrder.valueOf(it) } ?: SortOrder.ASC
+        Timber.d("queryState: $mark, $sortBy, $sortOrder")
+        CorpusQueryState(mark, sortBy, sortOrder)
+    }
+
+    suspend fun saveQueryState(state: CorpusQueryState) = context.dataStore.edit { prefs ->
+        state.mark?.let { prefs[Keys.MARK] = it.name } ?: prefs.remove(Keys.MARK)
+        prefs[Keys.SORT_BY] = state.sortBy.name
+        prefs[Keys.SORT_ORDER] = state.sortOrder.name
     }
 }
 

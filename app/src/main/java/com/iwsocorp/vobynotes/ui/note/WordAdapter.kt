@@ -209,6 +209,10 @@ class WordAdapter(
 
     fun getSelectedItems(): List<String> = selectedIds.toList()
 
+    fun getSelectedItemLang(): String = getItem(0)?.wordLang ?: "en"
+
+    fun getSelectedItemMeaningLang(): String = getItem(0)?.meaningLang ?: "en"
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             ItemWordBinding.inflate(

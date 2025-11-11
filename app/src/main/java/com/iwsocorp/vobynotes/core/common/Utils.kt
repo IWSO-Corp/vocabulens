@@ -148,11 +148,16 @@ object Utils {
         return wrapper.supported_languages
     }
 
-    fun normalizeLanguageCode(lang: String): String = when (lang.lowercase()) {
+    fun String.normalizeLanguageCode(): String = when (this.lowercase()) {
         "in" -> "id"
         "iw" -> "he"
         "ji" -> "yi"
-        else -> lang.lowercase()
+        else -> this.lowercase()
     }
 
+    fun String.langCode(context: Context): String =
+        loadLanguages(context).find { it.name == this }?.code ?: "en"
+
+    fun String.langName(context: Context): String =
+        loadLanguages(context).find { it.code == this }?.name ?: "English"
 }

@@ -26,6 +26,7 @@ import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
+import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.databinding.FragmentSearchBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.ARG_FROM
@@ -227,7 +228,13 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
 
         binding.btnSave.setOnClickListener {
             noteViewModel.notes.observe(viewLifecycleOwner) { list ->
-                NoteBottomSheet(list, { note ->
+                NoteBottomSheet(list, {
+                    val note = Note(
+                        title = "New Note",
+                        wordLang = corpus.wordLang,
+                        meaningLang = corpus.meaningLang,
+                        contentSize = 1
+                    )
                     requireContext().alertInputDialog(note.title) {
                         val newNote = if (note.title == it) note else note.copy(title = it)
                         noteViewModel.updateNoteId(newNote.id)

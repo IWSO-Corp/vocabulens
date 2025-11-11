@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.firebase.Timestamp
 import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.core.model.SharedNote
 import com.iwsocorp.vobynotes.databinding.ItemSharedNoteBinding
 import timber.log.Timber
@@ -46,8 +47,8 @@ class ShareNoteAdapter(
             )
             tvLang.text = itemView.context.getString(
                 R.string.shared_note_lang,
-                sharedNote.wordLang,
-                sharedNote.meaningLang
+                sharedNote.wordLang.langName(itemView.context),
+                sharedNote.meaningLang.langName(itemView.context)
             )
             tvSaveCount.text = sharedNote.savedCount.toString()
 
@@ -56,7 +57,7 @@ class ShareNoteAdapter(
             icon?.setBounds(0, 0, 48, 48)
             tvSaveCount.setCompoundDrawables(icon, null, null, null)
 
-            itemView.setOnClickListener { onClick(sharedNote, it) }
+            card.setOnClickListener { onClick(sharedNote, it) }
         }
 
         private fun Timestamp.asDateString(): String =

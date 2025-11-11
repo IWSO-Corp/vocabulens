@@ -96,6 +96,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
 
             }
         }
+        btnLanguageTranslations.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_settings_to_languageFragment)
+        }
         btnBackupRestore.setOnClickListener {
             showBackupDialog(user)
         }
