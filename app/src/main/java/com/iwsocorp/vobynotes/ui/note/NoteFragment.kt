@@ -62,8 +62,17 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val sharedViewModel: ShareViewModel by activityViewModels()
-    private val wordAdapter: WordAdapter by lazy {
-        WordAdapter(true, object : WordAdapter.ClickListener {
+    private lateinit var wordAdapter: WordAdapter
+    private lateinit var alphabetSidebarHelper: AlphabetSidebarHelper
+    private val argNoteId: String? by lazy {
+        arguments?.getString(ARG_NOTE_ID)
+    }
+
+    @OptIn(FlowPreview::class)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        wordAdapter = WordAdapter(true, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
                 findNavController().navigate(
                     R.id.action_noteFragment_to_corpusDetailFragment,
@@ -108,21 +117,13 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                 )
             }
         })
-    }
-    private val alphabetSidebarHelper: AlphabetSidebarHelper by lazy {
-        AlphabetSidebarHelper(
+        alphabetSidebarHelper = AlphabetSidebarHelper(
             requireContext(),
             binding.alphabetSidebar,
             binding.rvCorpus,
         )
-    }
-    private val argNoteId: String? by lazy {
-        arguments?.getString(ARG_NOTE_ID)
-    }
 
-    @OptIn(FlowPreview::class)
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        highlight(binding.rvCorpus)
 
         setFragmentResultListener("requestKey") { _, bundle ->
             val position = bundle.getInt(ARG_POSITION)
@@ -254,7 +255,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         Timber.d("locale.country: ${locale.country}")
         Timber.d("locale.displayName: ${locale.displayName}")
         val localeCode = normalizeLanguageCode(locale.language)
-        val localeName = languages.find { it.code == localeCode }?.name ?: getString(R.string.english)
+        val localeName =
+            languages.find { it.code == localeCode }?.name ?: getString(R.string.english)
         tvMeaningLang.text = localeName
 
         tvWordLang.setOnClickListener {
@@ -425,7 +427,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                 showAlertDialog(
                     requireContext(),
                     "Delete ${selectedItemIds.size} Words",
-                    null,
+                    "This action cannot be undone",
                     "Delete",
                     "Cancel"
                 ) {
@@ -527,18 +529,22 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
 
-            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
-            val data = wordAdapter.snapshot().items
+            highlight(recyclerView)
+        }
+    }
 
-            if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
-                val firstCorpus = data[firstVisiblePosition]
-                if (firstCorpus.word.isEmpty()) return
+    private fun highlight(recyclerView: RecyclerView) {
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+        val data = wordAdapter.snapshot().items
 
-                val firstLetter = firstCorpus.word.first().uppercaseChar()
+        if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
+            val firstCorpus = data[firstVisiblePosition]
+            if (firstCorpus.word.isEmpty()) return
 
-                alphabetSidebarHelper.highlightCurrentLetter(firstLetter)
-            }
+            val firstLetter = firstCorpus.word.first().uppercaseChar()
+
+            alphabetSidebarHelper.highlightCurrentLetter(firstLetter)
         }
     }
 

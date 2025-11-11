@@ -67,7 +67,7 @@ interface NoteDao {
         WHERE noteId = :noteId
         ORDER BY createdAt DESC LIMIT 5
     """)
-    suspend fun getLastFiveCorpusByNoteId(noteId: String): List<CorpusEntity>
+    fun getLastFiveCorpusByNoteId(noteId: String): Flow<List<CorpusEntity>>
 
     @Query("SELECT * FROM corpus WHERE deletedAt IS NULL")
     fun getAllCorpusFlow(): Flow<List<CorpusEntity>>

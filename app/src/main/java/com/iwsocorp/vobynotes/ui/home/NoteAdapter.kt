@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.Utils.asString
@@ -28,29 +29,35 @@ class NoteAdapter(
         fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit)
     }
 
-    private val selectedIds = mutableSetOf<String>()
     private var isSelectionMode = false
+    private val selectedIds = mutableSetOf<String>()
+    private val corpusCache = mutableMapOf<String, List<Corpus>>()
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(noteWithCorpus: NoteWithCorpus, pos: Int) = with(binding) {
             val note = noteWithCorpus.note
 
+            tvLang.isVisible = pos != 0
+            tvDate.isVisible = pos != 0
             tvFamiliar.isVisible = pos != 0
             tvUnfamiliar.isVisible = pos != 0
             tvTitle.apply {
                 text = note.title
                 visibility = if (note.title.isEmpty()) View.GONE else View.VISIBLE
             }
-            tvDate.visibility = if (note.updatedAt == 0L) View.GONE else View.VISIBLE
             tvDate.text = note.updatedAt.asString()
+            tvLang.text =
+                itemView.context.getString(R.string.note_lang, note.wordLang, note.meaningLang)
 
             if (note.id.isNotEmpty()) {
-                tvWordCount.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
                 tvWordCount.text =
-                    itemView.context.getString(R.string.word_amount, note.contentSize)
+                    itemView.context.getString(R.string.word_amount, noteWithCorpus.corpusCount)
 
-                if (note.contentSize > 0) setupMark(
+                tvFamiliar.isVisible = noteWithCorpus.corpusCount > 0
+                tvUnfamiliar.isVisible = noteWithCorpus.corpusCount > 0
+
+                if (noteWithCorpus.corpusCount > 0) setupMark(
                     noteWithCorpus.familiarCount,
                     noteWithCorpus.unfamiliarCount
                 )
@@ -81,21 +88,32 @@ class NoteAdapter(
             )
 
             rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
-            listener.getLastFiveCorpus(note.id) {
-                rvPreview.adapter = PreviewAdapter(
-                    corpusList = it,
-                    noteId = note.id,
-                    onClick = {
-                        if (!isSelectionMode) listener.onClick(
-                            absoluteAdapterPosition,
-                            note.id
-                        ) else toggleSelection(note.id)
-                    },
-                ) {
-                    if (!isSelectionMode) isSelectionMode = true
-                    toggleSelection(note.id)
+
+            val adapter = PreviewAdapter(
+                noteId = note.id,
+                onClick = {
+                    if (!isSelectionMode) listener.onClick(
+                        absoluteAdapterPosition,
+                        note.id
+                    ) else toggleSelection(note.id)
+                },
+            ) {
+                if (!isSelectionMode) isSelectionMode = true
+                toggleSelection(note.id)
+            }
+
+            listener.getLastFiveCorpus(note.id) { newList ->
+                val cachedList = corpusCache[note.id]
+                if (cachedList != newList) {
+                    corpusCache[note.id] = newList
+                    adapter.submitList(newList)
+                } else {
+                    // gunakan cache tanpa animasi / submit ulang
+                    adapter.submitList(cachedList)
                 }
             }
+
+            rvPreview.adapter = adapter
         }
 
         private fun ItemNoteBinding.setupMark(
@@ -143,16 +161,22 @@ class NoteAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     private fun toggleSelection(id: String) {
+        val currentListSnapshot = snapshot()
+        val pos = currentListSnapshot.indexOfFirst { it?.note?.id == id }
+        if (pos == -1) return
+
         if (selectedIds.contains(id)) {
             selectedIds.remove(id)
         } else {
             selectedIds.add(id)
         }
+
         if (selectedIds.isEmpty()) {
             isSelectionMode = false
         }
+
         listener.onSelectionChanged(selectedIds.size)
-        notifyDataSetChanged()
+        notifyItemChanged(pos)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -181,10 +205,16 @@ class NoteAdapter(
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<NoteWithCorpus>() {
-            override fun areItemsTheSame(oldItem: NoteWithCorpus, newItem: NoteWithCorpus): Boolean =
+            override fun areItemsTheSame(
+                oldItem: NoteWithCorpus,
+                newItem: NoteWithCorpus
+            ): Boolean =
                 oldItem.note.id == newItem.note.id
 
-            override fun areContentsTheSame(oldItem: NoteWithCorpus, newItem: NoteWithCorpus): Boolean =
+            override fun areContentsTheSame(
+                oldItem: NoteWithCorpus,
+                newItem: NoteWithCorpus
+            ): Boolean =
                 oldItem == newItem
         }
     }
@@ -192,11 +222,10 @@ class NoteAdapter(
 }
 
 class PreviewAdapter(
-    private val corpusList: List<Corpus>,
     private val noteId: String,
     private val onClick: (noteId: String) -> Unit,
     private val onLongClick: (noteId: String) -> Unit,
-) : RecyclerView.Adapter<PreviewAdapter.ViewHolder>() {
+) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DiffCallback) {
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -231,11 +260,15 @@ class PreviewAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(corpusList[position])
+        holder.bind(getItem(position))
     }
 
-    override fun getItemCount(): Int {
-        return corpusList.size
+    object DiffCallback : DiffUtil.ItemCallback<Corpus>() {
+        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+            oldItem == newItem
     }
 
 }

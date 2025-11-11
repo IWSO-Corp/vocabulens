@@ -55,22 +55,25 @@ class HomeViewModel @Inject constructor(
                             ),
                             familiarCount = 0,
                             unfamiliarCount = 0,
-                            corpus = emptyList()
+                            corpusCount = 0
                         )
                     )
                 }
                 .cachedIn(viewModelScope)
                 .collectLatest {
-                withContext(Dispatchers.Main) {
-                    _uiState.value = UiState.Loaded(it)
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = UiState.Loaded(it)
+                    }
                 }
-            }
         }
     }
 
-    fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit) = viewModelScope.launch {
-        callback(noteRepository.getLastFiveCorpus(noteId))
-    }
+    fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit) =
+        viewModelScope.launch {
+            noteRepository.getLastFiveCorpus(noteId).collectLatest {
+                callback(it)
+            }
+        }
 
     private val _allCorpus = MutableStateFlow<List<Corpus>>(emptyList())
     val allCorpus: StateFlow<List<Corpus>> get() = _allCorpus
@@ -83,7 +86,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private val _deletedNoteId = MutableSharedFlow< List<String>>()
+    private val _deletedNoteId = MutableSharedFlow<List<String>>()
     val deletedNoteId: SharedFlow<List<String>> get() = _deletedNoteId
 
     fun moveNotesToTrash(noteIds: List<String>) = viewModelScope.launch {

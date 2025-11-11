@@ -60,14 +60,15 @@ class NoteRepositoryImpl @Inject constructor(
                 note = entity.note.asExternalModel(),
                 familiarCount = entity.familiarCount,
                 unfamiliarCount = entity.unfamiliarCount,
-                corpus = emptyList()
+                corpusCount = entity.corpusCount
             )
         }
     }
 
-    override suspend fun getLastFiveCorpus(noteId: String): List<Corpus> =
-        noteDao.getLastFiveCorpusByNoteId(noteId)
-            .map { it.asExternalModel() }
+    override fun getLastFiveCorpus(noteId: String): Flow<List<Corpus>> =
+        noteDao.getLastFiveCorpusByNoteId(noteId).map { list ->
+            list.map { it.asExternalModel() }
+        }
 
     override fun getTrashNotesFlow(): Flow<PagingData<NoteWithCorpus>> = Pager(
         config = PagingConfig(pageSize = 10, enablePlaceholders = false),
@@ -78,7 +79,7 @@ class NoteRepositoryImpl @Inject constructor(
                 note = it.note.asExternalModel(),
                 familiarCount = it.familiarCount,
                 unfamiliarCount = it.unfamiliarCount,
-                corpus = emptyList()
+                corpusCount = it.corpusCount
             )
         }
     }
@@ -119,7 +120,7 @@ interface NoteRepository {
     suspend fun getNoteById(id: String): Note
     fun getNotesFlow(): Flow<List<Note>>
     fun getNotesPagingFlow(): Flow<PagingData<NoteWithCorpus>>
-    suspend fun getLastFiveCorpus(noteId: String): List<Corpus>
+    fun getLastFiveCorpus(noteId: String): Flow<List<Corpus>>
     fun getTrashNotesFlow(): Flow<PagingData<NoteWithCorpus>>
     suspend fun moveNotesToTrash(ids: List<String>)
     suspend fun restoreNotesFromTrash(ids: List<String>)
@@ -136,5 +137,5 @@ data class NoteWithCorpus(
     val note: Note,
     val familiarCount: Int,
     val unfamiliarCount: Int,
-    val corpus: List<Corpus>,
+    val corpusCount: Int,
 )

@@ -31,7 +31,9 @@ class TrashViewModel @Inject constructor(
     }
 
     fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit) = viewModelScope.launch {
-        callback(noteRepository.getLastFiveCorpus(noteId))
+        noteRepository.getLastFiveCorpus(noteId).collectLatest {
+            callback(it)
+        }
     }
 
     fun moveNotesToTrash(ids: List<String>) = viewModelScope.launch {
