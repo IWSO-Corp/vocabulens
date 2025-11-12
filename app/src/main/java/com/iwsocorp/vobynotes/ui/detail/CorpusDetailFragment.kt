@@ -191,14 +191,8 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                         }
                     )
                 }
-            }) { word ->
-                scanViewModel.translate(word) {
-                    Snackbar.make(
-                        requireView(),
-                        "$word: $it",
-                        Snackbar.LENGTH_INDEFINITE,
-                    ).setAction("OK") {}.show()
-                }
+            }) { word, result ->
+                scanViewModel.translate(word, result)
             }
             rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
             rvMeanings.setHasFixedSize(true)

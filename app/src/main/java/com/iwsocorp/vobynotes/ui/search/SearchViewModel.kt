@@ -46,12 +46,12 @@ class SearchViewModel @Inject constructor(
             }
     }
 
-    fun searchWordDefinition(word: String) = viewModelScope.launch {
+    fun searchWordDefinition(word: String, meaning: String) = viewModelScope.launch {
         _searchUiState.value = SearchUiState.Loading
 
         dataStore.translationLang.filterNotNull().collectLatest { lang ->
             _searchUiState.value = SearchUiState.ApiLoaded(
-                vocabularyRepository.getVocabulary(word).toCorpus(lang)
+                vocabularyRepository.getVocabulary(word).toCorpus(lang, meaning)
             )
         }
     }

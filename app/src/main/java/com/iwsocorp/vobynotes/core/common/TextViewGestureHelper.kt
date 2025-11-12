@@ -16,6 +16,7 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.text.clearSpans
+import androidx.core.view.isVisible
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.databinding.PopupWordBinding
 
@@ -23,7 +24,7 @@ class TextViewGestureHelper(
     context: Context,
     private val currentWord: String,
     private val onSearch: (String) -> Unit,
-    private val onTranslate: (String) -> Unit,
+    private val onTranslate: (String, (String) -> Unit) -> Unit,
 ) {
 
     private var currentTextView: TextView? = null
@@ -110,8 +111,8 @@ class TextViewGestureHelper(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             true
         )
-        popupWindow.animationStyle = android.R.style.Animation_Dialog
 
+        popupWindow.animationStyle = android.R.style.Animation_Dialog
         popupWindow.elevation = 10f
         popupWindow.isOutsideTouchable = true
         popupWindow.showAtLocation(
@@ -127,22 +128,77 @@ class TextViewGestureHelper(
             textView.text = span
         }
 
-        // Bisa kasih aksi tambahan
+        // Ikon Search
+        val iconSearch = ContextCompat.getDrawable(textView.context, R.drawable.baseline_search_24)
+        iconSearch?.setBounds(0, 0, 48, 48)
+        binding.tvSearch.setCompoundDrawables(iconSearch, null, null, null)
         binding.tvSearch.setOnClickListener {
             onSearch(word)
             popupWindow.dismiss()
         }
-        binding.tvTranslate.setOnClickListener {
-            onTranslate(word)
-            popupWindow.dismiss()
-        }
 
-        val iconSearch = ContextCompat.getDrawable(textView.context, R.drawable.baseline_search_24)
-        iconSearch?.setBounds(0, 0, 48, 48)
-        binding.tvSearch.setCompoundDrawables(iconSearch, null, null, null)
-        val iconTranslate = ContextCompat.getDrawable(textView.context, R.drawable.baseline_translate_24)
+        // Ikon Translate
+        val iconTranslate =
+            ContextCompat.getDrawable(textView.context, R.drawable.baseline_translate_24)
         iconTranslate?.setBounds(0, 0, 48, 48)
         binding.tvTranslate.setCompoundDrawables(iconTranslate, null, null, null)
+        binding.tvTranslate.setOnClickListener {
+            popupWindow.dismiss()
+
+            // Panggil ViewModel untuk translate (async)
+            onTranslate(word) { translated ->
+                // tampilkan popup hasil translate setelah hasil diterima
+                showTranslatePopup(textView, word, translated, rect)
+            }
+        }
+    }
+
+    @SuppressLint("InflateParams")
+    private fun showTranslatePopup(
+        textView: TextView,
+        word: String,
+        translated: String,
+        rect: Rect
+    ) {
+        val popupView = LayoutInflater.from(textView.context).inflate(R.layout.popup_word, null)
+        val binding = PopupWordBinding.bind(popupView)
+
+        // Gunakan layout yang sama tapi ubah isi untuk mode hasil terjemahan
+        binding.tvSearch.isVisible = false
+        binding.tvTranslate.text = translated
+
+        // Nonaktifkan klik agar tampil pasif
+        binding.tvTranslate.isClickable = false
+
+        // Tambahkan animasi fade-in
+        popupView.alpha = 0f
+        popupView.animate().alpha(1f).setDuration(250).start()
+
+        val popupWindow = PopupWindow(
+            popupView,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.animationStyle = android.R.style.Animation_Dialog
+        popupWindow.elevation = 10f
+        popupWindow.isOutsideTouchable = true
+        popupWindow.showAtLocation(
+            textView,
+            Gravity.NO_GRAVITY,
+            rect.left,
+            rect.top - 150
+        )
+
+        // Pertahankan highlight selama popup tampil
+        val span = highlightWord(textView, word)
+
+        popupWindow.setOnDismissListener {
+            // Hapus highlight sepenuhnya saat popup ditutup
+            span.clearSpans()
+            textView.text = textView.text.toString() // reset teks tanpa span
+        }
     }
 
     private fun highlightWord(textView: TextView, word: String): SpannableString {

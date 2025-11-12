@@ -55,9 +55,9 @@ class LanguageViewModel @Inject constructor(
         dataStore.setInfoShowed(isInfoShowed)
     }
 
-    fun checkDownloadedModels(onResult: (List<String>) -> Unit) {
-        val modelManager = RemoteModelManager.getInstance()
+    private val modelManager = RemoteModelManager.getInstance()
 
+    fun checkDownloadedModels(onResult: (List<String>) -> Unit) =
         modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
             .addOnSuccessListener { models ->
                 val modelNames = models.map { it.language }
@@ -66,6 +66,12 @@ class LanguageViewModel @Inject constructor(
             .addOnFailureListener { e ->
                 onResult(listOf("Error: ${e.message}"))
             }
+
+    fun deleteModel(langCode: String, onResult: (Boolean) -> Unit) {
+        val model = TranslateRemoteModel.Builder(langCode).build()
+        modelManager.deleteDownloadedModel(model)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { onResult(false) }
     }
 
 }

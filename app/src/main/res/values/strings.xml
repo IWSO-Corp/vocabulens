@@ -62,4 +62,6 @@
     <string name="language">App Language</string>
     <string name="translations">Translate word to</string>
     <string name="lang_info">The translation model is stored on the device; you will download it first, and the app size will increase.</string>
+    <string name="translation_info">This setting also changes when you change the destination language in the scan feature and the meaning language in new notes.</string>
+    <string name="downloaded_language_model">Downloaded language model</string>
 </resources>

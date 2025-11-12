@@ -19,7 +19,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.paging.PagingData
-import com.google.android.material.snackbar.Snackbar
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
@@ -184,7 +183,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
     }
 
     private fun onSearch(word: String) {
-        viewModel.searchWordDefinition(word.trim())
+        scanViewModel.translate(word) {
+            viewModel.searchWordDefinition(word.trim(), it)
+        }
 
         binding.btnSearch.visibility = View.GONE
         binding.itemDetail.contentDetail.visibility = View.VISIBLE
@@ -197,7 +198,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
 
     private fun setupDetailUI(corpus: Corpus) = with(binding.itemDetail) {
         tvWord.text = corpus.word.ifEmpty { args }
-        tvMeaning.visibility = View.GONE
+        tvMeaning.text = corpus.meaning
         csExample.visibility = View.GONE
         rvExample.visibility = View.GONE
         underline.isVisible = corpus.audio.isNotEmpty()
@@ -215,14 +216,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
         val gestureHelper = TextViewGestureHelper(requireContext(), corpus.word, {
             binding.searchView.setQuery("", false)
             onSearch(it)
-        }) { word ->
-            scanViewModel.translate(word) {
-                Snackbar.make(
-                    requireView(),
-                    "$word: $it",
-                    Snackbar.LENGTH_INDEFINITE,
-                ).setAction("OK") {}.show()
-            }
+        }) { word, result ->
+            scanViewModel.translate(word, result)
         }
         rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
 

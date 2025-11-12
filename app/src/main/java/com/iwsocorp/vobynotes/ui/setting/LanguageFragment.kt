@@ -1,5 +1,6 @@
 package com.iwsocorp.vobynotes.ui.setting
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -11,7 +12,6 @@ import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.databinding.FragmentLanguageBinding
 import com.iwsocorp.vobynotes.ui.note.LangBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
 
 @AndroidEntryPoint
 class LanguageFragment : BaseFragment<FragmentLanguageBinding>(FragmentLanguageBinding::inflate) {
@@ -23,10 +23,6 @@ class LanguageFragment : BaseFragment<FragmentLanguageBinding>(FragmentLanguageB
 
         setupUI()
         observe()
-
-        viewModel.checkDownloadedModels {
-            Timber.d("Downloaded models: $it")
-        }
     }
 
     private fun observe() {
@@ -35,6 +31,30 @@ class LanguageFragment : BaseFragment<FragmentLanguageBinding>(FragmentLanguageB
         }
         viewModel.translationLanguage.collectOnStarted {
             binding.tvTranslation.text = it?.langName(requireContext())
+        }
+
+        val adapter = LanguageAdapter() { lang, onDelete ->
+            val langName = lang.langName(requireContext())
+            AlertDialog.Builder(requireContext())
+                .setTitle("Delete model")
+                .setMessage("Are you sure want to delete $langName model?")
+                .setPositiveButton("Delete") { _, _ ->
+                    viewModel.deleteModel(lang) { success ->
+                        onDelete(success)
+                        Toast.makeText(
+                            requireContext(),
+                            if (success) "Model $langName deleted" else "Error deleting model $langName",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+        binding.rvLanguage.adapter = adapter
+
+        viewModel.checkDownloadedModels { languages ->
+            adapter.submitList(languages.sortedBy { it.langName(requireContext()) })
         }
     }
 
