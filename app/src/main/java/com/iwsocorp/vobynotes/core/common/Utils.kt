@@ -73,7 +73,7 @@ object Utils {
         val editText = EditText(this).apply {
             setText(noteTitle)
             hint = "Note title"
-            inputType = InputType.TYPE_CLASS_TEXT
+            inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             setPadding(32, 24, 32, 24)
         }
 
@@ -153,6 +153,14 @@ object Utils {
         "iw" -> "he"
         "ji" -> "yi"
         else -> this.lowercase()
+    }
+
+    fun getLocaleLang(context: Context): String {
+        val languages = loadLanguages(context)
+        val localeCode = Locale.getDefault().language
+        return languages.find {
+            it.code == localeCode.normalizeLanguageCode()
+        }?.code ?: "en"
     }
 
     fun String.langCode(context: Context): String =

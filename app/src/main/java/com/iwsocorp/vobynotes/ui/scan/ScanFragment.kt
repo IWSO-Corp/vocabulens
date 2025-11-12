@@ -28,13 +28,17 @@ import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.fadeVisibility
+import com.iwsocorp.vobynotes.core.common.Utils.langCode
+import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.core.model.WordResult
 import com.iwsocorp.vobynotes.core.model.asCorpus
 import com.iwsocorp.vobynotes.databinding.FragmentScanBinding
+import com.iwsocorp.vobynotes.ui.note.LangBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
+import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import java.io.File
@@ -46,6 +50,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
 
     private val viewModel: ScanViewModel by activityViewModels()
     private val notesViewModel: NoteViewModel by activityViewModels()
+    private val languageViewModel: LanguageViewModel by activityViewModels()
     private var imageCapture: ImageCapture? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private val permissionLauncher: ActivityResultLauncher<String> by lazy {
@@ -77,10 +82,6 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        binding.btnCapture.setOnClickListener {
-            captureImageForProcessing()
-        }
-
         setupUI()
         setupBottomSheet()
         setupOnBack()
@@ -91,14 +92,16 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
     private fun setupUI() {
         binding.rvScan.adapter = adapter
         binding.btnSave.setOnClickListener {
-            val items: List<WordResult> = adapter.getSelectedItems()
+            val items: List<WordResult> = adapter.getSelectedItems().ifEmpty { adapter.currentList }
 
             notesViewModel.notes.observe(viewLifecycleOwner) { notes ->
                 NoteBottomSheet(notes, {
+                    val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
+                    val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
                     val note = Note(
                         title = "New Note",
-                        wordLang = items.first().sourceLang,
-                        meaningLang = items.first().targetLang,
+                        wordLang = sourceLang,
+                        meaningLang = targetLang,
                         contentSize = items.size
                     )
                     requireContext().alertInputDialog(note.title) {
@@ -114,16 +117,58 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         binding.tvClear.setOnClickListener {
             adapter.clearSelection()
         }
+        binding.btnCapture.setOnClickListener {
+            captureImageForProcessing()
+        }
+        binding.tvSourceLang.setOnClickListener {
+            LangBottomSheet("Source language") {
+                languageViewModel.setSourceLanguage(it.code)
+            }.show(parentFragmentManager, null)
+        }
         binding.tvTargetLang.setOnClickListener {
-            Toast.makeText(requireContext(), "More language coming soon!", Toast.LENGTH_SHORT)
-                .show()
+            LangBottomSheet("Translation language") {
+                languageViewModel.setTranslationLanguage(it.code)
+            }.show(parentFragmentManager, null)
+        }
+
+        var rotated = false
+
+        binding.iconSwitch.setOnClickListener { view ->
+            val rotationAngle = if (rotated) 0f else 180f
+            view.animate()
+                .rotation(rotationAngle)
+                .setDuration(300)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .start()
+            rotated = !rotated
+
+            languageViewModel.switchLanguage()
+        }
+
+        viewModel.isInfoShowed.collectOnStarted {
+            if (it == null) {
+                showInfo()
+                languageViewModel.setInfoShowed(true)
+            }
+        }
+        languageViewModel.sourceLanguage.collectOnStarted {
+            binding.tvSourceLang.text = it?.langName(requireContext())
+        }
+        languageViewModel.translationLanguage.collectOnStarted {
+            binding.tvTargetLang.text = it?.langName(requireContext())
         }
     }
 
+    private fun showInfo() = AlertDialog.Builder(requireContext())
+        .setTitle("Data Usage")
+        .setMessage(getString(R.string.lang_info))
+        .setPositiveButton("OK") { _, _ -> }
+        .setCancelable(false)
+        .show()
+
     private fun onSaveToNote(items: List<WordResult>, note: Note) {
         notesViewModel.insertCorpusList(
-            items.ifEmpty { adapter.currentList }
-                .map { it.asCorpus(note.id) }
+            items.map { it.asCorpus(note.id) }
         ) {
             if (items.isNotEmpty()) adapter.removeSelectedItems() else rescan()
 
@@ -362,12 +407,16 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             outputOptions, ContextCompat.getMainExecutor(requireContext()),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    viewModel.setError("Gagal mengambil gambar: ${exc.message}")
+                    viewModel.setError("Failed to take picture: ${exc.message}")
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val imageUri = Uri.fromFile(photoFile)
-                    viewModel.processImage(imageUri)
+                    val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
+                    val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
+
+                    viewModel.processImage(imageUri, sourceLang, targetLang)
+
                     displayCapturedImage(imageUri)
                 }
             }

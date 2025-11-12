@@ -8,13 +8,10 @@ import androidx.navigation.fragment.findNavController
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.langName
-import com.iwsocorp.vobynotes.core.common.Utils.loadLanguages
-import com.iwsocorp.vobynotes.core.common.Utils.normalizeLanguageCode
 import com.iwsocorp.vobynotes.databinding.FragmentLanguageBinding
 import com.iwsocorp.vobynotes.ui.note.LangBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
-import java.util.Locale
 
 @AndroidEntryPoint
 class LanguageFragment : BaseFragment<FragmentLanguageBinding>(FragmentLanguageBinding::inflate) {
@@ -26,28 +23,19 @@ class LanguageFragment : BaseFragment<FragmentLanguageBinding>(FragmentLanguageB
 
         setupUI()
         observe()
+
+        viewModel.checkDownloadedModels {
+            Timber.d("Downloaded models: $it")
+        }
     }
 
     private fun observe() {
-
         viewModel.appLanguage.collectOnStarted {
-//            if (it == null) viewModel.setAppLanguage(getLocalLang())
-
             binding.tvLanguage.text = getString(R.string.english)
         }
         viewModel.translationLanguage.collectOnStarted {
-            if (it == null) viewModel.setTranslationLanguage(getLocalLang())
-
             binding.tvTranslation.text = it?.langName(requireContext())
         }
-    }
-
-    private fun getLocalLang(): String {
-        val languages = loadLanguages(requireContext())
-        val localeCode = Locale.getDefault().language
-        return languages.find {
-            it.code == localeCode.normalizeLanguageCode()
-        }?.code ?: "en"
     }
 
     private fun setupUI() = with(binding) {
@@ -71,6 +59,7 @@ class LanguageFragment : BaseFragment<FragmentLanguageBinding>(FragmentLanguageB
         btnTranslations.setOnClickListener {
             LangBottomSheet("Translation language") {
                 viewModel.setTranslationLanguage(it.code)
+                viewModel.setInfoShowed(null)
                 Toast.makeText(
                     requireContext(),
                     "Word will be translated to ${it.name}",

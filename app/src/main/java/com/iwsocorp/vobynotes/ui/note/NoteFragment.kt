@@ -25,8 +25,7 @@ import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.langCode
-import com.iwsocorp.vobynotes.core.common.Utils.loadLanguages
-import com.iwsocorp.vobynotes.core.common.Utils.normalizeLanguageCode
+import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
 import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
@@ -41,6 +40,7 @@ import com.iwsocorp.vobynotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
+import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareState
 import com.iwsocorp.vobynotes.ui.share.ShareViewModel
 import com.iwsocorp.vobynotes.ui.share.shareLink
@@ -49,7 +49,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.Locale
 
 const val ARG_NOTE_ID = "noteIdParam"
 const val ARG_POSITION = "positionRecyclerView"
@@ -64,6 +63,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val sharedViewModel: ShareViewModel by activityViewModels()
+    private val languageViewModel: LanguageViewModel by activityViewModels()
     private lateinit var wordAdapter: WordAdapter
     private lateinit var alphabetSidebarHelper: AlphabetSidebarHelper
     private val argNoteId: String? by lazy {
@@ -184,8 +184,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         viewModel.note.observe(viewLifecycleOwner) { note ->
             Timber.d("note: $note")
             binding.tvToolbarTitle.text = note.title
-            binding.tvWordLang.text = note.wordLang
-            binding.tvMeaningLang.text = note.meaningLang
+            binding.tvWordLang.text = note.wordLang.langName(requireContext())
+            binding.tvMeaningLang.text = note.meaningLang.langName(requireContext())
             viewModel.updateNoteTitle(note.title)
         }
 
@@ -238,38 +238,28 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         }
         iconSwitch.isVisible = argNoteId == null
         iconSwitch.setOnClickListener {
-            val worldLang = tvWordLang.text.toString()
-            val meaningLang = tvMeaningLang.text.toString()
-            tvWordLang.text = meaningLang
-            tvMeaningLang.text = worldLang
+            languageViewModel.switchLanguage()
         }
         btnScrollToTop.setOnClickListener {
             rvCorpus.scrollToPosition(0)
         }
 
-        tvWordLang.text = getString(R.string.english)
-
-        val languages = loadLanguages(requireContext())
-        val locale = Locale.getDefault()
-        Timber.d("locale: $locale")
-        Timber.d("locale.language: ${locale.language}")
-        Timber.d("locale.isO3Language: ${locale.isO3Language}")
-        Timber.d("locale.country: ${locale.country}")
-        Timber.d("locale.displayName: ${locale.displayName}")
-        val localeCode = locale.language.normalizeLanguageCode()
-        val localeName =
-            languages.find { it.code == localeCode }?.name ?: getString(R.string.english)
-        tvMeaningLang.text = localeName
+        languageViewModel.sourceLanguage.collectOnStarted {
+            tvWordLang.text = it?.langName(requireContext())
+        }
+        languageViewModel.translationLanguage.collectOnStarted {
+            tvMeaningLang.text = it?.langName(requireContext())
+        }
 
         tvWordLang.setOnClickListener {
             LangBottomSheet("Word Language") {
-                tvWordLang.text = it.name
-            }.show(childFragmentManager, null)
+                languageViewModel.setSourceLanguage(it.code)
+            }.show(parentFragmentManager, null)
         }
         tvMeaningLang.setOnClickListener {
             LangBottomSheet("Meaning Language") {
-                tvMeaningLang.text = it.name
-            }.show(childFragmentManager, null)
+                languageViewModel.setTranslationLanguage(it.code)
+            }.show(parentFragmentManager, null)
         }
     }
 
@@ -440,7 +430,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     "Cancel"
                 ) {
                     viewModel.deleteCorpusBatch(selectedItemIds)
-                    setNormalToolbar()
+                    wordAdapter.clearSelection()
                 }
             }
 

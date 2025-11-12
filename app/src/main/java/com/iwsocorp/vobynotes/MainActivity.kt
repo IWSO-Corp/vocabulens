@@ -19,8 +19,10 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.firebase.auth.FirebaseAuth
+import com.iwsocorp.vobynotes.core.common.Utils.getLocaleLang
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
 import com.iwsocorp.vobynotes.databinding.NavHeaderMainBinding
+import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
 import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
 import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
@@ -45,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val languageViewModel: LanguageViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +69,22 @@ class MainActivity : AppCompatActivity() {
         val headerBinding = NavHeaderMainBinding.bind(binding.navView.getHeaderView(0))
         headerBinding.headerTitle.setCompoundDrawables(icon, null, null, null)
         headerBinding.headerTitle.compoundDrawablePadding = 8
+
+        lifecycleScope.launch {
+            languageViewModel.appLanguage.collectLatest {
+                if (it == null) languageViewModel.setAppLanguage(getLocaleLang(this@MainActivity))
+            }
+        }
+        lifecycleScope.launch {
+            languageViewModel.sourceLanguage.collectLatest {
+                if (it == null) languageViewModel.setSourceLanguage("en")
+            }
+        }
+        lifecycleScope.launch {
+            languageViewModel.translationLanguage.collectLatest {
+                if (it == null) languageViewModel.setTranslationLanguage(getLocaleLang(this@MainActivity))
+            }
+        }
 
         setupTable()
         setupNavigation()

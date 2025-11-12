@@ -70,6 +70,10 @@ androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poiOoxml" }
 text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
+text-recognition-chinese = { module = "com.google.mlkit:text-recognition-chinese", version.ref = "textRecognition" }
+text-recognition-devanagari = { module = "com.google.mlkit:text-recognition-devanagari", version.ref = "textRecognition" }
+text-recognition-japanese = { module = "com.google.mlkit:text-recognition-japanese", version.ref = "textRecognition" }
+text-recognition-korean = { module = "com.google.mlkit:text-recognition-korean", version.ref = "textRecognition" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }

@@ -244,6 +244,11 @@ class PreviewAdapter(
                 text = corpus.phonetic
                 visibility = if (corpus.phonetic.isEmpty()) View.GONE else View.VISIBLE
             }
+
+            val rtlLang = listOf("ar", "fa", "ur")
+            tvMeaning.textDirection =
+                if (rtlLang.contains(corpus.meaningLang)) View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
+
             itemView.setOnClickListener {
                 onClick(noteId)
             }

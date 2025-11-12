@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.iwsocorp.vobynotes.core.common.CorpusQueryStateDataStore
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vobynotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vobynotes.core.model.Corpus
@@ -11,6 +12,8 @@ import com.iwsocorp.vobynotes.core.model.Mark
 import com.iwsocorp.vobynotes.core.model.toCorpus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +22,7 @@ import javax.inject.Inject
 class SearchViewModel @Inject constructor(
     private val corpusRepository: CorpusRepository,
     private val vocabularyRepository: VocabularyRepository,
+    private val dataStore: CorpusQueryStateDataStore
 ) : ViewModel() {
 
     private val _searchUiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
@@ -44,9 +48,12 @@ class SearchViewModel @Inject constructor(
 
     fun searchWordDefinition(word: String) = viewModelScope.launch {
         _searchUiState.value = SearchUiState.Loading
-        _searchUiState.value = SearchUiState.ApiLoaded(
-            vocabularyRepository.getVocabulary(word).toCorpus()
-        )
+
+        dataStore.translationLang.filterNotNull().collectLatest { lang ->
+            _searchUiState.value = SearchUiState.ApiLoaded(
+                vocabularyRepository.getVocabulary(word).toCorpus(lang)
+            )
+        }
     }
 
     fun updateCorpusMark(corpusIds: List<String>, newMark: Mark) = viewModelScope.launch {

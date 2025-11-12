@@ -57,7 +57,7 @@ class ShareNoteAdapter(
             icon?.setBounds(0, 0, 48, 48)
             tvSaveCount.setCompoundDrawables(icon, null, null, null)
 
-            card.setOnClickListener { onClick(sharedNote, it) }
+            card.setOnClickListener { onClick(sharedNote, itemView) }
         }
 
         private fun Timestamp.asDateString(): String =

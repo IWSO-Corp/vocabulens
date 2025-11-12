@@ -76,10 +76,15 @@ dependencies {
     implementation(libs.poi.ooxml)
     implementation(libs.library)
     implementation(libs.vbpd)
+    implementation(libs.glide)
+
     implementation(libs.text.recognition)
     implementation(libs.language.id)
     implementation(libs.translate)
-    implementation(libs.glide)
+    implementation(libs.text.recognition.chinese)
+    implementation(libs.text.recognition.japanese)
+    implementation(libs.text.recognition.korean)
+    implementation(libs.text.recognition.devanagari)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
