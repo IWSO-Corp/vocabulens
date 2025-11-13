@@ -1,12 +1,9 @@
 package com.iwsocorp.vobynotes.ui.home
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
@@ -14,19 +11,18 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.CorpusFileManager
+import com.iwsocorp.vobynotes.core.common.FilePickerManager
 import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentHomeBinding
-import com.iwsocorp.vobynotes.databinding.ImportBottomSheetBinding
 import com.iwsocorp.vobynotes.ui.note.ARG_NOTE_ID
 import com.iwsocorp.vobynotes.ui.setting.ARG_TITLE
 import com.iwsocorp.vobynotes.ui.setting.ImportViewModel
@@ -79,9 +75,30 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
 
     @Inject
     lateinit var fileManager: CorpusFileManager
+    private lateinit var pickerManager: FilePickerManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        pickerManager = FilePickerManager(
+            caller = this,
+            context = requireContext(),
+            fileManager = fileManager,
+            onImportComplete = { data, fileName ->
+                importViewModel.setImportedData(data)
+                findNavController().navigate(
+                    R.id.action_nav_home_to_importFragment,
+                    bundleOf(ARG_TITLE to fileName)
+                )
+            },
+            onExportComplete = { stream, name ->
+                val note = adapter.getSelectedItems().firstOrNull() ?: return@FilePickerManager
+                viewModel.getCorpusByNoteId(note.id) {
+                    fileManager.exportCorpusList(stream, it)
+                    adapter.clearSelection()
+                }
+            }
+        )
 
         setNormalToolbar()
         setOnBack()
@@ -199,7 +216,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             }
 
             R.id.action_import -> {
-                showImportBottomSheet()
+                pickerManager.showImportBottomSheet()
             }
 
             R.id.action_share -> {
@@ -212,7 +229,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 AlertDialog.Builder(requireContext())
                     .setTitle("Export ${items.first().title}")
                     .setPositiveButton("Export") { _, _ ->
-                        exportExcel(items.first().title)
+                        pickerManager.exportExcel(items.first().title)
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
@@ -273,90 +290,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 }
             }
         }
-    }
-
-    private val import = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@registerForActivityResult
-
-        val fileName = fileManager.getFileName(uri)
-        val inputStream = requireContext().contentResolver.openInputStream(uri)
-        if (inputStream == null) return@registerForActivityResult
-
-        val data = fileManager.readFile(
-            inputStream,
-            fileName ?: ""
-        ) {
-            if (!it) {
-                Toast.makeText(requireContext(), "Invalid file format", Toast.LENGTH_SHORT)
-                    .show()
-                return@readFile
-            }
-        }
-
-        if (data.isEmpty()) {
-            Toast.makeText(requireContext(), "File is empty", Toast.LENGTH_SHORT).show()
-            return@registerForActivityResult
-        }
-
-        importViewModel.setImportedData(data)
-
-        findNavController().navigate(
-            R.id.action_nav_home_to_importFragment,
-            bundleOf(
-                ARG_TITLE to fileName
-            )
-        )
-    }
-
-    private fun pickExcelFile() = import.launch(
-        arrayOf(
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "application/vnd.ms-excel",
-            "text/csv"
-        )
-    )
-
-    private val export = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    ) { uri ->
-        if (uri == null) return@registerForActivityResult
-
-        val outputStream = requireContext().contentResolver.openOutputStream(uri)
-        if (outputStream == null) return@registerForActivityResult
-
-        val note = adapter.getSelectedItems().first()
-        viewModel.getCorpusByNoteId(note.id) {
-            fileManager.exportCorpusList(outputStream, it)
-            adapter.clearSelection()
-            Toast.makeText(requireContext(), "${note.title} exported", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    fun exportExcel(noteTitle: String) {
-        fileManager.setExportFormat(CorpusFileManager.ExportFormat.XLSX)
-        export.launch("$noteTitle.xlsx")
-    }
-
-    @SuppressLint("InflateParams")
-    private fun showImportBottomSheet() {
-        val dialog = BottomSheetDialog(requireContext())
-        val view = layoutInflater.inflate(R.layout.import_bottom_sheet, null)
-        val binding = ImportBottomSheetBinding.bind(view)
-        dialog.setContentView(view)
-
-        binding.cardSaved.setOnClickListener {
-            fileManager.setImportFormat(CorpusFileManager.ImportFormat.SAVED)
-            dialog.dismiss()
-            pickExcelFile()
-        }
-        binding.cardCustom.setOnClickListener {
-            fileManager.setImportFormat(CorpusFileManager.ImportFormat.CUSTOM)
-            dialog.dismiss()
-            pickExcelFile()
-        }
-        binding.iconClose.setOnClickListener { dialog.dismiss() }
-
-        dialog.show()
     }
 
     override fun onDestroyView() {

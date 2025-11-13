@@ -7,11 +7,12 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.iwsocorp.vobynotes.R
+import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
 import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.databinding.BottomSheetListBinding
 
 class NoteBottomSheet(
-    private val notes: List<Note>,
+    private val notes: List<NoteWithCorpus>,
     private val onNewNote: (() -> Unit)? = null,
     private val onItemClick: (Note) -> Unit,
 ) : BottomSheetDialogFragment() {

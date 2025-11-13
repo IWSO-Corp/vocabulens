@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -14,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.Utils.asString
 import com.iwsocorp.vobynotes.core.common.Utils.langName
+import com.iwsocorp.vobynotes.core.common.Utils.setupMark
 import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Note
@@ -64,6 +64,7 @@ class NoteAdapter(
                 tvUnfamiliar.isVisible = noteWithCorpus.corpusCount > 0
 
                 if (noteWithCorpus.corpusCount > 0) setupMark(
+                    itemView.context,
                     noteWithCorpus.familiarCount,
                     noteWithCorpus.unfamiliarCount
                 )
@@ -122,47 +123,6 @@ class NoteAdapter(
             rvPreview.adapter = adapter
         }
 
-        private fun ItemNoteBinding.setupMark(
-            familiarCount: Int,
-            unfamiliarCount: Int
-        ) {
-            val iconFam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
-            iconFam?.setBounds(0, 0, 48, 48) // width x height dalam px
-            iconFam?.setTint(
-                itemView.context.resources.getColor(
-                    R.color.blue,
-                    itemView.context.theme
-                )
-            )
-            val iconUnfam = ContextCompat.getDrawable(itemView.context, R.drawable.baseline_star_24)
-            iconUnfam?.setBounds(0, 0, 48, 48) // width x height dalam px
-            iconUnfam?.setTint(
-                itemView.context.resources.getColor(
-                    R.color.red,
-                    itemView.context.theme
-                )
-            )
-
-            tvFamiliar.setCompoundDrawables(iconFam, null, null, null)
-            tvUnfamiliar.setCompoundDrawables(iconUnfam, null, null, null)
-
-            tvFamiliar.text = familiarCount.toString()
-            tvFamiliar.setTextColor(
-                itemView.context.resources.getColor(
-                    R.color.blue,
-                    itemView.context.theme
-                )
-            )
-
-            tvUnfamiliar.text = unfamiliarCount.toString()
-            tvUnfamiliar.setTextColor(
-                itemView.context.resources.getColor(
-                    R.color.red,
-                    itemView.context.theme
-                )
-            )
-
-        }
     }
 
     @SuppressLint("NotifyDataSetChanged")

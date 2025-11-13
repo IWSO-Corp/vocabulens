@@ -18,6 +18,7 @@ import com.google.gson.Gson
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.model.Language
 import com.iwsocorp.vobynotes.core.model.SupportedLanguages
+import com.iwsocorp.vobynotes.databinding.ItemNoteBinding
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -168,4 +169,47 @@ object Utils {
 
     fun String.langName(context: Context): String =
         loadLanguages(context).find { it.code == this }?.name ?: "English"
+
+    fun ItemNoteBinding.setupMark(
+        context: Context,
+        familiarCount: Int,
+        unfamiliarCount: Int
+    ) {
+        val iconFam = ContextCompat.getDrawable(context, R.drawable.baseline_star_24)
+        iconFam?.setBounds(0, 0, 48, 48) // width x height dalam px
+        iconFam?.setTint(
+            context.resources.getColor(
+                R.color.blue,
+                context.theme
+            )
+        )
+        val iconUnfam = ContextCompat.getDrawable(context, R.drawable.baseline_star_24)
+        iconUnfam?.setBounds(0, 0, 48, 48) // width x height dalam px
+        iconUnfam?.setTint(
+            context.resources.getColor(
+                R.color.red,
+                context.theme
+            )
+        )
+
+        tvFamiliar.setCompoundDrawables(iconFam, null, null, null)
+        tvUnfamiliar.setCompoundDrawables(iconUnfam, null, null, null)
+
+        tvFamiliar.text = familiarCount.toString()
+        tvFamiliar.setTextColor(
+            context.resources.getColor(
+                R.color.blue,
+                context.theme
+            )
+        )
+
+        tvUnfamiliar.text = unfamiliarCount.toString()
+        tvUnfamiliar.setTextColor(
+            context.resources.getColor(
+                R.color.red,
+                context.theme
+            )
+        )
+    }
+
 }

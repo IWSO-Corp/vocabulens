@@ -36,6 +36,7 @@ import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.note.WordAdapter
 import com.iwsocorp.vobynotes.ui.scan.ScanViewModel
+import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,6 +51,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
     private val noteViewModel: NoteViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
     private val detailViewModel: DetailViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
     private val wordAdapter: WordAdapter by lazy {
         WordAdapter(false, object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
@@ -222,40 +225,23 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
         rvMeanings.adapter = MeaningAdapter(corpus.meanings, gestureHelper)
 
         binding.btnSave.setOnClickListener {
-            noteViewModel.notes.observe(viewLifecycleOwner) { list ->
-                NoteBottomSheet(list, {
-                    val note = Note(
-                        title = "New Note",
-                        wordLang = corpus.wordLang,
-                        meaningLang = corpus.meaningLang,
-                        contentSize = 1
-                    )
-                    requireContext().alertInputDialog(note.title) {
-                        val newNote = if (note.title == it) note else note.copy(title = it)
-                        noteViewModel.updateNoteId(newNote.id)
-                        noteViewModel.createNote(newNote)
-                        noteViewModel.insertCorpus(
-                            corpus.copy(noteId = newNote.id)
-                        ) {
-                            Toast.makeText(
-                                requireContext(),
-                                "Word saved to ${newNote.title}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        binding.btnSave.visibility = View.GONE
-                        binding.btnSearch.visibility = View.GONE
-                        binding.rvSearch.visibility = View.GONE
-                    }
-                }) { note ->
-                    noteViewModel.updateNoteId(note.id)
+            NoteBottomSheet(settingsViewModel.notes.value!!, {
+                val note = Note(
+                    title = "New Note",
+                    wordLang = corpus.wordLang,
+                    meaningLang = corpus.meaningLang,
+                    contentSize = 1
+                )
+                requireContext().alertInputDialog(note.title) {
+                    val newNote = if (note.title == it) note else note.copy(title = it)
+                    noteViewModel.updateNoteId(newNote.id)
+                    noteViewModel.createNote(newNote)
                     noteViewModel.insertCorpus(
-                        corpus.copy(noteId = note.id)
+                        corpus.copy(noteId = newNote.id)
                     ) {
                         Toast.makeText(
                             requireContext(),
-                            "Word saved to ${note.title}",
+                            "Word saved to ${newNote.title}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -263,8 +249,23 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
                     binding.btnSave.visibility = View.GONE
                     binding.btnSearch.visibility = View.GONE
                     binding.rvSearch.visibility = View.GONE
-                }.show(childFragmentManager, null)
-            }
+                }
+            }) { note ->
+                noteViewModel.updateNoteId(note.id)
+                noteViewModel.insertCorpus(
+                    corpus.copy(noteId = note.id)
+                ) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Word saved to ${note.title}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                binding.btnSave.visibility = View.GONE
+                binding.btnSearch.visibility = View.GONE
+                binding.rvSearch.visibility = View.GONE
+            }.show(childFragmentManager, null)
         }
     }
 

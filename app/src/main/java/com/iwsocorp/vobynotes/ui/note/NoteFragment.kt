@@ -41,6 +41,7 @@ import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
 import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
+import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareState
 import com.iwsocorp.vobynotes.ui.share.ShareViewModel
 import com.iwsocorp.vobynotes.ui.share.shareLink
@@ -64,6 +65,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val sharedViewModel: ShareViewModel by activityViewModels()
     private val languageViewModel: LanguageViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
     private lateinit var wordAdapter: WordAdapter
     private lateinit var alphabetSidebarHelper: AlphabetSidebarHelper
     private val argNoteId: String? by lazy {
@@ -359,34 +362,37 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             }
 
             R.id.action_move -> {
-                val notes = viewModel.notes.value
-                notes?.let { list ->
-                    NoteBottomSheet(list.filterNot { it.id == viewModel.noteId.value }, {
-                        val note = Note(
-                            title = "New Note",
-                            wordLang = wordAdapter.getSelectedItemLang(),
-                            meaningLang = wordAdapter.getSelectedItemMeaningLang(),
-                            contentSize = 0
-                        )
-                        requireContext().alertInputDialog(note.title) {
-                            val newNote = if (note.title == it) note else note.copy(title = it)
-                            viewModel.createNote(newNote)
-                            viewModel.moveCorpusToNote(selectedItemIds, newNote.id)
-                            wordAdapter.clearSelection()
-                        }
-                    }) { note ->
-                        showAlertDialog(
+                NoteBottomSheet(settingsViewModel.notes.value!!, {
+                    val note = Note(
+                        title = "New Note",
+                        wordLang = wordAdapter.getSelectedItemLang(),
+                        meaningLang = wordAdapter.getSelectedItemMeaningLang(),
+                        contentSize = 0
+                    )
+                    requireContext().alertInputDialog(note.title) {
+                        val newNote = if (note.title == it) note else note.copy(title = it)
+                        viewModel.createNote(newNote)
+                        viewModel.moveCorpusToNote(selectedItemIds, newNote.id)
+                        wordAdapter.clearSelection()
+                    }
+                }) { note ->
+                    showAlertDialog(
+                        requireContext(),
+                        "Move ${selectedItemIds.size} Words to ${note.title}",
+                        null,
+                        "Move",
+                        "Cancel"
+                    ) {
+                        viewModel.moveCorpusToNote(selectedItemIds, note.id)
+                        wordAdapter.clearSelection()
+
+                        Toast.makeText(
                             requireContext(),
-                            "Move ${selectedItemIds.size} Words to ${note.title}",
-                            null,
-                            "Move",
-                            "Cancel"
-                        ) {
-                            viewModel.moveCorpusToNote(selectedItemIds, note.id)
-                            wordAdapter.clearSelection()
-                        }
-                    }.show(childFragmentManager, null)
-                }
+                            "${selectedItemIds.size} words moved to ${note.title}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }.show(childFragmentManager, null)
             }
 
             R.id.action_mark -> {

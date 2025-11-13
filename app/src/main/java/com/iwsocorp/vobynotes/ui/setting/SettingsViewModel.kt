@@ -1,14 +1,19 @@
 package com.iwsocorp.vobynotes.ui.setting
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vobynotes.core.data.repository.BackupRepository
+import com.iwsocorp.vobynotes.core.data.repository.NoteRepository
+import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
 import com.iwsocorp.vobynotes.core.database.model.NoteEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -16,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val backupRepository: BackupRepository,
+    private val noteRepository: NoteRepository,
 ) : ViewModel() {
 
     private val _backupState = MutableStateFlow<BackupState>(BackupState.Idle)
@@ -79,8 +85,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    private val _notes = MutableLiveData<List<NoteWithCorpus>>()
+    val notes: LiveData<List<NoteWithCorpus>> get() = _notes
+
+    fun getNotes() = viewModelScope.launch {
+        noteRepository.getNoteWithCorpusFlow().collectLatest {
+            _notes.value = it
+        }
+    }
+
     init {
         getLocalData()
+        getNotes()
     }
 
 }

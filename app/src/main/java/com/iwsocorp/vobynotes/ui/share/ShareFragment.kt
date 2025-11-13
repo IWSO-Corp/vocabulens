@@ -25,6 +25,7 @@ import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentShareBinding
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
+import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -33,6 +34,8 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
     private val viewModel: ShareViewModel by activityViewModels()
     private val noteViewModel: NoteViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
     private val adapter: ShareNoteAdapter by lazy {
         ShareNoteAdapter { sharedNote, view ->
             viewModel.updateRecyclerPosition(binding.rvSharedNote.getChildAdapterPosition(view))
@@ -156,43 +159,34 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
         ) {
             findNavController().navigate(R.id.action_nav_share_to_authFragment)
         } else {
-            var isBottomSheetShown = false
-
-            noteViewModel.notes.observe(viewLifecycleOwner) { notes ->
-                if (!isBottomSheetShown) {
-                    isBottomSheetShown = true
-                    NoteBottomSheet(notes) { note ->
-                        showAlertDialog(
-                            requireContext(),
-                            (if (note.shared) "Update Shared " else "Share ") + note.title,
-                            null,
-                            "Share",
-                            "Cancel",
-                        ) {
-                            if (note.shared) {
-                                viewModel.updateSharedNote(
-                                    noteId = note.id,
-                                    title = note.title,
-                                    wordLang = note.wordLang,
-                                    meaningLang = note.meaningLang,
-                                )
-                            } else {
-                                val sharedNote = note.asSharedNote(
-                                    ownerId = user.uid,
-                                    ownerAvatar = if (user.photoUrl != null) user.photoUrl.toString() else null,
-                                    ownerName = user.displayName,
-                                    content = emptyList()
-                                )
-                                viewModel.shareNote(sharedNote)
-                            }
-                            isBottomSheetShown = false
-                            adapter.refresh()
-                        }
-                    }.show(childFragmentManager, null)
+            NoteBottomSheet(settingsViewModel.notes.value!!) { note ->
+                showAlertDialog(
+                    requireContext(),
+                    (if (note.shared) "Update Shared " else "Share ") + note.title,
+                    null,
+                    "Share",
+                    "Cancel",
+                ) {
+                    if (note.shared) {
+                        viewModel.updateSharedNote(
+                            noteId = note.id,
+                            title = note.title,
+                            wordLang = note.wordLang,
+                            meaningLang = note.meaningLang,
+                        )
+                    } else {
+                        val sharedNote = note.asSharedNote(
+                            ownerId = user.uid,
+                            ownerAvatar = if (user.photoUrl != null) user.photoUrl.toString() else null,
+                            ownerName = user.displayName,
+                            content = emptyList()
+                        )
+                        viewModel.shareNote(sharedNote)
+                    }
+                    adapter.refresh()
                 }
-            }
+            }.show(childFragmentManager, null)
         }
-
     }
 
     private fun setupDropdowns() = with(binding) {
@@ -212,7 +206,9 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
                 ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_dropdown_item_1line,
-                    if (text.toString().trim().isEmpty() || text.toString().lowercase() == "all") filterOptions else filtered
+                    if (text.toString().trim().isEmpty() || text.toString()
+                            .lowercase() == "all"
+                    ) filterOptions else filtered
                 )
             )
             if (text.toString().trim().isEmpty()) filterDropdown.showDropDown()

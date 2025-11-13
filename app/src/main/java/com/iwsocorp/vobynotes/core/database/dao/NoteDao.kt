@@ -63,6 +63,23 @@ interface NoteDao {
     ): PagingSource<Int, NoteAggregateEntity>
 
     @Query("""
+        SELECT 
+            n.*,
+            COUNT(c.id) AS corpusCount,
+            SUM(CASE WHEN c.mark = :familiar THEN 1 ELSE 0 END) AS familiarCount,
+            SUM(CASE WHEN c.mark = :unfamiliar THEN 1 ELSE 0 END) AS unfamiliarCount
+        FROM notes n
+        LEFT JOIN corpus c ON n.id = c.noteId
+        WHERE n.deletedAt IS NULL
+        GROUP BY n.id
+        ORDER BY n.updatedAt DESC
+    """)
+    fun getNotesWithAggregate(
+        familiar: String = "FAMILIAR",
+        unfamiliar: String = "UNFAMILIAR"
+    ): Flow<List<NoteAggregateEntity>>
+
+    @Query("""
         SELECT * FROM corpus
         WHERE noteId = :noteId
         ORDER BY createdAt DESC LIMIT 5

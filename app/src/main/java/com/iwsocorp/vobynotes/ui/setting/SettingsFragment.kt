@@ -4,28 +4,62 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
+import com.iwsocorp.vobynotes.core.common.CorpusFileManager
+import com.iwsocorp.vobynotes.core.common.FilePickerManager
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.databinding.BottomSheetBackupBinding
 import com.iwsocorp.vobynotes.databinding.FragmentSettingsBinding
 import com.iwsocorp.vobynotes.ui.auth.AuthViewModel
+import com.iwsocorp.vobynotes.ui.home.HomeViewModel
+import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsBinding::inflate) {
 
     private val viewModel: SettingsViewModel by activityViewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
+    private val importViewModel: ImportViewModel by activityViewModels()
+
+    @Inject
+    lateinit var fileManager: CorpusFileManager
+    private lateinit var pickerManager: FilePickerManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        pickerManager = FilePickerManager(
+            caller = this,
+            context = requireContext(),
+            fileManager = fileManager,
+            onImportComplete = { data, fileName ->
+                importViewModel.setImportedData(data)
+                findNavController().navigate(
+                    R.id.action_nav_settings_to_importFragment,
+                    bundleOf(ARG_TITLE to fileName)
+                )
+            },
+            onExportComplete = { stream, name ->
+                note.observe(viewLifecycleOwner) { note ->
+                    homeViewModel.getCorpusByNoteId(note.id) {
+                        fileManager.exportCorpusList(stream, it)
+                    }
+                }
+            }
+        )
 
         observeState()
     }
@@ -103,9 +137,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             showBackupDialog(user)
         }
         btnExportImport.setOnClickListener {
-            showExportDialog(user)
+            showExportDialog()
         }
-        btnImportFileFormat.setOnClickListener {
+        btnAddWidget.setOnClickListener {
 
         }
         btnVersion.setOnClickListener {
@@ -133,7 +167,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         dialog.show()
     }
 
-    private fun showExportDialog(user: FirebaseUser?) {
+    private fun showExportDialog() {
         val binding = BottomSheetBackupBinding.inflate(layoutInflater)
         val dialog = BottomSheetDialog(requireContext())
         dialog.setContentView(binding.root)
@@ -145,12 +179,24 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             tvRestore.text = "Import"
 
             cardBackup.setOnClickListener {
-
                 dialog.dismiss()
+
+                NoteBottomSheet(viewModel.notes.value!!) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Export Note")
+                        .setMessage("Are you sure want to export ${it.title}?")
+                        .setPositiveButton("Export") { _, _ ->
+                            note.value = it
+                            pickerManager.exportExcel(it.title)
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }.show(parentFragmentManager, null)
             }
             cardRestore.setOnClickListener {
-
                 dialog.dismiss()
+
+                pickerManager.showImportBottomSheet()
             }
             iconClose.setOnClickListener {
                 dialog.dismiss()
@@ -159,6 +205,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
 
         dialog.show()
     }
+
+    private val note = MutableLiveData<Note>()
 
     private fun onSignIn(user: FirebaseUser?) = user?.let {
         showAlertDialog(

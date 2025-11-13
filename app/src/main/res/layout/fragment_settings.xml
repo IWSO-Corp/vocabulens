@@ -99,13 +99,13 @@
                 android:text="@string/export_amp_import" />
 
             <TextView
-                android:id="@+id/btn_import_file_format"
+                android:id="@+id/btn_add_widget"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="2dp"
                 android:background="@color/white"
                 android:padding="16dp"
-                android:text="Import file format" />
+                android:text="Add widget" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/btn_version"

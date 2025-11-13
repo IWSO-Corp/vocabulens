@@ -51,6 +51,19 @@ class NoteRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getNoteWithCorpusFlow(): Flow<List<NoteWithCorpus>> {
+        return noteDao.getNotesWithAggregate().map { list ->
+            list.map {
+                NoteWithCorpus(
+                    note = it.note.asExternalModel(),
+                    familiarCount = it.familiarCount,
+                    unfamiliarCount = it.unfamiliarCount,
+                    corpusCount = it.corpusCount
+                )
+            }
+        }
+    }
+
     override fun getNotesPagingFlow(): Flow<PagingData<NoteWithCorpus>> = Pager(
         config = PagingConfig(pageSize = 10, enablePlaceholders = false),
         pagingSourceFactory = { noteDao.getPagedNotesWithAggregate() }
@@ -119,6 +132,7 @@ interface NoteRepository {
     suspend fun deleteNotes(ids: List<String>)
     suspend fun getNoteById(id: String): Note
     fun getNotesFlow(): Flow<List<Note>>
+    fun getNoteWithCorpusFlow(): Flow<List<NoteWithCorpus>>
     fun getNotesPagingFlow(): Flow<PagingData<NoteWithCorpus>>
     fun getLastFiveCorpus(noteId: String): Flow<List<Corpus>>
     fun getTrashNotesFlow(): Flow<PagingData<NoteWithCorpus>>

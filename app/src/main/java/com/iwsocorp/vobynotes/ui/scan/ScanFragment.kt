@@ -39,6 +39,7 @@ import com.iwsocorp.vobynotes.ui.note.LangBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
+import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import java.io.File
@@ -49,8 +50,10 @@ import java.util.concurrent.Executors
 class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::inflate) {
 
     private val viewModel: ScanViewModel by activityViewModels()
-    private val notesViewModel: NoteViewModel by activityViewModels()
+    private val noteViewModel: NoteViewModel by activityViewModels()
     private val languageViewModel: LanguageViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
     private var imageCapture: ImageCapture? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private val permissionLauncher: ActivityResultLauncher<String> by lazy {
@@ -94,8 +97,9 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         binding.btnSave.setOnClickListener {
             val items: List<WordResult> = adapter.getSelectedItems().ifEmpty { adapter.currentList }
 
-            notesViewModel.notes.observe(viewLifecycleOwner) { notes ->
-                NoteBottomSheet(notes, {
+            NoteBottomSheet(
+                settingsViewModel.notes.value!!,
+                onNewNote = {
                     val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
                     val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
                     val note = Note(
@@ -106,13 +110,14 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
                     )
                     requireContext().alertInputDialog(note.title) {
                         val newNote = if (note.title == it) note else note.copy(title = it)
-                        notesViewModel.createNote(newNote)
+                        noteViewModel.createNote(newNote)
                         onSaveToNote(items, newNote)
                     }
-                }) { note ->
+                },
+                onItemClick = { note ->
                     onSaveToNote(items, note)
-                }.show(childFragmentManager, null)
-            }
+                }
+            ).show(childFragmentManager, null)
         }
         binding.tvClear.setOnClickListener {
             adapter.clearSelection()
@@ -167,12 +172,12 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         .show()
 
     private fun onSaveToNote(items: List<WordResult>, note: Note) {
-        notesViewModel.insertCorpusList(
+        noteViewModel.insertCorpusList(
             items.map { it.asCorpus(note.id) }
         ) {
             if (items.isNotEmpty()) adapter.removeSelectedItems() else rescan()
 
-            notesViewModel.updateNote(
+            noteViewModel.updateNote(
                 note.copy(
                     contentSize = note.contentSize + it.successCount,
                     updatedAt = System.currentTimeMillis()
