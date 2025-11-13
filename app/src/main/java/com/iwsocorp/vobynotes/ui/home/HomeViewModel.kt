@@ -1,8 +1,5 @@
 package com.iwsocorp.vobynotes.ui.home
 
-import android.content.ContentResolver
-import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -24,8 +21,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import java.io.InputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -98,63 +93,18 @@ class HomeViewModel @Inject constructor(
         noteRepository.restoreNotesFromTrash(noteIds)
     }
 
-    fun readExcelFile(inputStream: InputStream): List<Corpus> {
-        val corpusList = mutableListOf<Corpus>()
-
-        try {
-            val workbook = XSSFWorkbook(inputStream)
-            val sheet = workbook.getSheetAt(0)
-
-            for (row in sheet) {
-                val worldLang = row.getCell(0).stringCellValue
-                val meaningLang = row.getCell(1).stringCellValue
-                val word = row.getCell(2).stringCellValue
-                val meaning = row.getCell(3).stringCellValue
-
-                val corpus = Corpus(
-                    noteId = "",
-                    word = word,
-                    meaning = meaning,
-                    wordLang = worldLang,
-                    meaningLang = meaningLang,
-                )
-
-                corpusList.add(corpus)
-            }
-
-            workbook.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return corpusList
-    }
-
-    fun getFileName(contentResolver: ContentResolver, uri: Uri): String? {
-        var fileName: String? = null
-        val cursor = contentResolver.query(uri, null, null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                // Retrieve the file name from the OpenableColumns.DISPLAY_NAME column
-                fileName = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
-            }
-        }
-        return fileName
-    }
-
     fun importCorpusBatch(
-        fileName: String?,
+        fileName: String,
         corpusBatch: List<Corpus>,
+        wordLang: String,
+        meaningLang: String,
         insertResult: (result: InsertResult) -> Unit,
     ) = viewModelScope.launch {
         if (corpusBatch.isEmpty()) return@launch
 
-        val wordLang = corpusBatch.first().wordLang
-        val meaningLang = corpusBatch.first().meaningLang
-
         // Buat Note baru
         val note = Note(
-            title = fileName ?: "$wordLang-$meaningLang",
+            title = fileName,
             wordLang = wordLang,
             meaningLang = meaningLang,
             contentSize = corpusBatch.size,
@@ -164,6 +114,10 @@ class HomeViewModel @Inject constructor(
         // Insert corpus baru (yang belum ada)
         val corpusWithNote = corpusBatch.map { it.copy(noteId = note.id) }
         insertResult(corpusRepository.insertCorpusList(corpusWithNote))
+    }
+
+    fun getCorpusByNoteId(noteId: String, callback: (List<Corpus>) -> Unit) = viewModelScope.launch {
+        callback(corpusRepository.getCorpusListByNoteId(noteId))
     }
 
     init {

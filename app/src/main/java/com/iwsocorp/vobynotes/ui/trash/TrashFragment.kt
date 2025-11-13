@@ -111,7 +111,7 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
     }
 
     private val menuListener = Toolbar.OnMenuItemClickListener { menuItem ->
-        val items = adapter.getSelectedItems()
+        val items = adapter.getSelectedItems().map { it.id }
 
         when (menuItem.itemId) {
             R.id.action_restore -> {

@@ -132,6 +132,10 @@ class ImageTextProcessor @Inject constructor(
         return translator.translate(word).await()
     }
 
+    suspend fun identifyLanguage(word: String): String {
+        return identifier.identifyLanguage(word).await()
+    }
+
     fun deleteTempFile(uri: Uri) {
         try {
             val file = File(uri.path ?: return)

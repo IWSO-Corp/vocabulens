@@ -10,10 +10,10 @@
         <item name="colorSurfaceContainer">@color/light_blue</item>
         <item name="android:colorBackground">@color/white</item>
 
-        <item name="colorTertiaryContainer">@color/yellow</item>
-        <item name="colorContainer">@color/yellow</item>
+<!--        <item name="colorTertiaryContainer">@color/yellow</item>-->
+<!--        <item name="colorContainer">@color/yellow</item>-->
         <item name="android:progressTint">@color/blue</item>
-        <item name="android:colorPrimary">@color/yellow</item>
+<!--        <item name="android:colorPrimary">@color/yellow</item>-->
         <item name="colorScheme">@color/green</item>
         <item name="colorSecondaryContainer">@color/light_blue</item>
 

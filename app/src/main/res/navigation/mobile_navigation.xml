@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_nav_home_to_authFragment"
             app:destination="@id/authFragment" />
+        <action
+            android:id="@+id/action_nav_home_to_importFragment"
+            app:destination="@id/importFragment" />
     </fragment>
 
     <fragment
@@ -103,6 +106,9 @@
         <action
             android:id="@+id/action_nav_settings_to_languageFragment"
             app:destination="@id/languageFragment" />
+        <action
+            android:id="@+id/action_nav_settings_to_importFragment"
+            app:destination="@id/importFragment" />
     </fragment>
     
     <fragment
@@ -170,5 +176,10 @@
         android:name="com.iwsocorp.vobynotes.ui.setting.LanguageFragment"
         android:label="fragment_language"
         tools:layout="@layout/fragment_language" />
+    <fragment
+        android:id="@+id/importFragment"
+        android:name="com.iwsocorp.vobynotes.ui.setting.ImportFragment"
+        android:label="fragment_import"
+        tools:layout="@layout/fragment_import" />
 
 </navigation>

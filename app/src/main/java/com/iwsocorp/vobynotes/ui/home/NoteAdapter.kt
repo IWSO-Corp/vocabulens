@@ -16,6 +16,7 @@ import com.iwsocorp.vobynotes.core.common.Utils.asString
 import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
 import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.databinding.ItemNoteBinding
 import com.iwsocorp.vobynotes.databinding.ItemWordPreviewBinding
 
@@ -31,7 +32,7 @@ class NoteAdapter(
     }
 
     private var isSelectionMode = false
-    private val selectedIds = mutableSetOf<String>()
+    private val selectedNotes = mutableSetOf<Note>()
     private val corpusCache = mutableMapOf<String, List<Corpus>>()
 
     inner class ViewHolder(val binding: ItemNoteBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -75,15 +76,15 @@ class NoteAdapter(
                 if (!isSelectionMode) listener.onClick(
                     absoluteAdapterPosition,
                     note.id
-                ) else toggleSelection(note.id)
+                ) else toggleSelection(note)
             }
             itemView.setOnLongClickListener {
                 if (!isSelectionMode) isSelectionMode = true
-                toggleSelection(note.id)
+                toggleSelection(note)
                 true
             }
 
-            val isSelected = selectedIds.contains(note.id)
+            val isSelected = selectedNotes.contains(note)
 
             cardNote.setCardBackgroundColor(
                 if (isSelected) itemView.context.resources.getColor(
@@ -100,11 +101,11 @@ class NoteAdapter(
                     if (!isSelectionMode) listener.onClick(
                         absoluteAdapterPosition,
                         note.id
-                    ) else toggleSelection(note.id)
+                    ) else toggleSelection(note)
                 },
             ) {
                 if (!isSelectionMode) isSelectionMode = true
-                toggleSelection(note.id)
+                toggleSelection(note)
             }
 
             listener.getLastFiveCorpus(note.id) { newList ->
@@ -165,34 +166,34 @@ class NoteAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun toggleSelection(id: String) {
+    private fun toggleSelection(note: Note) {
         val currentListSnapshot = snapshot()
-        val pos = currentListSnapshot.indexOfFirst { it?.note?.id == id }
+        val pos = currentListSnapshot.indexOfFirst { it?.note == note }
         if (pos == -1) return
 
-        if (selectedIds.contains(id)) {
-            selectedIds.remove(id)
+        if (selectedNotes.contains(note)) {
+            selectedNotes.remove(note)
         } else {
-            selectedIds.add(id)
+            selectedNotes.add(note)
         }
 
-        if (selectedIds.isEmpty()) {
+        if (selectedNotes.isEmpty()) {
             isSelectionMode = false
         }
 
-        listener.onSelectionChanged(selectedIds.size)
+        listener.onSelectionChanged(selectedNotes.size)
         notifyItemChanged(pos)
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearSelection() {
-        selectedIds.clear()
+        selectedNotes.clear()
         isSelectionMode = false
         notifyDataSetChanged()
         listener.onSelectionChanged(0)
     }
 
-    fun getSelectedItems(): List<String> = selectedIds.toList()
+    fun getSelectedItems(): List<Note> = selectedNotes.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
