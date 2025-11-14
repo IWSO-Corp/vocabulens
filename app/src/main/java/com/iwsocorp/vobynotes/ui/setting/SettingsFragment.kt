@@ -1,5 +1,6 @@
 package com.iwsocorp.vobynotes.ui.setting
 
+import android.app.Activity.RESULT_OK
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -7,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
@@ -14,12 +16,22 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.core.appupdate.AppUpdateInfo
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.CorpusFileManager
 import com.iwsocorp.vobynotes.core.common.FilePickerManager
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.common.Utils.showToast
 import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.databinding.BottomSheetBackupBinding
 import com.iwsocorp.vobynotes.databinding.FragmentSettingsBinding
@@ -41,11 +53,13 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
 
     @Inject
     lateinit var fileManager: CorpusFileManager
+    private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var pickerManager: FilePickerManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        appUpdateManager = AppUpdateManagerFactory.create(requireContext())
         pickerManager = FilePickerManager(
             caller = this,
             context = requireContext(),
@@ -65,6 +79,12 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 }
             }
         )
+
+        appUpdateManager.appUpdateInfo.addOnSuccessListener {
+            val isUpdate = it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+            binding.redDot.isVisible = isUpdate
+            Timber.d("Update available: $isUpdate")
+        }
 
         observeState()
     }
@@ -126,10 +146,16 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 null
             )
         )
+
+        val versionName = requireContext().packageManager.getPackageInfo(
+            requireContext().packageName,
+            0
+        ).versionName
+        tvVersion.text = "v$versionName"
+
         tvSignin.setOnClickListener {
             onSignIn(user)
         }
-
         csAccount.setOnClickListener {
             user?.let {
 
@@ -148,7 +174,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             requestAddWidgetToHomeScreen()
         }
         btnVersion.setOnClickListener {
-
+            checkForAppUpdates()
         }
     }
 
@@ -303,6 +329,100 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     ) {
         findNavController().navigate(R.id.action_nav_settings_to_authFragment)
     }
+
+    private fun checkForAppUpdates() {
+
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
+            val isUpdate = appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+            showToast(
+                requireContext(),
+                if (isUpdate) "Update available" else "The app is up to date"
+            )
+
+            // Check if an update is available
+            if (isUpdate && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+            ) {
+                showToast(requireContext(), getString(R.string.update_available))
+                monitorUpdates(appUpdateInfo)
+            }
+        }.addOnFailureListener { exception ->
+            // Handle the error if the task fails
+            showToast(requireContext(), getString(R.string.failed_to_check_for_updates))
+        }
+    }
+
+    private val listener = InstallStateUpdatedListener { state ->
+        when (state.installStatus()) {
+            InstallStatus.DOWNLOADING -> {
+                // Get progress percentage and show it to the user
+                val bytesDownloaded = state.bytesDownloaded()
+                val totalBytesToDownload = state.totalBytesToDownload()
+                if (totalBytesToDownload > 0) {
+                    val progress = (bytesDownloaded * 100 / totalBytesToDownload).toInt()
+                    // Show progress in a UI component, such as a progress bar
+                    showToast(requireContext(), "Download progress: $progress%")
+                }
+            }
+
+            InstallStatus.DOWNLOADED -> {
+                // Update has been downloaded, prompt user to restart the app
+                showRestartSnackbar()
+                showToast(requireContext(), "Update downloaded.")
+            }
+
+            InstallStatus.FAILED -> {
+                // Handle update failure
+                showToast(requireContext(), "Update failed.")
+            }
+
+            InstallStatus.INSTALLED -> {
+                showToast(requireContext(), "Update installed.")
+            }
+
+            else -> {
+                // Handle other cases if necessary
+                showToast(requireContext(), "Update status: ${state.installStatus()}")
+            }
+        }
+    }
+
+    private val activityResultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        // handle callback
+        if (result.resultCode != RESULT_OK) {
+            showToast(requireContext(), "Update flow failed! Result code: ${result.resultCode}");
+            // If the update is canceled or fails,
+            // you can request to start the update again.
+        }
+    }
+
+    private fun monitorUpdates(appUpdateInfo: AppUpdateInfo) {
+        // Register the listener
+        appUpdateManager.registerListener(listener)
+
+        // Start the update
+        appUpdateManager.startUpdateFlowForResult(
+            // Pass the intent that is returned by 'getAppUpdateInfo()'.
+            appUpdateInfo,
+            // an activity result launcher registered via registerForActivityResult
+            activityResultLauncher,
+            // Or pass 'AppUpdateType.FLEXIBLE' to newBuilder() for
+            // flexible updates.
+            AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+        )
+
+        // When status updates are no longer needed, unregister the listener.
+        appUpdateManager.unregisterListener(listener)
+    }
+
+    private fun showRestartSnackbar() = Snackbar.make(
+        requireActivity().findViewById(android.R.id.content),
+        getString(R.string.update_downloaded),
+        Snackbar.LENGTH_INDEFINITE
+    ).setAction("Restart") {
+        appUpdateManager.completeUpdate()  // This will trigger the app restart
+    }.show()
 
     override fun onDestroyView() {
         super.onDestroyView()

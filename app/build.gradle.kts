@@ -7,6 +7,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -17,15 +18,16 @@ android {
         applicationId = "com.iwsocorp.vobynotes"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -66,20 +68,21 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.paging.runtime.ktx)
 
+    implementation(libs.app.update.ktx)
+    implementation(libs.glide)
+    implementation(libs.google.gson)
+    implementation(libs.library)
     implementation(libs.material)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp.logging)
+    implementation(libs.poi.ooxml)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.kotlin.serialization)
     implementation(libs.timber)
-    implementation(libs.google.gson)
-    implementation(libs.okhttp.logging)
-    implementation(libs.poi.ooxml)
-    implementation(libs.library)
     implementation(libs.vbpd)
-    implementation(libs.glide)
 
-    implementation(libs.text.recognition)
     implementation(libs.language.id)
+    implementation(libs.text.recognition)
     implementation(libs.translate)
     implementation(libs.text.recognition.chinese)
     implementation(libs.text.recognition.japanese)
@@ -87,6 +90,7 @@ dependencies {
     implementation(libs.text.recognition.devanagari)
 
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics.ndk)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)

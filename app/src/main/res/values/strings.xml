@@ -71,4 +71,7 @@
     <string name="open_scan">Open scan</string>
     <string name="word">Word</string>
     <string name="meaning">Meaning</string>
+    <string name="update_available">New version of the app is available!</string>
+    <string name="update_downloaded">An update has been downloaded. Please restart to apply.</string>
+    <string name="failed_to_check_for_updates">Failed to check for updates</string>
 </resources>

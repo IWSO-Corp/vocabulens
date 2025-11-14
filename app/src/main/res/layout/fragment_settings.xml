@@ -123,6 +123,19 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
+                    android:id="@+id/red_dot"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="🔴"
+                    android:textColor="@color/red"
+                    android:textSize="4sp"
+                    android:visibility="gone"
+                    app:layout_constraintStart_toEndOf="@id/textView2"
+                    app:layout_constraintTop_toTopOf="@id/textView2"
+                    tools:ignore="HardcodedText,SmallSp" />
+
+                <TextView
                     android:id="@+id/tv_version"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
