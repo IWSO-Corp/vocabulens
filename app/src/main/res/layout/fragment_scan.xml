@@ -7,13 +7,30 @@
     android:layout_height="match_parent"
     tools:context=".ui.scan.ScanFragment">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/Theme.VocabNotes.AppBarOverlay"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar_scan"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/white"
+            android:foregroundTint="@color/black"
+            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay"
+            app:titleTextColor="@color/black" />
+    </com.google.android.material.appbar.AppBarLayout>
+
     <!-- ===================== -->
     <!-- 📸 AREA PREVIEW KAMERA -->
     <!-- ===================== -->
     <FrameLayout
         android:id="@+id/framePreview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <!-- Preview Kamera -->
         <androidx.camera.view.PreviewView
@@ -63,7 +80,7 @@
         android:paddingVertical="16dp"
         app:behavior_hideable="false"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        tools:behavior_peekHeight="1500dp">
+        tools:behavior_peekHeight="100dp">
 
         <!-- Handle -->
         <View

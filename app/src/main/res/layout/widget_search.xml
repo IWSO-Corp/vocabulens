@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/widget_search_root"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_widget_search"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingVertical="12dp"
-    android:paddingHorizontal="16dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="16dp">
 
-    <!-- Icon Search -->
     <ImageView
-        android:id="@+id/iv_search_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:src="@drawable/baseline_search_24"
-        app:tint="@color/grey" />
+        android:id="@+id/widget_logo"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/vocabulens_logo" />
 
-    <!-- Placeholder Text -->
     <TextView
-        android:id="@+id/tv_search_placeholder"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Search words"
-        android:textColor="@color/grey"
-        android:textSize="18sp" />
+        android:layout_weight="1" />
 
+    <ImageView
+        android:id="@+id/widget_camera"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:contentDescription="@string/open_scan"
+        android:src="@drawable/baseline_camera_alt_24" />
 </LinearLayout>
 

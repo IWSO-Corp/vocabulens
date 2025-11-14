@@ -26,9 +26,11 @@ import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
 import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
 import com.iwsocorp.vobynotes.ui.widget.OPEN_FRAGMENT
-import com.iwsocorp.vobynotes.ui.widget.SEARCH
+import com.iwsocorp.vobynotes.ui.widget.OPEN_SCAN
+import com.iwsocorp.vobynotes.ui.widget.OPEN_SEARCH
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -111,13 +113,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            settingsViewModel.localData.collectLatest {
-                it?.let {
-                    binding.tvNotesLocal.text = it.notes.size.toString()
-                    binding.tvWordsLocal.text = it.corpus.size.toString()
-                    binding.tvExamplesLocal.text = it.examples.size.toString()
-                }
-                Timber.d("DB data: notes=${it?.notes?.size}, corpus=${it?.corpus?.size}, examples=${it?.examples?.size}")
+            settingsViewModel.localData.filterNotNull().collectLatest {
+                binding.tvNotesLocal.text = it.notes.size.toString()
+                binding.tvWordsLocal.text = it.corpus.size.toString()
+                binding.tvExamplesLocal.text = it.examples.size.toString()
+                Timber.d("DB data: notes=${it.notes.size}, corpus=${it.corpus.size}, examples=${it.examples.size}")
             }
         }
     }
@@ -126,7 +126,6 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_home,
-                R.id.nav_scan,
                 R.id.nav_practice,
                 R.id.nav_share,
                 R.id.nav_trash,
@@ -151,7 +150,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             when (destination.id) {
-                R.id.nav_scan,
                 R.id.nav_practice,
                     -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
@@ -220,7 +218,17 @@ class MainActivity : AppCompatActivity() {
         Timber.d("Intent search: ${intent.getStringExtra(OPEN_FRAGMENT)}")
         Timber.d("Handle deep link: ${intent.data}")
 
-        if (intent.getStringExtra(OPEN_FRAGMENT) == SEARCH) navController.navigate(R.id.searchFragment)
+        intent.getStringExtra(OPEN_FRAGMENT)?.let { action ->
+            when (action) {
+                OPEN_SEARCH -> {
+                    navController.navigate(R.id.searchFragment)
+                }
+
+                OPEN_SCAN -> {
+                    navController.navigate(R.id.nav_scan)
+                }
+            }
+        }
 
         val data = intent.data ?: return
         val noteId = data.lastPathSegment

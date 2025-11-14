@@ -1,5 +1,9 @@
 package com.iwsocorp.vobynotes.ui.setting
 
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -22,6 +26,7 @@ import com.iwsocorp.vobynotes.databinding.FragmentSettingsBinding
 import com.iwsocorp.vobynotes.ui.auth.AuthViewModel
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
+import com.iwsocorp.vobynotes.ui.widget.SearchWidget
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Inject
@@ -140,10 +145,33 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             showExportDialog()
         }
         btnAddWidget.setOnClickListener {
-
+            requestAddWidgetToHomeScreen()
         }
         btnVersion.setOnClickListener {
 
+        }
+    }
+
+    private fun requestAddWidgetToHomeScreen() {
+        val appWidgetManager = AppWidgetManager.getInstance(requireContext())
+        val provider = ComponentName(requireContext(), SearchWidget::class.java)
+
+        if (appWidgetManager.isRequestPinAppWidgetSupported) {
+            val intent = Intent(requireContext(), SearchWidget::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                requireContext(),
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            appWidgetManager.requestPinAppWidget(provider, null, pendingIntent)
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "The device does not support adding widgets directly",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -231,9 +259,14 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 .setTitle("Restore Data")
                 .setMessage("Are you sure want to restore data?")
                 .setPositiveButton("Restore") { _, _ ->
-                    viewModel.insertToDatabase(backupData)
+                    viewModel.insertToDatabase(backupData) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Restore ${it.successCount} success, ${it.failedCount} failed",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                     Toast.makeText(requireContext(), "Syncing...", Toast.LENGTH_SHORT).show()
-                    viewModel.getLocalData()
                 }
                 .setNegativeButton("Cancel", null)
                 .show()

@@ -148,7 +148,7 @@ interface NoteDao {
     @Query(
         """
             UPDATE examples SET deletedAt = :deletedAt
-            WHERE corpusId IN (SELECT id FROM corpus WHERE noteId = :noteIds)
+            WHERE corpusId IN (SELECT id FROM corpus WHERE noteId IN (:noteIds))
     """
     )
     suspend fun markExampleDeletedByNoteId(noteIds: List<String>, deletedAt: Long)

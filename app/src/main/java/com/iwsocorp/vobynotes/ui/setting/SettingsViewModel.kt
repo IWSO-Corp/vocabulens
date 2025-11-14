@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vobynotes.core.data.repository.BackupRepository
 import com.iwsocorp.vobynotes.core.data.repository.NoteRepository
 import com.iwsocorp.vobynotes.core.data.repository.NoteWithCorpus
+import com.iwsocorp.vobynotes.core.database.dao.InsertResult
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
 import com.iwsocorp.vobynotes.core.database.model.NoteEntity
@@ -41,15 +42,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun insertToDatabase(backupData: BackupData) = viewModelScope.launch {
-        _backupState.value = BackupState.Loading
-        try {
-            backupRepository.insertToDatabase(backupData)
-            _backupState.value = BackupState.Restored
-        } catch (e: Exception) {
-            _backupState.value = BackupState.Error(e.message ?: "Unknown error")
+    fun insertToDatabase(backupData: BackupData, result: (InsertResult) -> Unit) =
+        viewModelScope.launch {
+            _backupState.value = BackupState.Loading
+            try {
+                backupRepository.insertToDatabase(backupData, result)
+                _backupState.value = BackupState.Restored
+            } catch (e: Exception) {
+                _backupState.value = BackupState.Error(e.message ?: "Unknown error")
+            }
         }
-    }
 
     private val _backupData = MutableStateFlow<BackupData?>(null)
     val backupData: StateFlow<BackupData?> = _backupData
@@ -75,13 +77,8 @@ class SettingsViewModel @Inject constructor(
     val localData: StateFlow<BackupData?> = _localData
 
     fun getLocalData() = viewModelScope.launch {
-        try {
-            val localData = backupRepository.getLocalData()
-            Timber.d("Local data vm: notes=${localData.notes.size}, corpus=${localData.corpus.size}, examples=${localData.examples.size}")
-            _localData.value = localData
-        } catch (e: Exception) {
-            _localData.value = null
-            Timber.e(e)
+        backupRepository.getLocalData().collectLatest {
+            _localData.value = it
         }
     }
 

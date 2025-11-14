@@ -69,7 +69,6 @@ class NoteAdapter(
                     noteWithCorpus.unfamiliarCount
                 )
             } else listener.getAllCorpusSize() {
-                tvWordCount.isVisible = it != 0
                 tvWordCount.text = itemView.context.getString(R.string.word_amount, it)
             }
 

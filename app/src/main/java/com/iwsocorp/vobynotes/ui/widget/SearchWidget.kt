@@ -10,7 +10,8 @@ import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
 
 const val OPEN_FRAGMENT = "open_fragment"
-const val SEARCH = "search"
+const val OPEN_SEARCH = "open_search"
+const val OPEN_SCAN = "open_scan"
 
 class SearchWidget : AppWidgetProvider() {
 
@@ -19,13 +20,13 @@ class SearchWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        // update semua widget instance
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
     companion object {
+
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -33,23 +34,33 @@ class SearchWidget : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_search)
 
-            // Intent untuk membuka MainActivity + flag tujuan fragment
-            val intent = Intent(context, MainActivity::class.java).apply {
-                putExtra(OPEN_FRAGMENT, SEARCH)
+            // Klik untuk SearchFragment
+            val searchIntent = Intent(context, MainActivity::class.java).apply {
+                putExtra(OPEN_FRAGMENT, OPEN_SEARCH)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
 
-            val pendingIntent = PendingIntent.getActivity(
-                context, appWidgetId, intent,
+            val searchPending = PendingIntent.getActivity(
+                context, appWidgetId + 1, searchIntent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
-            // Klik root widget → buka SearchFragment
-            views.setOnClickPendingIntent(R.id.widget_search_root, pendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_root, searchPending)
 
-            // Apply ke widget
+            // Klik kamera → ScanFragment
+            val scanIntent = Intent(context, MainActivity::class.java).apply {
+                putExtra(OPEN_FRAGMENT, OPEN_SCAN)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+
+            val scanPending = PendingIntent.getActivity(
+                context, appWidgetId + 2, scanIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+            views.setOnClickPendingIntent(R.id.widget_camera, scanPending)
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
-
 }

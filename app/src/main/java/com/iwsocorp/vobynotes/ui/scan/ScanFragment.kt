@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.iwsocorp.vobynotes.MainActivity
 import com.iwsocorp.vobynotes.R
@@ -92,45 +93,31 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         checkCameraPermission()
     }
 
-    private fun setupUI() {
-        binding.rvScan.adapter = adapter
-        binding.btnSave.setOnClickListener {
-            val items: List<WordResult> = adapter.getSelectedItems().ifEmpty { adapter.currentList }
-
-            NoteBottomSheet(
-                settingsViewModel.notes.value!!,
-                onNewNote = {
-                    val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
-                    val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
-                    val note = Note(
-                        title = "New Note",
-                        wordLang = sourceLang,
-                        meaningLang = targetLang,
-                        contentSize = items.size
-                    )
-                    requireContext().alertInputDialog(note.title) {
-                        val newNote = if (note.title == it) note else note.copy(title = it)
-                        noteViewModel.createNote(newNote)
-                        onSaveToNote(items, newNote)
-                    }
-                },
-                onItemClick = { note ->
-                    onSaveToNote(items, note)
-                }
-            ).show(childFragmentManager, null)
+    private fun setupUI() = with(binding) {
+        toolbarScan.apply {
+            title = getString(R.string.menu_scan)
+            setNavigationIcon(R.drawable.baseline_arrow_back_24)
+            setNavigationOnClickListener {
+                findNavController().navigateUp()
+            }
         }
-        binding.tvClear.setOnClickListener {
+
+        rvScan.adapter = adapter
+        btnSave.setOnClickListener {
+            onSave()
+        }
+        tvClear.setOnClickListener {
             adapter.clearSelection()
         }
-        binding.btnCapture.setOnClickListener {
+        btnCapture.setOnClickListener {
             captureImageForProcessing()
         }
-        binding.tvSourceLang.setOnClickListener {
+        tvSourceLang.setOnClickListener {
             LangBottomSheet("Source language") {
                 languageViewModel.setSourceLanguage(it.code)
             }.show(parentFragmentManager, null)
         }
-        binding.tvTargetLang.setOnClickListener {
+        tvTargetLang.setOnClickListener {
             LangBottomSheet("Translation language") {
                 languageViewModel.setTranslationLanguage(it.code)
             }.show(parentFragmentManager, null)
@@ -138,7 +125,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
 
         var rotated = false
 
-        binding.iconSwitch.setOnClickListener { view ->
+        iconSwitch.setOnClickListener { view ->
             val rotationAngle = if (rotated) 0f else 180f
             view.animate()
                 .rotation(rotationAngle)
@@ -157,11 +144,37 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             }
         }
         languageViewModel.sourceLanguage.collectOnStarted {
-            binding.tvSourceLang.text = it?.langName(requireContext())
+            tvSourceLang.text = it?.langName(requireContext())
         }
         languageViewModel.translationLanguage.collectOnStarted {
-            binding.tvTargetLang.text = it?.langName(requireContext())
+            tvTargetLang.text = it?.langName(requireContext())
         }
+    }
+
+    private fun onSave() {
+        val items: List<WordResult> = adapter.getSelectedItems().ifEmpty { adapter.currentList }
+
+        NoteBottomSheet(
+            settingsViewModel.notes.value!!,
+            onNewNote = {
+                val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
+                val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
+                val note = Note(
+                    title = "New Note",
+                    wordLang = sourceLang,
+                    meaningLang = targetLang,
+                    contentSize = items.size
+                )
+                requireContext().alertInputDialog(note.title) {
+                    val newNote = if (note.title == it) note else note.copy(title = it)
+                    noteViewModel.createNote(newNote)
+                    onSaveToNote(items, newNote)
+                }
+            },
+            onItemClick = { note ->
+                onSaveToNote(items, note)
+            }
+        ).show(childFragmentManager, null)
     }
 
     private fun showInfo() = AlertDialog.Builder(requireContext())

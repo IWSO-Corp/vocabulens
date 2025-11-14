@@ -23,6 +23,9 @@ interface ExampleDao {
     @Query("SELECT * FROM examples WHERE deletedAt IS NULL")
     suspend fun getAll(): List<ExampleEntity>
 
+    @Query("SELECT * FROM examples WHERE deletedAt IS NULL")
+    fun getExampleFlow(): Flow<List<ExampleEntity>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExampleList(exampleList: List<ExampleEntity>)
 

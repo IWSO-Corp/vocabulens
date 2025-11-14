@@ -7,11 +7,14 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.iwsocorp.vobynotes.core.database.dao.CorpusDao
 import com.iwsocorp.vobynotes.core.database.dao.ExampleDao
+import com.iwsocorp.vobynotes.core.database.dao.InsertResult
 import com.iwsocorp.vobynotes.core.database.dao.NoteDao
 import com.iwsocorp.vobynotes.core.database.model.CorpusEntity
 import com.iwsocorp.vobynotes.core.database.model.ExampleEntity
 import com.iwsocorp.vobynotes.core.database.model.NoteEntity
 import com.iwsocorp.vobynotes.ui.setting.BackupData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -32,10 +35,33 @@ class BackupRepository @Inject constructor(
         backupExamples(userId)
     }
 
-    suspend fun insertToDatabase(backupData: BackupData) = with(backupData) {
+    suspend fun insertToDatabase(backupData: BackupData, result: (InsertResult) -> Unit) = with(backupData) {
         if (notes.isNotEmpty()) noteDao.insertNoteList(notes)
-        if (corpus.isNotEmpty()) corpusDao.insertCorpusList(corpus)
+        if (corpus.isNotEmpty()) result(insertCorpusSafely(corpus))
         if (examples.isNotEmpty()) exampleDao.insertExampleList(examples)
+    }
+
+    suspend fun insertCorpusSafely(corpusList: List<CorpusEntity>): InsertResult {
+        val success = mutableListOf<CorpusEntity>()
+        val failed = mutableListOf<CorpusEntity>()
+
+        corpusList.forEach { item ->
+            try {
+                val id = corpusDao.insertCorpus(item)
+                if (id != -1L) {
+                    success.add(item)
+                } else {
+                    failed.add(item) // duplicate (IGNORE)
+                }
+            } catch (e: Exception) {
+                failed.add(item) // foreign key error dll
+            }
+        }
+
+        return InsertResult(
+            successCount = success.size,
+            failedCount = failed.size
+        )
     }
 
     private fun userBackupPath(userId: String): DocumentReference = firestore
@@ -143,28 +169,49 @@ class BackupRepository @Inject constructor(
         return Gson().fromJson(json, type)
     }
 
-    suspend fun restoreAllCorpus(userId: String): List<CorpusEntity> {
+    suspend fun restoreAllCorpus(
+        userId: String,
+        onError: (Int) -> Unit = {}
+    ): List<CorpusEntity> {
+
         val snapshot = userBackupPath(userId)
             .collection("corpus")
             .get()
             .await()
+
         val allEntities = mutableListOf<CorpusEntity>()
         val type = object : TypeToken<List<CorpusEntity>>() {}.type
+        var errorCount = 0
 
         snapshot.documents.forEach { doc ->
             val json = doc.getString("data") ?: return@forEach
-            val entities: List<CorpusEntity> = Gson().fromJson(json, type)
-            allEntities.addAll(entities)
+
+            try {
+                val entities: List<CorpusEntity> = Gson().fromJson(json, type)
+                allEntities.addAll(entities)
+            } catch (e: Exception) {
+                errorCount++
+                Timber.e(e, "Error parsing JSON at doc ${doc.id}")
+            }
         }
+
+        if (errorCount > 0) onError(errorCount)
 
         return allEntities
     }
 
-    suspend fun getLocalData(): BackupData {
-        val notes = noteDao.getNoteList()
-        val corpus = corpusDao.getAll()
-        val examples = exampleDao.getAll()
-        return BackupData(notes, corpus, examples)
+    fun getLocalData(): Flow<BackupData> {
+        return combine(
+            noteDao.getNotesFlow(),
+            corpusDao.allCorpusFlow(),
+            exampleDao.getExampleFlow()
+        ) { notes, corpus, examples ->
+            BackupData(
+                notes = notes,
+                corpus = corpus,
+                examples = examples
+            )
+        }
     }
 
 }

@@ -52,6 +52,7 @@
 
         <receiver
             android:name=".ui.widget.SearchWidget"
+            android:label="@string/vocabulens_search_bar"
             android:exported="false">
 
             <intent-filter>
