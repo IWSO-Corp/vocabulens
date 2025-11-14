@@ -82,7 +82,7 @@ interface NoteDao {
     @Query("""
         SELECT * FROM corpus
         WHERE noteId = :noteId
-        ORDER BY createdAt DESC LIMIT 5
+        ORDER BY updatedAt DESC LIMIT 5
     """)
     fun getLastFiveCorpusByNoteId(noteId: String): Flow<List<CorpusEntity>>
 

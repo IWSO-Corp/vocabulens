@@ -86,8 +86,11 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
         optionButtons.clear()
 
         val corpus = homeViewModel.allCorpus.value
-        val wrongOptions = corpus.map { it.word }.distinct().filterNot { it == example.forWord }
-            .shuffled().take(3)
+        val sentenceCorpus = corpus.find { it.id == example.corpusId }!!
+        val wrongOptions =
+            corpus.filter { it.wordLang == sentenceCorpus.wordLang }.map { it.word }.distinct()
+                .filterNot { it == example.forWord }
+                .shuffled().take(3)
         val options = (wrongOptions + example.forWord).shuffled()
 
         options.forEach { word ->

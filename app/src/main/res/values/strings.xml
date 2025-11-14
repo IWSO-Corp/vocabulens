@@ -67,6 +67,8 @@
     <string name="google_translate_saved_translations">Google Translate saved translations (.xlsx)</string>
     <string name="vocabulens_custom">Vocabulens custom (.xlsx, .csv)</string>
     <string name="create">Create</string>
-    <string name="vocabulens_search_bar">Vocabulens search bar</string>
+    <string name="vocabulens_search_bar">Search and Scan</string>
     <string name="open_scan">Open scan</string>
+    <string name="word">Word</string>
+    <string name="meaning">Meaning</string>
 </resources>

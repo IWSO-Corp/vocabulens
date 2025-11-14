@@ -188,7 +188,7 @@ class TextViewGestureHelper(
             textView,
             Gravity.NO_GRAVITY,
             rect.left,
-            rect.top - 150
+            rect.top - 130
         )
 
         // Pertahankan highlight selama popup tampil
