@@ -40,6 +40,7 @@ import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_SEARCH_WORD = "searchWordParam"
@@ -121,7 +122,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             is SearchUiState.Idle -> {}
             is SearchUiState.Loading -> {}
             is SearchUiState.LocalLoaded -> {
-                wordAdapter.submitData(viewLifecycleOwner.lifecycle, state.corpusPagingData)
+                withContext(Dispatchers.Main) {
+                    wordAdapter.submitData(state.corpusPagingData)
+                }
                 wordAdapter.addLoadStateListener {
                     if (it.refresh is LoadState.NotLoading) binding.rvSearch.scrollToPosition(0)
                     binding.tvEmpty.isVisible = wordAdapter.itemCount == 0

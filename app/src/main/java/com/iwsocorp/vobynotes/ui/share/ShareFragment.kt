@@ -27,6 +27,8 @@ import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -84,7 +86,9 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
 
         when (state) {
             is ShareState.Loaded -> {
-                adapter.submitData(viewLifecycleOwner.lifecycle, state.notes)
+                withContext(Dispatchers.Main) {
+                    adapter.submitData(state.notes)
+                }
             }
 
             is ShareState.Shared -> {

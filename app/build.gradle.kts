@@ -18,8 +18,8 @@ android {
         applicationId = "com.iwsocorp.vobynotes"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.0.1"
+        versionCode = 4
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

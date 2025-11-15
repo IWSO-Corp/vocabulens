@@ -2,12 +2,14 @@ package com.iwsocorp.vobynotes.ui.share
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iwsocorp.vobynotes.core.data.repository.BackupRepository
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vobynotes.core.data.repository.NoteRepository
 import com.iwsocorp.vobynotes.core.data.repository.ShareRepository
 import com.iwsocorp.vobynotes.core.database.dao.InsertResult
 import com.iwsocorp.vobynotes.core.model.SharedNote
 import com.iwsocorp.vobynotes.core.model.asCorpus
+import com.iwsocorp.vobynotes.core.model.asEntity
 import com.iwsocorp.vobynotes.core.model.asNote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,6 +25,7 @@ class ShareDetailViewModel @Inject constructor(
     private val shareRepository: ShareRepository,
     private val noteRepository: NoteRepository,
     private val corpusRepository: CorpusRepository,
+    private val backupRepository: BackupRepository
 ) : ViewModel() {
 
     private val _sharedNoteState = MutableStateFlow<SharedNoteState>(SharedNoteState.Loading)
@@ -51,7 +54,10 @@ class ShareDetailViewModel @Inject constructor(
                 if (existCount == sharedNote.content.size) return@launch
 
                 noteRepository.addNote(sharedNote.asNote())
-                insertResult(corpusRepository.insertCorpusList(sharedNote.content.map { it.asCorpus() }))
+                val result =
+                    backupRepository.insertCorpusSafely(sharedNote.content.map { it.asCorpus() }
+                        .map { it.asEntity() })
+                insertResult(result)
 
                 _saveState.emit("Saved")
             }.onFailure {
@@ -82,7 +88,8 @@ class ShareDetailViewModel @Inject constructor(
             sharedNote.content.size,
         )
 
-        val result = corpusRepository.insertCorpusList(sharedNote.content.map { it.asCorpus() })
+        val result = backupRepository.insertCorpusSafely(sharedNote.content.map { it.asCorpus() }
+            .map { it.asEntity() })
         insertResult(result)
 
         _saveState.emit(if (result.successCount > 0) "Updated" else "Note already up to date")

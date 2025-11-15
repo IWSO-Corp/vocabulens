@@ -19,6 +19,8 @@ import com.iwsocorp.vobynotes.databinding.FragmentTrashBinding
 import com.iwsocorp.vobynotes.ui.home.NoteAdapter
 import com.iwsocorp.vobynotes.ui.home.UiState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::inflate) {
@@ -84,9 +86,9 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
     private fun observeState() = viewModel.uiState.collectOnStarted { state ->
         binding.progressBar.isVisible = state is UiState.Loading
 
-        if (state is UiState.Loaded) with(binding) {
-            adapter.submitData(viewLifecycleOwner.lifecycle, state.notesPaging)
-            rvNote.adapter = adapter
+        if (state is UiState.Loaded) withContext(Dispatchers.Main) {
+            adapter.submitData(state.notesPaging)
+            binding.rvNote.adapter = adapter
         }
     }
 

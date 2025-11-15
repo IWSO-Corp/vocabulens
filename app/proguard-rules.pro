@@ -93,3 +93,33 @@
 #           TIMBER (opsional)
 # ================================
 -dontwarn timber.log.Timber
+
+# ================================
+#           APACHE POI
+# ================================
+-dontwarn org.apache.poi.**
+-keep class org.apache.poi.** { *; }
+
+# OPenXML schemas (wajib agar XSSF tidak crash)
+-keep class org.openxmlformats.schemas.** { *; }
+-dontwarn org.openxmlformats.schemas.**
+
+# Dependencies XMLBeans (penting)
+-keep class org.apache.xmlbeans.** { *; }
+-dontwarn org.apache.xmlbeans.**
+
+# Abaikan semua referensi AWT yang tidak dipakai di Android
+-dontwarn java.awt.**
+
+# ================================
+#           LOG4J
+# ================================
+-keep class org.apache.logging.log4j.** { *; }
+-dontwarn org.apache.logging.log4j.**
+
+-keep class org.apache.commons.compress.** { *; }
+-dontwarn org.apache.commons.compress.**
+
+-keep class com.google.android.gms.auth.api.signin.** { *; }
+-keep class com.google.android.gms.common.api.** { *; }
+-dontwarn com.google.android.gms.**

@@ -30,7 +30,9 @@ import com.iwsocorp.vobynotes.ui.share.ShareState
 import com.iwsocorp.vobynotes.ui.share.ShareViewModel
 import com.iwsocorp.vobynotes.ui.share.shareLink
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -108,6 +110,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             setOnMenuItemClickListener(menuListener)
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
         }
+        binding.rvNote.itemAnimator = null
         binding.rvNote.adapter = adapter
         adapter.loadStateFlow.collectOnStarted {
             binding.tvEmpty.isVisible = adapter.itemCount == 0
@@ -139,8 +142,8 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         binding.progressBar.isVisible =
             uiState is UiState.Loading || shareState is ShareState.Loading
 
-        if (uiState is UiState.Loaded) with(binding) {
-            adapter.submitData(viewLifecycleOwner.lifecycle, uiState.notesPaging)
+        if (uiState is UiState.Loaded) withContext(Dispatchers.Main) {
+            adapter.submitData(uiState.notesPaging)
         }
 
         if (shareState is ShareState.Shared) requireContext().sharePublicNoteLink(
@@ -267,7 +270,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         } else {
             val noteId = adapter.getSelectedItems().map { it.id }.firstOrNull()
             noteId?.let { id ->
-                val note = adapter.snapshot().items.find { it.note.id == id }!!.note
+                val note = adapter.snapshot().items.firstOrNull { it.note.id == id }?.note ?: return
                 if (note.shared) requireContext().sharePublicNoteLink(
                     note.title,
                     shareLink + note.id

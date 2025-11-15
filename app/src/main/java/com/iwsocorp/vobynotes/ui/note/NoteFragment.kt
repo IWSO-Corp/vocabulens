@@ -49,6 +49,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_NOTE_ID = "noteIdParam"
@@ -162,7 +163,9 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             id?.let { noteId ->
                 viewModel.getPagedCorpus(noteId).collectOnStarted { corpusPagingData ->
                     Timber.d("corpusPagingData: $corpusPagingData")
-                    wordAdapter.submitData(corpusPagingData)
+                    withContext(Dispatchers.Main) {
+                        wordAdapter.submitData(corpusPagingData)
+                    }
                 }
                 binding.tvWordLang.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
                 binding.tvMeaningLang.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
