@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Synonyms"
-            android:textColor="@color/black" />
+            android:textColor="?attr/colorOnPrimary" />
 
         <TextView
             android:id="@+id/tv_synonyms"
@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Antonyms"
-            android:textColor="@color/black" />
+            android:textColor="?attr/colorOnPrimary" />
 
         <TextView
             android:id="@+id/tv_antonyms"

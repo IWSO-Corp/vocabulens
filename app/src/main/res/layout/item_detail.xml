@@ -25,7 +25,7 @@
                 android:id="@+id/tv_word"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnPrimary"
                 android:textIsSelectable="true"
                 android:textSize="24sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -88,7 +88,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Examples"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -136,7 +136,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Definitions"
-                    android:textColor="@color/black"
+                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="16sp" />
 
                 <androidx.recyclerview.widget.RecyclerView

@@ -42,7 +42,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="?attr/colorSurface"
             android:gravity="center"
             android:orientation="horizontal"
             android:padding="16dp">
@@ -52,7 +52,7 @@
                 android:layout_width="42dp"
                 android:layout_height="42dp"
                 android:background="@drawable/bg_popup"
-                android:backgroundTint="@color/light_grey"
+                android:backgroundTint="@color/bg_lang"
                 android:src="@drawable/baseline_add_24"
                 app:layout_constraintEnd_toStartOf="@id/tv_new_note"
                 app:layout_constraintStart_toStartOf="parent"
@@ -64,6 +64,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:text="New Note"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toBottomOf="@+id/imageView3"
                 app:layout_constraintEnd_toEndOf="parent"

@@ -81,7 +81,12 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
         )
         binding.tvSentence.text =
             HtmlCompat.fromHtml(blankSentence, HtmlCompat.FROM_HTML_MODE_LEGACY)
-        binding.nextButton.setTextColor(resources.getColor(R.color.black, null))
+        binding.nextButton.setTextColor(
+            resources.getColor(R.color.onPrimary, null)
+        )
+        binding.nextButton.backgroundTintList = ColorStateList.valueOf(
+            resources.getColor(R.color.bg_lang, null)
+        )
         binding.optionsGrid.removeAllViews()
         optionButtons.clear()
 
@@ -98,9 +103,11 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
                 text = word
                 textSize = 16f
                 setPadding(24, 12, 24, 12)
-                setTextColor(resources.getColor(R.color.black, null))
+                setTextColor(
+                    resources.getColor(R.color.onPrimary, null)
+                )
                 backgroundTintList = ColorStateList.valueOf(
-                    resources.getColor(R.color.light_grey, null)
+                    resources.getColor(R.color.bg_lang, null)
                 )
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = 0
@@ -121,7 +128,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
                 resources.getColor(
                     when (button.text) {
                         state.selectedAnswer -> if (isCorrect) R.color.green else R.color.red
-                        else -> R.color.light_grey
+                        else -> R.color.bg_lang
                     }, null
                 )
             )
@@ -129,7 +136,7 @@ class QuizFragment : BaseFragment<FragmentQuizBinding>(FragmentQuizBinding::infl
                 resources.getColor(
                     when (button.text) {
                         state.selectedAnswer -> R.color.white
-                        else -> R.color.black
+                        else -> R.color.onPrimary
                     }, null
                 )
             )

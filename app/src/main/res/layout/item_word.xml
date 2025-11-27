@@ -65,7 +65,7 @@
                 android:id="@+id/tv_word"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toStartOf="@id/tv_pronun"
                 app:layout_constraintStart_toStartOf="parent"

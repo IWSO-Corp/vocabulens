@@ -63,9 +63,6 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(toolbar)
 
-        toolbar.title = getString(R.string.app_name)
-        toolbar.overflowIcon?.setTint(ContextCompat.getColor(this, R.color.black))
-
         val icon = ContextCompat.getDrawable(this, R.drawable.vocabulens_logo)
         icon?.setBounds(0, 0, 72, 72)
         val headerBinding = NavHeaderMainBinding.bind(binding.navView.getHeaderView(0))
@@ -178,7 +175,7 @@ class MainActivity : AppCompatActivity() {
             this, drawerLayout, toolbar,
             R.string.navigation_drawer_open, R.string.navigation_drawer_close
         )
-        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.black)
+        drawerToggle.drawerArrowDrawable.color = ContextCompat.getColor(this, R.color.onPrimary)
         drawerLayout.addDrawerListener(drawerToggle)
         drawerToggle.syncState()
     }

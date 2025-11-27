@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1A1A1A</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="bg_widget">#E6373737</color> <!-- 90% black -->
+    <color name="bg_lang">#404040</color>
+    <color name="settings">#242424</color>
+    <color name="bg_search">#989898</color>
+    <color name="bg_card">#242424</color>
+    <color name="highlight">#D4D400</color>
+
+</resources>

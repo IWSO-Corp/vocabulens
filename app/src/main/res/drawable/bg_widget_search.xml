@@ -2,7 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <solid android:color="#E6FFFFFF" /> <!-- 90% opacity -->
+    <solid android:color="@color/bg_widget" />
 
     <corners android:radius="36dp" />
 

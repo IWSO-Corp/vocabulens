@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
@@ -108,7 +107,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
 
         binding.toolbarHome.apply {
             setOnMenuItemClickListener(menuListener)
-            overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
         }
         binding.rvNote.itemAnimator = null
         binding.rvNote.adapter = adapter

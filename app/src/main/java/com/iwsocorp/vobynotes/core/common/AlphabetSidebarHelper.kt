@@ -35,7 +35,7 @@ class AlphabetSidebarHelper(
             if (textView.text.toString() == currentLetter.toString()) {
                 textView.apply {
                     textSize = 20f
-                    setTextColor(ContextCompat.getColor(context, R.color.black))
+                    setTextColor(ContextCompat.getColor(context, R.color.onPrimary))
                     setTypeface(null, Typeface.BOLD)
                 }
                 break

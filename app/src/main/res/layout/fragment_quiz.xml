@@ -9,18 +9,14 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.VocabNotes.AppBarOverlay"
+
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar_quiz"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
-            android:foregroundTint="@color/black"
-            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay"
-            app:titleCentered="true"
-            app:titleTextColor="@color/black" />
+            app:titleCentered="true" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -128,6 +124,7 @@
             android:layout_height="wrap_content"
             android:clickable="false"
             android:text="@string/next"
+            android:textColor="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

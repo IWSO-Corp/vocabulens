@@ -9,18 +9,14 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.VocabNotes.AppBarOverlay"
+
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar_note"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
-            android:foregroundTint="@color/black"
-            app:navigationIconTint="@color/black"
-            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay"
-            app:titleTextColor="@color/black">
+            app:navigationIconTint="?attr/colorOnPrimary">
 
             <TextView
                 android:id="@+id/tv_toolbar_title"
@@ -28,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="18sp"
                 tools:text="Untitled Note" />
 
@@ -44,7 +40,7 @@
                 android:inputType="textCapSentences|text"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="18sp"
                 android:visibility="gone" />
 
@@ -115,7 +111,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/light_blue"
+        android:background="?attr/colorSurfaceContainer"
         android:elevation="8dp"
         android:padding="16dp"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior">
@@ -125,6 +121,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="16sp"
             app:drawableEndCompat="@drawable/baseline_arrow_drop_down_24"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout"
@@ -146,6 +143,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginBottom="8dp"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="16sp"
             app:drawableEndCompat="@drawable/baseline_arrow_drop_down_24"
             app:layout_constraintBottom_toTopOf="@+id/textInputLayout2"
@@ -158,7 +156,7 @@
             android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:hint="@string/word"
-            app:boxBackgroundColor="@color/white"
+            app:boxBackgroundColor="?attr/colorSurfaceVariant"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
@@ -174,7 +172,7 @@
             android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:hint="@string/meaning"
-            app:boxBackgroundColor="@color/white"
+            app:boxBackgroundColor="?attr/colorSurfaceVariant"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/btn_add"
             app:layout_constraintStart_toEndOf="@+id/textInputLayout">
@@ -191,6 +189,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/add"
+            android:textColor="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

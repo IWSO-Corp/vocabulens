@@ -26,7 +26,6 @@ import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.langCode
 import com.iwsocorp.vobynotes.core.common.Utils.langName
-import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
 import com.iwsocorp.vobynotes.core.common.Utils.sharePublicNoteLink
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.common.Utils.showPopupMenu
@@ -273,7 +272,6 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         viewModel.note.observe(viewLifecycleOwner) {
             tvToolbarTitle.apply {
                 text = it.title
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
             }
             toolbarNote.apply {
                 menu.clear()
@@ -287,7 +285,6 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             etToolbarTitle.requestFocus()
         }
         toolbarNote.apply {
-            setIconColor(requireContext())
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
                 parentFragmentManager.popBackStack()
@@ -524,7 +521,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                         when (state.mark) {
                             Mark.FAMILIAR -> R.color.blue
                             Mark.UNFAMILIAR -> R.color.red
-                            else -> R.color.black
+                            else -> R.color.onPrimary
                         }
                     )
                 )

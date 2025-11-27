@@ -9,7 +9,6 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:backgroundTint="@color/white"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
@@ -52,8 +51,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:backgroundTint="@color/blue"
             android:enabled="false"
-            android:text="Send Reset Link" />
+            android:text="Send Reset Link"
+            android:textColor="@color/white"
+            app:strokeColor="@color/white" />
 
         <ProgressBar
             android:id="@+id/progressBar"

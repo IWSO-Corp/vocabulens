@@ -2,7 +2,6 @@ package com.iwsocorp.vobynotes.core.common
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Rect
 import android.text.Spannable
 import android.text.SpannableString
@@ -209,7 +208,9 @@ class TextViewGestureHelper(
         if (start >= 0) {
             val end = start + word.length
             spannable.setSpan(
-                BackgroundColorSpan(Color.YELLOW), // warna highlight custom
+                BackgroundColorSpan(
+                    ContextCompat.getColor(textView.context, R.color.highlight)
+                ), // warna highlight custom
                 start,
                 end,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE

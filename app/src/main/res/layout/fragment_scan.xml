@@ -10,17 +10,13 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.VocabNotes.AppBarOverlay"
+
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar_scan"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
-            android:foregroundTint="@color/black"
-            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay"
-            app:titleTextColor="@color/black" />
+            android:layout_height="?attr/actionBarSize" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- ===================== -->
@@ -107,6 +103,7 @@
                 android:gravity="center"
                 android:padding="16dp"
                 android:text="@string/detect_language"
+                android:textColor="?attr/colorOnPrimary"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toStartOf="@+id/icon_switch"
                 app:layout_constraintStart_toStartOf="parent"
@@ -133,6 +130,7 @@
                 android:gravity="center"
                 android:padding="16dp"
                 android:text="Indonesia"
+                android:textColor="?attr/colorOnPrimary"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/icon_switch"
@@ -209,5 +207,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
         android:layout_margin="16dp"
-        android:text="@string/save_all" />
+        android:text="@string/save_all"
+        android:textColor="@color/white" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

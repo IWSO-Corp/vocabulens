@@ -56,7 +56,7 @@ class WordViewHolder(
         val isSelected = selectedIds.contains(corpus.id)
         itemView.setBackgroundColor(
             if (isSelected)
-                itemView.context.getColor(R.color.light_grey)
+                itemView.context.getColor(R.color.bg_lang)
             else
                 Color.TRANSPARENT
         )

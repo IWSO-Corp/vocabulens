@@ -168,14 +168,17 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             setOnQueryTextListener(queryListener)
         }
         binding.toolbarSearch.apply {
+            setBackgroundColor(
+                ContextCompat.getColor(requireContext(), R.color.bg_lang)
+            )
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
                 parentFragmentManager.popBackStack()
             }
         }
         binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text).apply {
-            setHintTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            setHintTextColor(ContextCompat.getColor(requireContext(), R.color.bg_search))
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.onPrimary))
             filters = arrayOf(
                 InputFilter.LengthFilter(30),
                 InputFilter { source, _, _, _, _, _ ->
@@ -184,7 +187,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             )
         }
         binding.searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn).apply {
-            setColorFilter(ContextCompat.getColor(requireContext(), R.color.black))
+            setColorFilter(ContextCompat.getColor(requireContext(), R.color.onPrimary))
         }
     }
 

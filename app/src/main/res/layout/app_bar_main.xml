@@ -9,16 +9,13 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.VocabNotes.AppBarOverlay"
+
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
-            app:popupTheme="@style/Theme.VocabNotes.PopupOverlay"
-            app:titleTextColor="@color/black" />
+            android:layout_height="?attr/actionBarSize" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -33,6 +30,7 @@
         android:layout_marginBottom="16dp"
         android:contentDescription="New note"
         android:foregroundTint="@color/white"
+        android:backgroundTint="?attr/colorPrimary"
         android:src="@drawable/baseline_add_white_24"
         android:tint="@color/white"
         tools:ignore="HardcodedText" />

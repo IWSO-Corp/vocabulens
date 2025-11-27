@@ -1,7 +1,6 @@
 package com.iwsocorp.vobynotes.ui.home
 
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -76,21 +75,22 @@ class NoteAdapter(
                 if (!isSelectionMode) listener.onClick(
                     absoluteAdapterPosition,
                     note.id
-                ) else toggleSelection(note)
+                ) else {
+                    if (pos != 0) toggleSelection(note)
+                }
             }
-            itemView.setOnLongClickListener {
+            if (pos != 0) itemView.setOnLongClickListener {
                 if (!isSelectionMode) isSelectionMode = true
                 toggleSelection(note)
                 true
             }
+            else itemView.setOnLongClickListener(null)
 
             val isSelected = selectedNotes.contains(note)
 
-            cardNote.setCardBackgroundColor(
-                if (isSelected) itemView.context.resources.getColor(
-                    R.color.light_grey,
-                    itemView.context.theme
-                ) else Color.WHITE
+            cardNote.backgroundTintList = itemView.context.resources.getColorStateList(
+                if (isSelected) R.color.bg_lang else R.color.bg_card,
+                itemView.context.theme
             )
 
             rvPreview.visibility = if (note.contentSize == 0) View.GONE else View.VISIBLE
@@ -180,7 +180,7 @@ class NoteAdapter(
                 oldItem: NoteWithCorpus,
                 newItem: NoteWithCorpus
             ): Boolean =
-                oldItem == newItem
+                oldItem.note == newItem.note
         }
     }
 
@@ -190,7 +190,7 @@ class PreviewAdapter(
     private val noteId: String,
     private val onClick: (noteId: String) -> Unit,
     private val onLongClick: (noteId: String) -> Unit,
-) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DiffCallback) {
+) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -233,12 +233,14 @@ class PreviewAdapter(
         holder.bind(getItem(position))
     }
 
-    object DiffCallback : DiffUtil.ItemCallback<Corpus>() {
-        override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
-            oldItem.id == newItem.id
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Corpus>() {
+            override fun areItemsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+                oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
-            oldItem == newItem
+            override fun areContentsTheSame(oldItem: Corpus, newItem: Corpus): Boolean =
+                oldItem == newItem
+        }
     }
 
 }

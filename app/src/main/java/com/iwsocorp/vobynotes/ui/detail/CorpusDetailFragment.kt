@@ -19,7 +19,6 @@ import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.TextViewGestureHelper
 import com.iwsocorp.vobynotes.core.common.Utils.isNetworkAvailable
-import com.iwsocorp.vobynotes.core.common.Utils.setIconColor
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Example
@@ -141,7 +140,6 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
             setNavigationOnClickListener { onBackPressed(position) }
             menu.clear()
             inflateMenu(R.menu.menu_detail)
-            setIconColor(requireContext())
             setOnMenuItemClickListener(menuListener)
         }
         requireActivity().onBackPressedDispatcher.addCallback(
@@ -212,6 +210,10 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                 }
         }
 
+        val menuEdit = binding.toolbarDetail.menu.findItem(R.id.action_edit)
+        menuEdit?.icon?.let {
+            DrawableCompat.setTint(it, ContextCompat.getColor(requireContext(), R.color.onPrimary))
+        }
         val menuMark = binding.toolbarDetail.menu.findItem(R.id.action_mark)
         menuMark?.setIcon(
             when (corpus.mark) {
@@ -230,7 +232,7 @@ class CorpusDetailFragment : BaseFragment<FragmentCorpusDetailBinding>(
                     when (corpus.mark) {
                         Mark.FAMILIAR -> R.color.blue
                         Mark.UNFAMILIAR -> R.color.red
-                        else -> R.color.black
+                        else -> R.color.onPrimary
                     }
                 )
             )

@@ -75,7 +75,7 @@ class ScanAdapter(
             }
             itemView.setBackgroundColor(
                 if (selectedItem.contains(wordResult)) itemView.context.resources.getColor(
-                    R.color.light_grey,
+                    R.color.bg_lang,
                     itemView.context.theme
                 ) else android.graphics.Color.TRANSPARENT
             )
