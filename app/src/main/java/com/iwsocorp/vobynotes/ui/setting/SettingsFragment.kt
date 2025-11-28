@@ -170,6 +170,10 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         btnExportImport.setOnClickListener {
             showExportDialog()
         }
+        btnFeedback.setOnClickListener {
+            if (user != null) findNavController().navigate(R.id.action_nav_settings_to_feedbackFragment)
+            else signInFirst()
+        }
         btnAddWidget.setOnClickListener {
             requestAddWidgetToHomeScreen()
         }
