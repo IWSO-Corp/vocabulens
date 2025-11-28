@@ -9,19 +9,41 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.model.Corpus
+import com.iwsocorp.vobynotes.ui.note.WordAdapter
 
 class AlphabetSidebarHelper(
     private val context: Context,
     private val sidebarContainer: LinearLayout,
     private val recyclerView: RecyclerView,
+    private val adapter: WordAdapter
 ) {
 
-    fun updateSidebarFromData(currentList: List<Corpus>) {
+    fun observePagesUpdates() = adapter.addOnPagesUpdatedListener {
+        val currentList = adapter.snapshot().items
         val letters = extractAvailableLettersFromLoadedPages(currentList)
         populateAlphabetSidebar(currentList, letters)
     }
 
-    fun highlightCurrentLetter(currentLetter: Char) {
+    val scrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+            val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+            val data = adapter.snapshot().items
+
+            if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
+                val firstCorpus = data[firstVisiblePosition]
+                if (firstCorpus.word.isEmpty()) return
+
+                val firstLetter = firstCorpus.word.first().uppercaseChar()
+
+                highlightCurrentLetter(firstLetter)
+            }
+        }
+    }
+
+    private fun highlightCurrentLetter(currentLetter: Char) {
         for (i in 0 until sidebarContainer.childCount) {
             val textView = sidebarContainer.getChildAt(i) as TextView
             textView.apply {

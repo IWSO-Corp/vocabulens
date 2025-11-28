@@ -21,20 +21,19 @@ class TrashViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> get() = _uiState
 
-    fun getTrashNotes() {
+    fun getTrashNotes() = viewModelScope.launch {
         _uiState.value = UiState.Loading
-        viewModelScope.launch {
-            noteRepository.getTrashNotesFlow().cachedIn(viewModelScope).collectLatest {
-                _uiState.value = UiState.Loaded(it)
-            }
+        noteRepository.getTrashNotesFlow().cachedIn(viewModelScope).collectLatest {
+            _uiState.value = UiState.Loaded(it)
         }
     }
 
-    fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit) = viewModelScope.launch {
-        noteRepository.getLastFiveCorpus(noteId).collectLatest {
-            callback(it)
+    fun getLastFiveCorpus(noteId: String, callback: (List<Corpus>) -> Unit) =
+        viewModelScope.launch {
+            noteRepository.getLastFiveCorpus(noteId).collectLatest {
+                callback(it)
+            }
         }
-    }
 
     fun moveNotesToTrash(ids: List<String>) = viewModelScope.launch {
         noteRepository.moveNotesToTrash(ids)

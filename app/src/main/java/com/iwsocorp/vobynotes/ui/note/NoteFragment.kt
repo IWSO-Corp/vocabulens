@@ -17,8 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.AlphabetSidebarHelper
@@ -126,9 +124,8 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             requireContext(),
             binding.alphabetSidebar,
             binding.rvCorpus,
+            wordAdapter
         )
-
-        highlight(binding.rvCorpus)
 
         setFragmentResultListener("requestKey") { _, bundle ->
             val position = bundle.getInt(ARG_POSITION)
@@ -194,10 +191,10 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             viewModel.updateNoteTitle(note.title)
         }
 
+            alphabetSidebarHelper.observePagesUpdates()
         wordAdapter.loadStateFlow.collectOnStarted {
             val currentList = wordAdapter.snapshot().items
             detailViewModel.setCorpusList(currentList)
-            alphabetSidebarHelper.updateSidebarFromData(currentList)
             updateUI(it)
         }
 
@@ -497,7 +494,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
         val isLoading = loadStates.refresh is LoadState.Loading
         progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         tvEmpty.isVisible = !isLoading && wordAdapter.snapshot().isEmpty()
-        rvCorpus.addOnScrollListener(scrollListener)
+        rvCorpus.addOnScrollListener(alphabetSidebarHelper.scrollListener)
 
         viewModel.queryState.collectOnStarted { state ->
             Timber.d("queryState: $state")
@@ -526,29 +523,6 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     )
                 )
             }
-        }
-    }
-
-    private val scrollListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            super.onScrolled(recyclerView, dx, dy)
-
-            highlight(recyclerView)
-        }
-    }
-
-    private fun highlight(recyclerView: RecyclerView) {
-        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-        val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
-        val data = wordAdapter.snapshot().items
-
-        if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
-            val firstCorpus = data[firstVisiblePosition]
-            if (firstCorpus.word.isEmpty()) return
-
-            val firstLetter = firstCorpus.word.first().uppercaseChar()
-
-            alphabetSidebarHelper.highlightCurrentLetter(firstLetter)
         }
     }
 

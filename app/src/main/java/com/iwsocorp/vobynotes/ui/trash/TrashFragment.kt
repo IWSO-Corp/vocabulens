@@ -5,6 +5,7 @@ import android.view.View
 import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -18,6 +19,7 @@ import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.databinding.FragmentTrashBinding
 import com.iwsocorp.vobynotes.ui.home.NoteAdapter
 import com.iwsocorp.vobynotes.ui.home.UiState
+import com.iwsocorp.vobynotes.ui.note.ARG_NOTE_ID
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -32,6 +34,9 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
                 override fun onClick(pos: Int, noteId: String) {
                     findNavController().navigate(
                         R.id.action_nav_trash_to_trashNoteFragment,
+                        bundleOf(
+                            ARG_NOTE_ID to noteId
+                        )
                     )
                 }
 
@@ -69,9 +74,10 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             }
         }
 
+        binding.rvNote.adapter = adapter
         binding.toolbarTrash.apply {
             setOnMenuItemClickListener(menuListener)
-            overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
+            overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.onPrimary))
         }
         adapter.loadStateFlow.collectOnStarted {
             val isNotEmpty = adapter.itemCount > 0
@@ -88,7 +94,6 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
 
         if (state is UiState.Loaded) withContext(Dispatchers.Main) {
             adapter.submitData(state.notesPaging)
-            binding.rvNote.adapter = adapter
         }
     }
 

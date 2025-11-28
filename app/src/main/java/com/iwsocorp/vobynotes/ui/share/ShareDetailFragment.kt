@@ -8,8 +8,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
@@ -23,7 +21,6 @@ import com.iwsocorp.vobynotes.core.model.asCorpus
 import com.iwsocorp.vobynotes.databinding.FragmentShareDetailBinding
 import com.iwsocorp.vobynotes.ui.note.WordAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
 
 @AndroidEntryPoint
 class ShareDetailFragment :
@@ -50,6 +47,7 @@ class ShareDetailFragment :
             requireContext(),
             binding.alphabetSidebar,
             binding.rvCorpus,
+            adapter
         )
     }
 
@@ -90,11 +88,7 @@ class ShareDetailFragment :
                 .setIcon(R.drawable.baseline_download_done_24)
         }
 
-        adapter.addOnPagesUpdatedListener {
-            val items = adapter.snapshot().items
-            Timber.d("items1: ${items.size}")
-            alphabetSidebarHelper.updateSidebarFromData(items)
-        }
+        alphabetSidebarHelper.observePagesUpdates()
     }
 
     private fun setupUI(sharedNote: SharedNote) {
@@ -113,7 +107,7 @@ class ShareDetailFragment :
         checkNoteSavedStatus(sharedNote)
 
         binding.rvCorpus.adapter = adapter
-        binding.rvCorpus.addOnScrollListener(scrollListener)
+        binding.rvCorpus.addOnScrollListener(alphabetSidebarHelper.scrollListener)
 
         var counter = 0
         val corpusList = sharedNote.content.map { it.asCorpus() }.map {
@@ -122,35 +116,11 @@ class ShareDetailFragment :
         }
 
         adapter.submitData(viewLifecycleOwner.lifecycle, PagingData.from(corpusList))
-        adapter.loadStateFlow.collectOnStarted {
-            val items = adapter.snapshot().items
-            Timber.d("items: ${items.size}")
-            alphabetSidebarHelper.updateSidebarFromData(items)
-        }
     }
 
     private fun checkNoteSavedStatus(sharedNote: SharedNote) = firebaseUser?.let { user ->
         viewModel.checkNoteSavedStatus(user.uid, sharedNote.id) {
             viewModel.setIsSaved(it)
-        }
-    }
-
-    private val scrollListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            super.onScrolled(recyclerView, dx, dy)
-
-            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
-            val data = adapter.snapshot().items
-
-            if (firstVisiblePosition != RecyclerView.NO_POSITION && firstVisiblePosition < data.size) {
-                val firstCorpus = data[firstVisiblePosition]
-                if (firstCorpus.word.isEmpty()) return
-
-                val firstLetter = firstCorpus.word.first().uppercaseChar()
-
-                alphabetSidebarHelper.highlightCurrentLetter(firstLetter)
-            }
         }
     }
 
