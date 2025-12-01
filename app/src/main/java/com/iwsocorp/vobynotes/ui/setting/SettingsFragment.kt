@@ -3,6 +3,7 @@ package com.iwsocorp.vobynotes.ui.setting
 import android.app.Activity.RESULT_OK
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -157,9 +159,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             onSignIn(user)
         }
         csAccount.setOnClickListener {
-            user?.let {
-
-            }
+            if (user != null) findNavController().navigate(R.id.action_nav_settings_to_accountFragment)
         }
         btnLanguageTranslations.setOnClickListener {
             findNavController().navigate(R.id.action_nav_settings_to_languageFragment)
@@ -176,6 +176,19 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         }
         btnAddWidget.setOnClickListener {
             requestAddWidgetToHomeScreen()
+        }
+        btnRating.setOnClickListener {
+            openPlayStoreForRating()
+        }
+        btnContact.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Contact the developer")
+                .setMessage("Email: vocabulens@gmail.com")
+                .setPositiveButton("Proceed") { _, _ ->
+                    sendEmail()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
         btnVersion.setOnClickListener {
             checkForAppUpdates()
@@ -334,8 +347,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
         findNavController().navigate(R.id.action_nav_settings_to_authFragment)
     }
 
-    private fun checkForAppUpdates() {
-
+    private fun checkForAppUpdates() =
         appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
             val isUpdate = appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
             showToast(
@@ -353,7 +365,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
             // Handle the error if the task fails
             showToast(requireContext(), getString(R.string.failed_to_check_for_updates))
         }
-    }
 
     private val listener = InstallStateUpdatedListener { state ->
         when (state.installStatus()) {
@@ -427,6 +438,43 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
     ).setAction("Restart") {
         appUpdateManager.completeUpdate()  // This will trigger the app restart
     }.show()
+
+    fun openPlayStoreForRating() {
+        val packageName = requireContext().packageName
+        try {
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                "market://details?id=$packageName".toUri()
+            )
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Timber.e(e)
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                "https://play.google.com/store/apps/details?id=$packageName".toUri()
+            )
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        }
+    }
+
+    fun sendEmail() {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = "mailto:".toUri()
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("vocabulens@gmail.com"))
+            putExtra(Intent.EXTRA_SUBJECT, "Vocabulens Feedback")
+        }
+
+        try {
+            requireContext().startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(context, "There is no email client installed.", Toast.LENGTH_SHORT)
+                .show()
+            Timber.e(e)
+        }
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

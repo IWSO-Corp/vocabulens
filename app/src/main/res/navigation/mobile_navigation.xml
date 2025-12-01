@@ -112,6 +112,9 @@
         <action
             android:id="@+id/action_nav_settings_to_feedbackFragment"
             app:destination="@id/feedbackFragment" />
+        <action
+            android:id="@+id/action_nav_settings_to_accountFragment"
+            app:destination="@id/accountFragment" />
     </fragment>
     
     <fragment
@@ -189,5 +192,14 @@
         android:name="com.iwsocorp.vobynotes.ui.setting.FeedbackFragment"
         android:label="FeedbackFragment"
         tools:layout="@layout/fragment_feedback" />
+    <fragment
+        android:id="@+id/accountFragment"
+        android:name="com.iwsocorp.vobynotes.ui.setting.AccountFragment"
+        android:label="fragment_account"
+        tools:layout="@layout/fragment_account" >
+        <action
+            android:id="@+id/action_accountFragment_to_shareDetailFragment"
+            app:destination="@id/shareDetailFragment" />
+    </fragment>
 
 </navigation>

@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -108,6 +109,10 @@ class ShareRepository @Inject constructor(
         val document = docRef.get().await()
         if (!document.exists()) return null
 
+        return createSharedNote(document)
+    }
+
+    private fun createSharedNote(document: DocumentSnapshot): SharedNote {
         val corpusJson = document.getString("content")
         val corpusType = object : TypeToken<List<SharedCorpus>>() {}.type
         val corpusList: List<SharedCorpus> = Gson().fromJson(corpusJson, corpusType)
@@ -172,6 +177,69 @@ class ShareRepository @Inject constructor(
             .get()
             .await()
         return userSaveRef.exists()
+    }
+
+    fun getUserSharedNotes(userId: String, callback: (List<SharedNote>) -> Unit) {
+        val userNotesRef = collection
+            .whereEqualTo("ownerId", userId)
+            .orderBy("updatedAt", Query.Direction.DESCENDING)
+        userNotesRef.addSnapshotListener { snapshot, exception ->
+            if (exception != null) {
+                Timber.e("Error getting user shared notes: $exception")
+                return@addSnapshotListener
+            }
+            if (snapshot != null && !snapshot.isEmpty) {
+                val sharedNotes = snapshot.documents.mapNotNull { doc ->
+                    createSharedNote(doc)
+                }
+                callback(sharedNotes)
+                Timber.d("User shared notes: $sharedNotes")
+            } else {
+                Timber.d("User has no shared notes")
+            }
+        }
+    }
+
+    suspend fun deleteSharedNote(noteId: String) {
+        val userSaves = firestore.collection("user_saves").document().collection("notes")
+            .document(noteId).get().await()
+        if (userSaves.exists()) {
+            userSaves.reference.delete().await()
+        }
+
+        val docRef = collection.document(noteId)
+
+        suspendCancellableCoroutine { cont ->
+            docRef.delete().addOnSuccessListener {
+                cont.resumeWith(Result.success(Unit))
+                Timber.d("Delete shared note berhasil")
+            }.addOnFailureListener {
+                cont.resumeWith(Result.failure(it))
+                Timber.e("Delete shared note gagal: $it")
+            }
+        }
+    }
+
+    suspend fun deleteAccountSharedNotes(userId: String) {
+        val query = collection
+            .whereEqualTo("ownerId", userId)
+            .get()
+            .await()
+        val batch = firestore.batch()
+        query.documents.forEach { doc ->
+            batch.delete(doc.reference)
+        }
+        batch.commit().await()
+        deleteUserSaves(userId)
+    }
+
+    private suspend fun deleteUserSaves(userId: String) {
+        val query = firestore.collection("user_saves")
+            .document(userId)
+            .collection("notes")
+        query.get().await().documents.forEach { doc ->
+            doc.reference.delete().await()
+        }
     }
 
 }

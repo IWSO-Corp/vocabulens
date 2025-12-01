@@ -1,6 +1,7 @@
 package com.iwsocorp.vobynotes.ui.share
 
 import android.os.Bundle
+import android.view.Menu
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
@@ -85,7 +86,7 @@ class ShareDetailFragment :
         }
         viewModel.isSaved.collectOnStarted {
             if (it) binding.toolbarNote.menu.findItem(R.id.action_save)
-                .setIcon(R.drawable.baseline_download_done_24)
+                ?.setIcon(R.drawable.baseline_download_done_24)
         }
 
         alphabetSidebarHelper.observePagesUpdates()
@@ -100,7 +101,10 @@ class ShareDetailFragment :
             inflateMenu(R.menu.menu_share_detail)
             setOnMenuItemClickListener(menuListener)
             firebaseUser?.let { user ->
-                if (user.uid == sharedNote.ownerId) menu.removeItem(R.id.action_save)
+                if (user.uid == sharedNote.ownerId) {
+                    menu.removeItem(R.id.action_save)
+                    menu.add(Menu.NONE, 1001, Menu.NONE, R.string.unshare)
+                }
             }
         }
 
@@ -150,6 +154,28 @@ class ShareDetailFragment :
                             state.sharedNote.title,
                             "${shareLink}${state.sharedNote.id}"
                         )
+                    }
+                }
+                true
+            }
+
+            1001 -> {
+                viewModel.sharedNoteState.collectOnStarted { state ->
+                    if (state is SharedNoteState.Loaded) showAlertDialog(
+                        requireContext(),
+                        "Unshare Note",
+                        "Unshare ${state.sharedNote.title} note?",
+                        "Unshare",
+                        "Cancel",
+                    ) {
+                        viewModel.deleteSharedNote(state.sharedNote.id) {
+                            Toast.makeText(
+                                requireContext(),
+                                if (it) "Removed from public note" else "Failed to unshare",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            if (it) findNavController().navigateUp()
+                        }
                     }
                 }
                 true

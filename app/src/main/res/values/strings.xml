@@ -74,4 +74,6 @@
     <string name="update_available">New version of the app is available!</string>
     <string name="update_downloaded">An update has been downloaded. Please restart to apply.</string>
     <string name="failed_to_check_for_updates">Failed to check for updates</string>
+    <string name="delete_account">This will also delete all your shared notes and backed up data. Are you sure you want to delete your account?</string>
+    <string name="unshare">Unshare</string>
 </resources>

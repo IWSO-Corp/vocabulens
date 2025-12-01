@@ -214,4 +214,17 @@ class BackupRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteBackup(userId: String) {
+        val docRef = userBackupPath(userId)
+        suspendCancellableCoroutine { cont ->
+            docRef.delete().addOnSuccessListener {
+                cont.resumeWith(Result.success(Unit))
+                Timber.d("Delete backup berhasil")
+            }.addOnFailureListener {
+                cont.resumeWith(Result.failure(it))
+                Timber.e("Delete backup gagal: $it")
+            }
+        }
+    }
+
 }

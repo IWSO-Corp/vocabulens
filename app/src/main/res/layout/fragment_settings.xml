@@ -111,6 +111,24 @@
                 android:padding="16dp"
                 android:text="Add widget" />
 
+            <TextView
+                android:id="@+id/btn_rating"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:background="@color/primary"
+                android:padding="16dp"
+                android:text="Rate Vocabulens" />
+
+            <TextView
+                android:id="@+id/btn_contact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:background="@color/primary"
+                android:padding="16dp"
+                android:text="Contact the developer" />
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/btn_version"
                 android:layout_width="match_parent"
