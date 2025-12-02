@@ -41,7 +41,7 @@ class ShareViewModel @Inject constructor(
         try {
             val content = getNoteCorpus(sharedNote.id)
             shareRepository.shareNoteToPublic(sharedNote.copy(content = content))
-            noteRepository.updateNoteSharedStatus(sharedNote.id, true)
+            noteRepository.updateNoteSharedStatus(listOf(sharedNote.id), true)
             _shareState.value = ShareState.Shared(sharedNote.title, "${shareLink}${sharedNote.id}")
         } catch (e: Exception) {
             _shareState.value = ShareState.Error(e.message ?: "Unknown error")

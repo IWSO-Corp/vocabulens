@@ -36,8 +36,8 @@ interface NoteDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
-    @Query("UPDATE notes SET shared = :shared WHERE id = :noteId")
-    suspend fun updateNoteSharedStatus(noteId: String, shared: Boolean)
+    @Query("UPDATE notes SET shared = :shared WHERE id IN (:noteIds)")
+    suspend fun updateNoteSharedStatus(noteIds: List<String>, shared: Boolean)
 
     @Query("DELETE FROM notes WHERE id IN (:ids)")
     suspend fun deleteNoteByIds(ids: List<String>)

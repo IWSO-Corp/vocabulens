@@ -1,5 +1,7 @@
 package com.iwsocorp.vobynotes.core.data.repository
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -214,17 +216,40 @@ class BackupRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteBackup(userId: String) {
-        val docRef = userBackupPath(userId)
-        suspendCancellableCoroutine { cont ->
-            docRef.delete().addOnSuccessListener {
-                cont.resumeWith(Result.success(Unit))
-                Timber.d("Delete backup berhasil")
-            }.addOnFailureListener {
-                cont.resumeWith(Result.failure(it))
-                Timber.e("Delete backup gagal: $it")
-            }
+    suspend fun deleteUserAccount(userId: String): Boolean {
+        return try {
+            val firestore = FirebaseFirestore.getInstance()
+            val userRef = userBackupPath(userId)
+
+            // 1. Hapus semua koleksi di bawah user (corpus, notes, examples, dll)
+            deleteSubcollection(firestore, userRef.collection("corpus"))
+            deleteSubcollection(firestore, userRef.collection("notes"))
+            deleteSubcollection(firestore, userRef.collection("examples"))
+
+            // 2. Hapus dokumen utama user
+            userRef.delete().await()
+
+            // 3. Hapus akun authentication
+            FirebaseAuth.getInstance().currentUser?.delete()?.await()
+
+            true
+        } catch (e: Exception) {
+            false
         }
+    }
+
+    private suspend fun deleteSubcollection(
+        firestore: FirebaseFirestore,
+        collectionRef: CollectionReference
+    ) {
+        val snapshot = collectionRef.get().await()
+        val batch = firestore.batch()
+
+        snapshot.documents.forEach { doc ->
+            batch.delete(doc.reference)
+        }
+
+        batch.commit().await()
     }
 
 }

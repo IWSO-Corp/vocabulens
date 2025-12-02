@@ -220,26 +220,41 @@ class ShareRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteAccountSharedNotes(userId: String) {
-        val query = collection
+    suspend fun deleteAccountSharedNotes(userId: String, deletedSharedNotesId: (List<String>) -> Unit) {
+        // delete shared_notes belonging to user
+        val sharedNotes = collection
             .whereEqualTo("ownerId", userId)
             .get()
             .await()
+
+        val sharedNotesId = sharedNotes.documents.map { it.id }
+        deletedSharedNotesId(sharedNotesId)
+
         val batch = firestore.batch()
-        query.documents.forEach { doc ->
+        sharedNotes.documents.forEach { doc ->
             batch.delete(doc.reference)
         }
+
         batch.commit().await()
+
         deleteUserSaves(userId)
     }
 
     private suspend fun deleteUserSaves(userId: String) {
-        val query = firestore.collection("user_saves")
-            .document(userId)
-            .collection("notes")
-        query.get().await().documents.forEach { doc ->
-            doc.reference.delete().await()
+        val userDocRef = firestore.collection("user_saves").document(userId)
+        val notesRef = userDocRef.collection("notes")
+
+        // delete subcollection documents
+        val notes = notesRef.get().await()
+
+        val batch = firestore.batch()
+        notes.documents.forEach { doc ->
+            batch.delete(doc.reference)
         }
+        if (!notes.isEmpty) batch.commit().await()
+
+        // delete main user doc
+        userDocRef.delete().await()
     }
 
 }

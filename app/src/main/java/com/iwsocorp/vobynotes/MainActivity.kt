@@ -18,10 +18,10 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.iwsocorp.vobynotes.core.common.Utils.getLocaleLang
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
 import com.iwsocorp.vobynotes.databinding.NavHeaderMainBinding
+import com.iwsocorp.vobynotes.ui.auth.AuthViewModel
 import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
 import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val languageViewModel: LanguageViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,8 +92,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupTable() {
-        FirebaseAuth.getInstance().currentUser?.let {
-            settingsViewModel.getBackupData(it.uid)
+        lifecycleScope.launch {
+            authViewModel.authState.collectLatest { result ->
+                result.onSuccess { user ->
+                    user?.let {
+                        settingsViewModel.getBackupData(it.uid)
+                    }
+                }
+            }
         }
 
         lifecycleScope.launch {

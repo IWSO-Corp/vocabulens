@@ -8,7 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import com.google.firebase.auth.FirebaseAuth
@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.databinding.FragmentAccountBinding
+import com.iwsocorp.vobynotes.ui.auth.AuthViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareDetailFragment
 import com.iwsocorp.vobynotes.ui.share.ShareNoteAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,7 +25,9 @@ import timber.log.Timber
 @AndroidEntryPoint
 class AccountFragment : BaseFragment<FragmentAccountBinding>(FragmentAccountBinding::inflate) {
 
-    private val viewModel: AccountViewModel by viewModels()
+    private val viewModel: AccountViewModel by activityViewModels()
+    private val authViewModel: AuthViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
     private val user: FirebaseUser by lazy {
         FirebaseAuth.getInstance().currentUser!!
     }
@@ -42,8 +45,9 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(FragmentAccountBind
 
         setupUI()
 
-        viewModel.getSharedNotes {
-            adapter.submitData(viewLifecycleOwner.lifecycle, PagingData.from(it))
+        viewModel.getSharedNotes()
+        viewModel.sharedNotes.collectOnStarted {
+            adapter.submitData(PagingData.from(it))
             Timber.d("Shared notes: ${it.size}")
         }
         adapter.addOnPagesUpdatedListener {
@@ -105,12 +109,17 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(FragmentAccountBind
                 val input = editText.text.toString().trim()
                 if (input == user.email) {
                     viewModel.deleteAccountData {
+                        if (it) {
+                            authViewModel.signOut()
+                            settingsViewModel.resetBackupData()
+                            findNavController().navigateUp()
+                        }
+
                         Toast.makeText(
                             requireContext(),
                             if (it) "Account deleted" else "Failed to delete account",
                             Toast.LENGTH_SHORT
                         ).show()
-                        if (it) findNavController().navigateUp()
                     }
                 } else {
                     Toast.makeText(

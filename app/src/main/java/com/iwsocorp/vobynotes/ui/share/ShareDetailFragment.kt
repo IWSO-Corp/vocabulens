@@ -90,13 +90,12 @@ class ShareDetailFragment :
         }
 
         alphabetSidebarHelper.observePagesUpdates()
+        binding.toolbarNote.setNavigationOnClickListener { findNavController().navigateUp() }
     }
 
     private fun setupUI(sharedNote: SharedNote) {
         with(binding.toolbarNote) {
             title = sharedNote.title
-            setNavigationIcon(R.drawable.baseline_arrow_back_24)
-            setNavigationOnClickListener { findNavController().navigateUp() }
             menu.clear()
             inflateMenu(R.menu.menu_share_detail)
             setOnMenuItemClickListener(menuListener)

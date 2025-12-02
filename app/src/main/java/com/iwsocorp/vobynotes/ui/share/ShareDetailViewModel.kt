@@ -110,7 +110,7 @@ class ShareDetailViewModel @Inject constructor(
     fun deleteSharedNote(noteId: String, callback: (Boolean) -> Unit) = viewModelScope.launch {
         try {
             shareRepository.deleteSharedNote(noteId)
-            noteRepository.updateNoteSharedStatus(noteId, false)
+            noteRepository.updateNoteSharedStatus(listOf(noteId), false)
             callback(true)
         } catch (e: Exception) {
             callback(false)
