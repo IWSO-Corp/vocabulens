@@ -40,7 +40,7 @@
             android:id="@+id/capturedImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:visibility="gone" />
 
         <!-- Overlay (opsional, buat efek fokus area scan) -->
@@ -50,6 +50,18 @@
             android:layout_height="match_parent"
             android:background="#33000000" />
     </FrameLayout>
+
+    <ImageView
+        android:id="@+id/btnGallery"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="64dp"
+        android:layout_marginBottom="180dp"
+        android:background="@drawable/rounded_12"
+        android:contentDescription="Gallery"
+        android:padding="2dp"
+        android:scaleType="centerCrop" />
 
     <!-- Floating capture button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

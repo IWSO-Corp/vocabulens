@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -44,6 +45,7 @@ import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -68,6 +70,10 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             }
         }
     }
+    private val pickImage =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            uri?.let { processImage(uri) }
+        }
     private val bottomSheetBehavior: BottomSheetBehavior<View> by lazy {
         BottomSheetBehavior.from(binding.bottomSheetContainer)
     }
@@ -77,6 +83,9 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             binding.btnSave.text = if (it == 0) getString(R.string.save_all)
             else getString(R.string.save_s, it)
         }
+    }
+    private val executor: Executor by lazy {
+        ContextCompat.getMainExecutor(requireContext())
     }
 
     private lateinit var cameraExecutor: ExecutorService
@@ -111,6 +120,9 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         }
         btnCapture.setOnClickListener {
             captureImageForProcessing()
+        }
+        btnGallery.setOnClickListener {
+            pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
         tvSourceLang.setOnClickListener {
             LangBottomSheet("Source language") {
@@ -149,6 +161,8 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         languageViewModel.translationLanguage.collectOnStarted {
             tvTargetLang.text = it?.langName(requireContext())
         }
+
+        loadLatestGalleryThumbnail()
     }
 
     private fun onSave() {
@@ -225,6 +239,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
                     val isHalfExpanded = newState == BottomSheetBehavior.STATE_HALF_EXPANDED
 
                     binding.btnCapture.fadeVisibility(isIdle && isCollapsed)
+                    binding.btnGallery.fadeVisibility(isIdle && isCollapsed)
                     binding.btnSave.isVisible = (isExpanded || isHalfExpanded) && isSuccess
                     binding.bottomSheetContainer.background = ContextCompat.getDrawable(
                         requireContext(),
@@ -241,6 +256,9 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         val params = binding.btnCapture.layoutParams as ViewGroup.MarginLayoutParams
         params.setMargins(0, 0, 0, dynamicPeekHeight + 32)
         binding.btnCapture.layoutParams = params
+        val params2 = binding.btnGallery.layoutParams as ViewGroup.MarginLayoutParams
+        params2.setMargins(0, 0, 0, dynamicPeekHeight + 32)
+        binding.btnGallery.layoutParams = params2
     }
 
     private fun setupOnBack() = requireActivity().onBackPressedDispatcher.addCallback(
@@ -259,8 +277,11 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
                             rescan()
                             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                         } else {
-                            rescan()
-                            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                            if (bottomSheetBehavior.state != BottomSheetBehavior.STATE_COLLAPSED) {
+                                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                            } else {
+                                rescan()
+                            }
                         }
                     }
 
@@ -293,6 +314,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
         binding.handle.isVisible = isSuccess
         binding.progressBar.isVisible = isLoading || isDownloading
         binding.btnCapture.fadeVisibility(isIdle && isCollapsed)
+        binding.btnGallery.fadeVisibility(isIdle && isCollapsed)
         binding.btnSave.isVisible = isSuccess && (isExpanded || isHalfExpanded)
         binding.tvResult.isVisible = isSuccess || isDownloading || isError
         binding.tvResult.text = when (state) {
@@ -379,7 +401,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
 
             cameraProvider?.unbindAll()
             cameraProvider?.bindToLifecycle(viewLifecycleOwner, selector, preview, imageCapture)
-        }, ContextCompat.getMainExecutor(requireContext()))
+        }, executor)
     }
 
     private fun checkCameraPermission() = when {
@@ -419,32 +441,45 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
             requireContext().externalCacheDir,
             "scan_${System.currentTimeMillis()}.jpg"
         )
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
         imageCapture.takePicture(
-            outputOptions, ContextCompat.getMainExecutor(requireContext()),
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    viewModel.setError("Failed to take picture: ${exc.message}")
-                }
-
-                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val imageUri = Uri.fromFile(photoFile)
-                    val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
-                    val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
-
-                    viewModel.processImage(imageUri, sourceLang, targetLang)
-
-                    displayCapturedImage(imageUri)
-                }
-            }
+            ImageCapture.OutputFileOptions.Builder(photoFile).build(),
+            executor,
+            imageSavedCallback(photoFile)
         )
     }
 
-    private fun displayCapturedImage(imageUri: Uri) = with(binding) {
-        previewView.visibility = View.GONE
-        capturedImage.visibility = View.VISIBLE
-        capturedImage.setImageURI(imageUri)
+    private fun imageSavedCallback(photoFile: File) = object : ImageCapture.OnImageSavedCallback {
+        override fun onError(exc: ImageCaptureException) {
+            viewModel.setError("Failed to take picture: ${exc.message}")
+        }
+
+        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+            val imageUri = Uri.fromFile(photoFile)
+            processImage(imageUri)
+        }
+    }
+
+    private fun processImage(imageUri: Uri) {
+        val sourceLang = binding.tvSourceLang.text.toString().langCode(requireContext())
+        val targetLang = binding.tvTargetLang.text.toString().langCode(requireContext())
+
+        viewModel.processImage(imageUri, sourceLang, targetLang)
+
+        with(binding) {
+            previewView.visibility = View.GONE
+            capturedImage.visibility = View.VISIBLE
+            capturedImage.setImageURI(imageUri)
+        }
+    }
+
+    private fun loadLatestGalleryThumbnail() {
+        val latestUri = viewModel.getLatestImage(requireContext())
+        latestUri?.let {
+            binding.btnGallery.setImageURI(it)
+        } ?: run {
+            binding.btnGallery.setImageResource(R.drawable.ic_menu_gallery)
+        }
     }
 
     override fun onDestroyView() {

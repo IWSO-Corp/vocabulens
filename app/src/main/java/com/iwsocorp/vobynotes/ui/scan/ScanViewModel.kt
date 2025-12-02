@@ -1,5 +1,6 @@
 package com.iwsocorp.vobynotes.ui.scan
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -74,6 +75,8 @@ class ScanViewModel @Inject constructor(
         SharingStarted.Lazily,
         false
     )
+
+    fun getLatestImage(context: Context): Uri? = processor.getLatestImage(context)
 
 }
 

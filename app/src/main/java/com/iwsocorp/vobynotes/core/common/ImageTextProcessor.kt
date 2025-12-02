@@ -1,7 +1,10 @@
 package com.iwsocorp.vobynotes.core.common
 
+import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.TranslateLanguage
@@ -68,7 +71,7 @@ class ImageTextProcessor @Inject constructor(
         }
     }
 
-    fun getTextRecognizerByLanguage(langCode: String): TextRecognizer = TextRecognition.getClient(
+    private fun getTextRecognizerByLanguage(langCode: String): TextRecognizer = TextRecognition.getClient(
         when (langCode) {
             "zh" -> ChineseTextRecognizerOptions.Builder().build()
             "ja" -> JapaneseTextRecognizerOptions.Builder().build()
@@ -146,6 +149,37 @@ class ImageTextProcessor @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Failed to delete temp file")
         }
+    }
+
+    fun getLatestImage(context: Context): Uri? {
+        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        } else {
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        }
+
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DATE_MODIFIED
+        )
+
+        val sortOrder = "${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+
+        val cursor = context.contentResolver.query(
+            collection,
+            projection,
+            null,
+            null,
+            sortOrder
+        ) ?: return null
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                return ContentUris.withAppendedId(collection, id)
+            }
+        }
+        return null
     }
 
 }
