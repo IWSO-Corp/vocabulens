@@ -1,7 +1,9 @@
 package com.iwsocorp.vobynotes.core.database.dao
 
 import androidx.paging.PagingSource
+import androidx.room.ColumnInfo
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -69,8 +71,16 @@ interface CorpusDao {
     @Query("SELECT * FROM corpus WHERE id = :id")
     fun getCorpusById(id: String): Flow<CorpusEntity>
 
-    @Query("SELECT * FROM corpus WHERE deletedAt IS NULL AND word LIKE :query || '%'")
-    fun searchCorpus(query: String): PagingSource<Int, CorpusEntity>
+    @Query(
+        """
+        SELECT c.*, n.title
+        FROM corpus c
+        JOIN notes n ON c.noteId = n.id
+        WHERE c.word LIKE '%' || :query || '%'
+        ORDER BY n.title ASC, c.word ASC
+    """
+    )
+    fun searchCorpus(query: String): PagingSource<Int, SearchItem>
 
     @Query("SELECT * FROM corpus WHERE deletedAt IS NULL ORDER BY word ASC")
     fun getAllCorpus(): PagingSource<Int, CorpusEntity>
@@ -110,4 +120,9 @@ suspend fun CorpusDao.insertCorpusListWithResult(
 data class InsertResult(
     val successCount: Int,
     val failedCount: Int,
+)
+
+data class SearchItem(
+    @Embedded val corpus: CorpusEntity,
+    @ColumnInfo(name = "title") val noteTitle: String
 )

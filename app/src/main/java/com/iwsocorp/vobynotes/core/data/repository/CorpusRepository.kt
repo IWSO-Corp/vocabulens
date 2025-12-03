@@ -64,8 +64,23 @@ class CorpusRepositoryImpl @Inject constructor(
         return corpusDao.getCorpusById(id).filterNotNull().map { it.asExternalModel() }
     }
 
-    override fun searchCorpus(query: String): Flow<PagingData<Corpus>> {
-        return createPager { corpusDao.searchCorpus(query) }
+    override fun searchCorpus(query: String): Flow<PagingData<CorpusWithNote>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 30,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                corpusDao.searchCorpus(query)
+            }
+        ).flow.map {  pagingData ->
+            pagingData.map {
+                CorpusWithNote(
+                    corpus = it.corpus.asExternalModel(),
+                    noteTitle = it.noteTitle
+                )
+            }
+        }
     }
 
     override fun getAllCorpus(): Flow<PagingData<Corpus>> {
@@ -138,7 +153,7 @@ interface CorpusRepository {
     suspend fun deleteBatch(ids: List<String>)
     suspend fun getCorpusByWord(word: String): Corpus?
     fun getCorpusById(id: String): Flow<Corpus>
-    fun searchCorpus(query: String): Flow<PagingData<Corpus>>
+    fun searchCorpus(query: String): Flow<PagingData<CorpusWithNote>>
     fun getAllCorpus(): Flow<PagingData<Corpus>>
     fun getPagedCorpus(
         noteId: String,
@@ -155,3 +170,8 @@ interface CorpusRepository {
     suspend fun moveCorpusToNote(corpusIds: List<String>, newNoteId: String)
     suspend fun updateCorpusMark(corpusIds: List<String>, newMark: Mark)
 }
+
+data class CorpusWithNote(
+    val corpus: Corpus,
+    val noteTitle: String
+)

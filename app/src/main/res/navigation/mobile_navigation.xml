@@ -87,6 +87,9 @@
         <action
             android:id="@+id/action_searchFragment_to_editDetailFragment"
             app:destination="@id/editDetailFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_noteFragment"
+            app:destination="@id/noteFragment" />
     </fragment>
 
     <fragment

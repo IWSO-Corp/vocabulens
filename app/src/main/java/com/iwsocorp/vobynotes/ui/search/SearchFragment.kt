@@ -31,6 +31,7 @@ import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.ARG_FROM
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.detail.MeaningAdapter
+import com.iwsocorp.vobynotes.ui.note.ARG_NOTE_ID
 import com.iwsocorp.vobynotes.ui.note.ARG_POSITION
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
 import com.iwsocorp.vobynotes.ui.note.NoteViewModel
@@ -40,7 +41,6 @@ import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 const val ARG_SEARCH_WORD = "searchWordParam"
@@ -54,8 +54,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
     private val detailViewModel: DetailViewModel by activityViewModels()
     private val settingsViewModel: SettingsViewModel by activityViewModels()
 
-    private val wordAdapter: WordAdapter by lazy {
-        WordAdapter(false, object : WordAdapter.ClickListener {
+    private val searchAdapter: SearchAdapter by lazy {
+        SearchAdapter(object : WordAdapter.ClickListener {
             override fun onClick(corpus: Corpus) {
                 detailViewModel.setCorpusList(emptyList())
                 findNavController().navigate(
@@ -95,7 +95,12 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
                     }
                 )
             }
-        })
+        }) {
+            findNavController().navigate(
+                R.id.action_searchFragment_to_noteFragment,
+                bundleOf(ARG_NOTE_ID to it)
+            )
+        }
     }
     private val args by lazy {
         arguments?.getString(ARG_SEARCH_WORD)
@@ -122,12 +127,10 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             is SearchUiState.Idle -> {}
             is SearchUiState.Loading -> {}
             is SearchUiState.LocalLoaded -> {
-                withContext(Dispatchers.Main) {
-                    wordAdapter.submitData(state.corpusPagingData)
-                }
-                wordAdapter.addLoadStateListener {
+                searchAdapter.submitData(viewLifecycleOwner.lifecycle, state.corpusPagingData)
+                searchAdapter.addLoadStateListener {
                     if (it.refresh is LoadState.NotLoading) binding.rvSearch.scrollToPosition(0)
-                    binding.tvEmpty.isVisible = wordAdapter.itemCount == 0
+                    binding.tvEmpty.isVisible = searchAdapter.itemCount == 0
                 }
             }
 
@@ -153,12 +156,12 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             binding.searchView.findViewById(androidx.appcompat.R.id.search_mag_icon)
         searchIcon.visibility = View.GONE
 
-        binding.rvSearch.adapter = wordAdapter
+        binding.rvSearch.adapter = searchAdapter
         binding.searchView.apply {
             isIconified = false
             requestFocus()
             setOnCloseListener {
-                wordAdapter.submitData(viewLifecycleOwner.lifecycle, PagingData.from(emptyList()))
+                searchAdapter.submitData(viewLifecycleOwner.lifecycle, PagingData.from(emptyList()))
                 setQuery("", false)
 
                 binding.itemDetail.contentDetail.visibility = View.GONE
@@ -177,7 +180,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
             }
         }
         binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text).apply {
-            setHintTextColor(ContextCompat.getColor(requireContext(), R.color.bg_search))
+            setHintTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
             setTextColor(ContextCompat.getColor(requireContext(), R.color.onPrimary))
             filters = arrayOf(
                 InputFilter.LengthFilter(30),
@@ -288,7 +291,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
                 if (q.isNotEmpty()) {
                     viewModel.searchWord(q)
                 } else {
-                    wordAdapter.submitData(
+                    searchAdapter.submitData(
                         viewLifecycleOwner.lifecycle,
                         PagingData.from(emptyList())
                     )
@@ -302,7 +305,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(FragmentSearchBinding
                 binding.btnSearch.text = q.trim()
                 binding.btnSearch.setOnClickListener {
                     onSearch(q)
-                    wordAdapter.submitData(
+                    searchAdapter.submitData(
                         viewLifecycleOwner.lifecycle,
                         PagingData.from(emptyList())
                     )

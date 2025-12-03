@@ -3,9 +3,13 @@ package com.iwsocorp.vobynotes.ui.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.iwsocorp.vobynotes.core.common.CorpusQueryStateDataStore
+import com.iwsocorp.vobynotes.core.common.Utils.withIndex
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepository
+import com.iwsocorp.vobynotes.core.data.repository.CorpusWithNote
 import com.iwsocorp.vobynotes.core.data.repository.VocabularyRepository
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
@@ -32,16 +36,33 @@ class SearchViewModel @Inject constructor(
         _searchUiState.value = SearchUiState.Idle
     }
 
-    fun searchWord(word: String) = viewModelScope.launch {
+    fun searchWord(query: String) = viewModelScope.launch {
         _searchUiState.value = SearchUiState.Loading
-        corpusRepository.searchCorpus(word)
+
+        corpusRepository.searchCorpus(query)
             .map { pagingData ->
-                var counter = 0
-                pagingData.map { entity ->
-                    counter++
-                    entity.copy(indexNumber = counter)
+                pagingData.withIndex().map { indexed ->
+                    val newCorpus = indexed.value.corpus.copy(indexNumber = indexed.index)
+                    SearchUiModel.Item(
+                        data = indexed.value.copy(corpus = newCorpus)
+                    )
                 }
-            }.collect {
+            }
+            .map { pagingData ->
+                pagingData.insertSeparators { before, after ->
+                    val beforeNoteId = before?.data?.corpus?.noteId
+                    val afterItem = after?.data
+
+                    if (afterItem != null && beforeNoteId != afterItem.corpus.noteId) {
+                        SearchUiModel.Header(
+                            noteId = afterItem.corpus.noteId,
+                            noteTitle = afterItem.noteTitle
+                        )
+                    } else null
+                }
+            }
+            .cachedIn(viewModelScope)
+            .collectLatest {
                 _searchUiState.value = SearchUiState.LocalLoaded(it)
             }
     }
@@ -67,6 +88,11 @@ class SearchViewModel @Inject constructor(
 sealed class SearchUiState {
     object Idle : SearchUiState()
     object Loading : SearchUiState()
-    data class LocalLoaded(val corpusPagingData: PagingData<Corpus>) : SearchUiState()
+    data class LocalLoaded(val corpusPagingData: PagingData<SearchUiModel>) : SearchUiState()
     data class ApiLoaded(val corpus: Corpus) : SearchUiState()
+}
+
+sealed class SearchUiModel {
+    data class Header(val noteId: String, val noteTitle: String) : SearchUiModel()
+    data class Item(val data: CorpusWithNote) : SearchUiModel()
 }

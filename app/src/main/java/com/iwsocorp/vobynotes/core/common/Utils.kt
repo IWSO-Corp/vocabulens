@@ -11,6 +11,8 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.paging.PagingData
+import androidx.paging.map
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.google.gson.Gson
@@ -196,6 +198,14 @@ object Utils {
 
     fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()
+    }
+
+    fun <T : Any> PagingData<T>.withIndex(): PagingData<IndexedValue<T>> {
+        var counter = 0
+        return this.map { item ->
+            counter += 1
+            IndexedValue(counter, item)
+        }
     }
 
 }
