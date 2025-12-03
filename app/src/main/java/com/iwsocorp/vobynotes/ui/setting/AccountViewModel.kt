@@ -21,8 +21,7 @@ class AccountViewModel @Inject constructor(
     private val noteRepository: NoteRepository
 ) : ViewModel() {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val user = auth.currentUser!!
+    private val user = FirebaseAuth.getInstance().currentUser!!
 
     private val _sharedNotes = MutableStateFlow<List<SharedNote>>(emptyList())
     val sharedNotes: MutableStateFlow<List<SharedNote>> = _sharedNotes
@@ -52,6 +51,7 @@ class AccountViewModel @Inject constructor(
                     noteRepository.updateNoteSharedStatus(it, false)
                 }
             }
+            _sharedNotes.value = emptyList()
             callback(true)
         } catch (e: Exception) {
             callback(false)

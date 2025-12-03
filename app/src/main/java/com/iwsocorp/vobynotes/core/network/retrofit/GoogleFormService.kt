@@ -16,6 +16,7 @@ interface GoogleFormService {
     @FormUrlEncoded
     @POST("formResponse")
     suspend fun postFeedback(
+        @Field("emailAddress") email: String,
         @Field("entry.1966404122") feedback: String
     ): Response<Void>
 }
@@ -31,8 +32,8 @@ class GoogleFormRepository @Inject constructor(networkJson: Json) {
         .build()
         .create(GoogleFormService::class.java)
 
-    suspend fun postFeedback(feedback: String): Response<Void> {
-        return service.postFeedback(feedback)
+    suspend fun postFeedback(email: String, feedback: String): Response<Void> {
+        return service.postFeedback(email, feedback)
     }
 
 }

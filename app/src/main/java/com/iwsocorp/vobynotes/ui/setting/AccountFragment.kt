@@ -56,7 +56,7 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(FragmentAccountBind
     }
 
     private fun setupUI() = with(binding) {
-        tvName.text = user.displayName
+        tvName.text = user.displayName?.ifEmpty { "Anonymous" } ?: "Anonymous"
         tvName.setOnClickListener {
             tvName.visibility = View.INVISIBLE
             ilName.visibility = View.VISIBLE
@@ -88,7 +88,13 @@ class AccountFragment : BaseFragment<FragmentAccountBinding>(FragmentAccountBind
     }
 
     private fun changeName(name: String) = viewModel.changeName(name) {
-        if (it) binding.btnSaveName.visibility = View.INVISIBLE
+        if (it) with(binding) {
+            tvName.text = name.ifEmpty { "Anonymous" }
+            tvName.visibility = View.VISIBLE
+            ilName.visibility = View.INVISIBLE
+            etName.visibility = View.INVISIBLE
+            btnSaveName.visibility = View.INVISIBLE
+        }
 
         Toast.makeText(requireContext(), if (it) "Success" else "Failed", Toast.LENGTH_SHORT)
             .show()

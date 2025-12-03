@@ -465,7 +465,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                                 user.displayName,
                                 emptyList()
                             )
-                        )
+                        ) {}
                     }
                 }
             }

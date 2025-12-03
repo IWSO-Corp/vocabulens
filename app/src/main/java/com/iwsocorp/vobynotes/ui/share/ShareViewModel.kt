@@ -36,15 +36,17 @@ class ShareViewModel @Inject constructor(
         _shareState.value = ShareState.Idle
     }
 
-    fun shareNote(sharedNote: SharedNote) = viewModelScope.launch {
+    fun shareNote(sharedNote: SharedNote, callback: (Boolean) -> Unit) = viewModelScope.launch {
         _shareState.value = ShareState.Loading
         try {
             val content = getNoteCorpus(sharedNote.id)
             shareRepository.shareNoteToPublic(sharedNote.copy(content = content))
             noteRepository.updateNoteSharedStatus(listOf(sharedNote.id), true)
             _shareState.value = ShareState.Shared(sharedNote.title, "${shareLink}${sharedNote.id}")
+            callback(true)
         } catch (e: Exception) {
             _shareState.value = ShareState.Error(e.message ?: "Unknown error")
+            callback(false)
         }
     }
 

@@ -185,7 +185,7 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
                             ownerName = user.displayName,
                             content = emptyList()
                         )
-                        viewModel.shareNote(sharedNote)
+                        viewModel.shareNote(sharedNote) {}
                     }
                     adapter.refresh()
                 }

@@ -3,6 +3,7 @@ package com.iwsocorp.vobynotes.ui.home
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.os.bundleOf
@@ -144,10 +145,18 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
             adapter.submitData(uiState.notesPaging)
         }
 
-        if (shareState is ShareState.Shared) requireContext().sharePublicNoteLink(
-            shareState.noteTitle,
-            shareState.link
-        )
+        if (shareState is ShareState.Shared) {
+            requireContext().sharePublicNoteLink(
+                shareState.noteTitle,
+                shareState.link
+            )
+
+            Toast.makeText(
+                requireContext(),
+                "Note shared to public",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
         Timber.d(
             "UiState: ${
@@ -286,7 +295,20 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                             user.displayName,
                             emptyList()
                         )
-                    )
+                    ) {
+                        if (it) {
+                            requireContext().sharePublicNoteLink(
+                                note.title,
+                                shareLink + note.id
+                            )
+
+                            Toast.makeText(
+                                requireContext(),
+                                "Note shared to public",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                     adapter.clearSelection()
                 }
             }

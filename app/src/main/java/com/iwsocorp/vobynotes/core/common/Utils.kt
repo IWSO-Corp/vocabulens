@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
@@ -22,7 +21,6 @@ import com.iwsocorp.vobynotes.databinding.ItemNoteBinding
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.random.Random
 
 object Utils {
 
@@ -42,19 +40,6 @@ object Utils {
         val date = Date(this)
         val format = SimpleDateFormat("MMM dd", Locale.US)
         return format.format(date)
-    }
-
-    fun containsWordRegex(sentence: String, word: String): Boolean {
-        val pattern = "\\b${Regex.escape(word)}\\b".toRegex(RegexOption.IGNORE_CASE)
-        return pattern.containsMatchIn(sentence)
-    }
-
-    fun generateRandomString(length: Int): String {
-        val charset = ('A'..'Z') + ('a'..'z') + ('0'..'9')
-        return (1..length)
-            .map { Random.nextInt(0, charset.size) }
-            .map(charset::get)
-            .joinToString("")
     }
 
     fun isNetworkAvailable(context: Context): Boolean {
@@ -128,9 +113,6 @@ object Utils {
         }
         popupMenu.show()
     }
-
-    fun Toolbar.setIconColor(context: Context) =
-        this.overflowIcon?.setTint(ContextCompat.getColor(context, R.color.black))
 
     fun Context.sharePublicNoteLink(noteTitle: String, link: String) {
         val shareText = "Check this vocabulary: $noteTitle on Vocabulens! \n$link"
