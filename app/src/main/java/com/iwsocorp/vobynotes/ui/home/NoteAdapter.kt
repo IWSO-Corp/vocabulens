@@ -21,6 +21,7 @@ import com.iwsocorp.vobynotes.databinding.ItemWordPreviewBinding
 
 class NoteAdapter(
     private val listener: ClickListener,
+    private val isTrash: Boolean = false,
 ) : PagingDataAdapter<NoteWithCorpus, NoteAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     interface ClickListener {
@@ -79,7 +80,7 @@ class NoteAdapter(
                     if (pos != 0) toggleSelection(note)
                 }
             }
-            if (pos != 0) itemView.setOnLongClickListener {
+            if (pos != 0 || isTrash) itemView.setOnLongClickListener {
                 if (!isSelectionMode) isSelectionMode = true
                 toggleSelection(note)
                 true

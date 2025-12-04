@@ -9,6 +9,7 @@ import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
@@ -37,6 +38,10 @@ import com.iwsocorp.vobynotes.databinding.FragmentNoteBinding
 import com.iwsocorp.vobynotes.ui.detail.ARG_CORPUS_ID
 import com.iwsocorp.vobynotes.ui.detail.DetailViewModel
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
+import com.iwsocorp.vobynotes.ui.setting.ARG_ID
+import com.iwsocorp.vobynotes.ui.setting.ARG_MEANING_LANG
+import com.iwsocorp.vobynotes.ui.setting.ARG_TITLE
+import com.iwsocorp.vobynotes.ui.setting.ARG_WORD_LANG
 import com.iwsocorp.vobynotes.ui.setting.LanguageViewModel
 import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareState
@@ -191,7 +196,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             viewModel.updateNoteTitle(note.title)
         }
 
-            alphabetSidebarHelper.observePagesUpdates()
+        alphabetSidebarHelper.observePagesUpdates()
         wordAdapter.loadStateFlow.collectOnStarted {
             val currentList = wordAdapter.snapshot().items
             detailViewModel.setCorpusList(currentList)
@@ -435,6 +440,19 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
                     viewModel.deleteCorpusBatch(selectedItemIds)
                     wordAdapter.clearSelection()
                 }
+            }
+
+            R.id.action_edit -> {
+                val note = viewModel.note.value
+                findNavController().navigate(
+                    R.id.action_noteFragment_to_importFragment,
+                    bundleOf(
+                        ARG_ID to note?.id,
+                        ARG_TITLE to note?.title,
+                        ARG_WORD_LANG to note?.wordLang,
+                        ARG_MEANING_LANG to note?.meaningLang
+                    )
+                )
             }
 
             R.id.action_share -> {

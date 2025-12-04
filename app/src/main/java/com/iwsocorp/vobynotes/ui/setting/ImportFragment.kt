@@ -15,10 +15,15 @@ import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.databinding.FragmentImportBinding
 import com.iwsocorp.vobynotes.ui.home.HomeViewModel
 import com.iwsocorp.vobynotes.ui.note.LangBottomSheet
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
+const val ARG_ID = "noteId"
 const val ARG_TITLE = "title"
+const val ARG_WORD_LANG = "wordLang"
+const val ARG_MEANING_LANG = "meaningLang"
 
+@AndroidEntryPoint
 class ImportFragment : BaseFragment<FragmentImportBinding>(FragmentImportBinding::inflate) {
 
     private val viewModel: ImportViewModel by activityViewModels()
@@ -31,12 +36,29 @@ class ImportFragment : BaseFragment<FragmentImportBinding>(FragmentImportBinding
         arguments?.getString(ARG_TITLE)?.let {
             setupUI(it)
         }
+        arguments?.getString(ARG_ID)?.let {
+            binding.tvWordLang.text =
+                arguments?.getString(ARG_WORD_LANG)?.langName(requireContext())
+            binding.tvMeaningLang.text =
+                arguments?.getString(ARG_MEANING_LANG)?.langName(requireContext())
+            binding.toolbarImport.apply {
+                title = "Edit"
+                menu.findItem(R.id.action_create).title = "Apply"
+            }
+        } ?: run {
+            binding.toolbarImport.title = "Import"
+            languageViewModel.sourceLanguage.collectOnStarted {
+                binding.tvWordLang.text = it?.langName(requireContext())
+            }
+            languageViewModel.translationLanguage.collectOnStarted {
+                binding.tvMeaningLang.text = it?.langName(requireContext())
+            }
+        }
 
     }
 
     private fun setupUI(noteTitle: String) = with(binding) {
         toolbarImport.apply {
-            title = "Import"
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener { onBack() }
             menu.clear()
@@ -45,23 +67,17 @@ class ImportFragment : BaseFragment<FragmentImportBinding>(FragmentImportBinding
         etTitle.setText(noteTitle)
 
         viewModel.importedCorpus.collectOnStarted { list ->
-                        Timber.d("Imported corpus: $list")
+            Timber.d("Imported corpus: $list")
             toolbarImport.setOnMenuItemClickListener {
                 when (it.itemId) {
                     R.id.action_create -> {
-                        onCreate(list)
+                        if (list.isNotEmpty()) onCreate(list) else onEdit()
                         true
                     }
 
                     else -> false
                 }
             }
-        }
-        languageViewModel.sourceLanguage.collectOnStarted {
-            tvWordLang.text = it?.langName(requireContext())
-        }
-        languageViewModel.translationLanguage.collectOnStarted {
-            tvMeaningLang.text = it?.langName(requireContext())
         }
 
         tvWordLang.setOnClickListener {
@@ -88,6 +104,26 @@ class ImportFragment : BaseFragment<FragmentImportBinding>(FragmentImportBinding
                 }
             }
         )
+    }
+
+    private fun onEdit() = arguments?.getString(ARG_ID)?.let { id ->
+        val newTitle = binding.etTitle.text.toString()
+        val wordLang = binding.tvWordLang.text.toString().langCode(requireContext())
+        val meaningLang = binding.tvMeaningLang.text.toString().langCode(requireContext())
+
+        viewModel.updateNote(
+            noteId = id,
+            title = newTitle,
+            wordLang = wordLang,
+            meaningLang = meaningLang
+        ) {
+            Toast.makeText(
+                requireContext(),
+                if (it > 0) "Note updated" else "Failed to update",
+                Toast.LENGTH_SHORT
+            ).show()
+            if (it > 0) findNavController().navigateUp()
+        }
     }
 
     fun onCreate(data: List<Corpus>) {

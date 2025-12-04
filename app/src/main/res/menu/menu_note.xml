@@ -17,6 +17,13 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_edit"
+        android:icon="@drawable/outline_edit_24"
+        android:orderInCategory="10"
+        android:title="@string/edit"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_share"
         android:icon="@drawable/baseline_share_24"
         android:orderInCategory="11"

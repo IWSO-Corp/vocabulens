@@ -9,6 +9,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_edit"
+        android:title="@string/edit"
+        android:icon="@drawable/outline_edit_24"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_export"
         android:title="@string/export"
         android:icon="@drawable/baseline_ios_share_24"

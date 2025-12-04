@@ -24,7 +24,6 @@ import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
 import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentShareBinding
 import com.iwsocorp.vobynotes.ui.note.NoteBottomSheet
-import com.iwsocorp.vobynotes.ui.note.NoteViewModel
 import com.iwsocorp.vobynotes.ui.setting.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +34,6 @@ import timber.log.Timber
 class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::inflate) {
 
     private val viewModel: ShareViewModel by activityViewModels()
-    private val noteViewModel: NoteViewModel by activityViewModels()
     private val settingsViewModel: SettingsViewModel by activityViewModels()
 
     private val adapter: ShareNoteAdapter by lazy {
@@ -137,6 +135,8 @@ class ShareFragment : BaseFragment<FragmentShareBinding>(FragmentShareBinding::i
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     viewModel.updateRecyclerPosition(0)
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
                 }
             }
         )

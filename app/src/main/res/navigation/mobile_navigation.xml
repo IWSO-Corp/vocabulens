@@ -58,6 +58,9 @@
         <action
             android:id="@+id/action_noteFragment_to_authFragment"
             app:destination="@id/authFragment" />
+        <action
+            android:id="@+id/action_noteFragment_to_importFragment"
+            app:destination="@id/importFragment" />
     </fragment>
 
     <fragment

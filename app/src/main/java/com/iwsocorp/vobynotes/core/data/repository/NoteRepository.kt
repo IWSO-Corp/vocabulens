@@ -25,6 +25,15 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.updateNote(note.asEntity())
     }
 
+    override suspend fun updateNote(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String
+    ): Int {
+        return noteDao.updateNote(noteId, title, wordLang, meaningLang)
+    }
+
     override suspend fun updateNoteSharedStatus(ids: List<String>, shared: Boolean) {
         noteDao.updateNoteSharedStatus(ids, shared)
     }
@@ -126,6 +135,13 @@ class NoteRepositoryImpl @Inject constructor(
 interface NoteRepository {
     suspend fun addNote(note: Note)
     suspend fun updateNote(note: Note)
+    suspend fun updateNote(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String
+    ): Int
+
     suspend fun updateNoteSharedStatus(ids: List<String>, shared: Boolean)
     suspend fun incrementContentSize(id: String, count: Int)
     suspend fun decrementContentSize(id: String, count: Int)

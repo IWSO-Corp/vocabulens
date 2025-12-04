@@ -55,7 +55,8 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
                 ) {
                     viewModel.getLastFiveCorpus(noteId, callback)
                 }
-            }
+            },
+            true
         )
     }
 
@@ -79,12 +80,12 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             setOnMenuItemClickListener(menuListener)
             overflowIcon?.setTint(ContextCompat.getColor(requireContext(), R.color.onPrimary))
         }
-        adapter.loadStateFlow.collectOnStarted {
+        adapter.addOnPagesUpdatedListener {
             val isNotEmpty = adapter.itemCount > 0
             binding.tvEmpty.isVisible = !isNotEmpty
-            if (isNotEmpty) binding.toolbarTrash.apply {
+            binding.toolbarTrash.apply {
                 menu.clear()
-                inflateMenu(R.menu.menu_trash)
+                if (isNotEmpty) inflateMenu(R.menu.menu_trash)
             }
         }
     }

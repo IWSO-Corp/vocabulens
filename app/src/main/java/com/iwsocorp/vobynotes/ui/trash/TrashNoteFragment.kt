@@ -2,7 +2,9 @@ package com.iwsocorp.vobynotes.ui.trash
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.iwsocorp.vobynotes.R
@@ -53,6 +55,10 @@ class TrashNoteFragment :
 
         sidebar.observePagesUpdates()
 
+        adapter.addOnPagesUpdatedListener {
+            binding.tvEmpty.isVisible = adapter.itemCount == 0
+        }
+
         binding.toolbarTrashNote.apply {
             setNavigationOnClickListener {
                 findNavController().navigateUp()
@@ -79,6 +85,7 @@ class TrashNoteFragment :
             R.id.action_restore -> {
                 viewModel.restoreNotes(listOf(noteId))
                 findNavController().navigateUp()
+                Toast.makeText(requireContext(), "Note restored", Toast.LENGTH_SHORT).show()
                 true
             }
 

@@ -24,7 +24,10 @@ import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.asSharedNote
 import com.iwsocorp.vobynotes.databinding.FragmentHomeBinding
 import com.iwsocorp.vobynotes.ui.note.ARG_NOTE_ID
+import com.iwsocorp.vobynotes.ui.setting.ARG_ID
+import com.iwsocorp.vobynotes.ui.setting.ARG_MEANING_LANG
 import com.iwsocorp.vobynotes.ui.setting.ARG_TITLE
+import com.iwsocorp.vobynotes.ui.setting.ARG_WORD_LANG
 import com.iwsocorp.vobynotes.ui.setting.ImportViewModel
 import com.iwsocorp.vobynotes.ui.share.ShareState
 import com.iwsocorp.vobynotes.ui.share.ShareViewModel
@@ -216,6 +219,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
         if (size > 1) menu.apply {
             removeItem(R.id.action_share)
             removeItem(R.id.action_export)
+            removeItem(R.id.action_edit)
         }
     }
 
@@ -231,6 +235,19 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
 
             R.id.action_share -> {
                 onShare()
+            }
+
+            R.id.action_edit -> {
+                val note = adapter.getSelectedItems().first()
+                findNavController().navigate(
+                    R.id.action_nav_home_to_importFragment,
+                    bundleOf(
+                        ARG_ID to note.id,
+                        ARG_TITLE to note.title,
+                        ARG_WORD_LANG to note.wordLang,
+                        ARG_MEANING_LANG to note.meaningLang
+                    )
+                )
             }
 
             R.id.action_export -> {
@@ -313,6 +330,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        adapter.clearSelection()
     }
 
     override fun onDestroyView() {

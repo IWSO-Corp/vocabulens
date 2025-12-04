@@ -26,6 +26,9 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: NoteEntity)
 
+    @Query("UPDATE notes SET title = :title, wordLang = :wordLang, meaningLang = :meaningLang WHERE id = :noteId")
+    suspend fun updateNote(noteId: String, title: String, wordLang: String, meaningLang: String): Int
+
     @Query("UPDATE notes SET title = :title, wordLang = :wordLang, meaningLang = :meaningLang, contentSize = :contentSize, updatedAt = :updatedAt WHERE id = :noteId")
     suspend fun refreshSavedNote(
         noteId: String,
@@ -45,7 +48,8 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: String): NoteEntity
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             n.*,
             COUNT(c.id) AS corpusCount,
@@ -56,13 +60,15 @@ interface NoteDao {
         WHERE n.deletedAt IS NULL
         GROUP BY n.id
         ORDER BY n.updatedAt DESC
-    """)
+    """
+    )
     fun getPagedNotesWithAggregate(
         familiar: String = "FAMILIAR",
         unfamiliar: String = "UNFAMILIAR"
     ): PagingSource<Int, NoteAggregateEntity>
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             n.*,
             COUNT(c.id) AS corpusCount,
@@ -73,17 +79,20 @@ interface NoteDao {
         WHERE n.deletedAt IS NULL
         GROUP BY n.id
         ORDER BY n.updatedAt DESC
-    """)
+    """
+    )
     fun getNotesWithAggregate(
         familiar: String = "FAMILIAR",
         unfamiliar: String = "UNFAMILIAR"
     ): Flow<List<NoteAggregateEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM corpus
         WHERE noteId = :noteId
         ORDER BY updatedAt DESC LIMIT 5
-    """)
+    """
+    )
     fun getLastFiveCorpusByNoteId(noteId: String): Flow<List<CorpusEntity>>
 
     @Query("SELECT * FROM corpus WHERE deletedAt IS NULL")
@@ -92,7 +101,8 @@ interface NoteDao {
     @Query("SELECT * FROM corpus WHERE deletedAt IS NOT NULL")
     fun getAllTrashCorpusFlow(): Flow<List<CorpusEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             n.*,
             COUNT(c.id) AS corpusCount,
@@ -103,7 +113,8 @@ interface NoteDao {
         WHERE n.deletedAt IS NOT NULL
         GROUP BY n.id
         ORDER BY n.updatedAt DESC
-    """)
+    """
+    )
     fun getTrashNotesFlow(
         familiar: String = "FAMILIAR",
         unfamiliar: String = "UNFAMILIAR"
