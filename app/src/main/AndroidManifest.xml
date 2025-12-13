@@ -11,6 +11,7 @@
 
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="com.ichi2.anki.permission.READ_WRITE_DATABASE" />
 
     <application
         android:name=".MainApplication"
@@ -64,4 +65,8 @@
                 android:resource="@xml/search_widget_info" />
         </receiver>
     </application>
+
+    <queries>
+        <package android:name="com.ichi2.anki" />
+    </queries>
 </manifest>

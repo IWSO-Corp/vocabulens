@@ -207,5 +207,10 @@
             android:id="@+id/action_accountFragment_to_shareDetailFragment"
             app:destination="@id/shareDetailFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/nav_anki"
+        android:name="com.iwsocorp.vobynotes.ui.anki.AnkiFragment"
+        android:label="fragment_anki"
+        tools:layout="@layout/fragment_anki" />
 
 </navigation>

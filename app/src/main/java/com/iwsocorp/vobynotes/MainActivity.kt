@@ -131,6 +131,7 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.nav_home,
                 R.id.nav_practice,
+                R.id.nav_anki,
                 R.id.nav_share,
                 R.id.nav_trash,
             ), drawerLayout
@@ -155,6 +156,7 @@ class MainActivity : AppCompatActivity() {
 
             when (destination.id) {
                 R.id.nav_practice,
+                R.id.nav_anki,
                     -> {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                     setupDrawer()

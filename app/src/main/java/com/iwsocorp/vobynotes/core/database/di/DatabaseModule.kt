@@ -3,6 +3,7 @@ package com.iwsocorp.vobynotes.core.database.di
 import android.content.Context
 import androidx.room.Room
 import com.iwsocorp.vobynotes.core.database.MainDatabase
+import com.iwsocorp.vobynotes.core.database.migration.MIGRATION_1_2
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +23,8 @@ object DatabaseModule {
         context,
         MainDatabase::class.java,
         "main-database"
-    ).build()
+    )
+        .addMigrations(MIGRATION_1_2)
+        .build()
 
 }

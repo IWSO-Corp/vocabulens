@@ -1,3 +1,5 @@
+import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -80,6 +82,7 @@ dependencies {
     implementation(libs.retrofit.kotlin.serialization)
     implementation(libs.timber)
     implementation(libs.vbpd)
+    implementation(libs.github.anki.android)
 
     implementation(libs.language.id)
     implementation(libs.text.recognition)

@@ -1,5 +1,7 @@
 package com.iwsocorp.vobynotes.core.data.di
 
+import com.iwsocorp.vobynotes.core.data.repository.AnkiRepository
+import com.iwsocorp.vobynotes.core.data.repository.AnkiRepositoryImpl
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepository
 import com.iwsocorp.vobynotes.core.data.repository.CorpusRepositoryImpl
 import com.iwsocorp.vobynotes.core.data.repository.ExampleRepository
@@ -16,6 +18,11 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
+
+    @Binds
+    internal abstract fun bindsAnkiRepository(
+        ankiRepository: AnkiRepositoryImpl,
+    ): AnkiRepository
 
     @Binds
     internal abstract fun bindsCorpusRepository(

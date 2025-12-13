@@ -17,7 +17,7 @@ import com.iwsocorp.vobynotes.core.database.util.Converters
         CorpusEntity::class,
         ExampleEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

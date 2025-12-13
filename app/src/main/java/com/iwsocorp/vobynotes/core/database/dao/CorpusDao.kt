@@ -106,6 +106,18 @@ interface CorpusDao {
     @Query("UPDATE corpus SET mark = :newMark WHERE id IN (:corpusIds)")
     suspend fun updateCorpusMark(corpusIds: List<String>, newMark: Mark)
 
+    @Query(
+        """
+        UPDATE corpus
+        SET exportedToAnkiAt = :timestamp
+        WHERE id IN (:corpusIds)
+    """
+    )
+    suspend fun markExported(
+        corpusIds: List<String>,
+        timestamp: Long = System.currentTimeMillis(),
+    )
+
 }
 
 suspend fun CorpusDao.insertCorpusListWithResult(

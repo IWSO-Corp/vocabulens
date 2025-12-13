@@ -5,6 +5,7 @@ cameraCore = "1.5.0"
 credentials = "1.6.0-beta01"
 datastorePreferences = "1.1.7"
 firebaseBom = "34.3.0"
+githubAnkiAndroid = "api-v1.1.0"
 glide = "5.0.5"
 googleid = "1.1.1"
 gsonVersion = "2.11.0"
@@ -54,6 +55,7 @@ firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics-ndk = { module = "com.google.firebase:firebase-crashlytics-ndk" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+github-anki-android = { module = "com.github.ankidroid:Anki-Android", version.ref = "githubAnkiAndroid" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }

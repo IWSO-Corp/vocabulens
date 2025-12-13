@@ -17,6 +17,10 @@
             android:icon="@drawable/baseline_menu_book_24"
             android:title="@string/menu_practice" />
         <item
+            android:id="@+id/nav_anki"
+            android:icon="@drawable/baseline_star_24"
+            android:title="@string/menu_anki" />
+        <item
             android:id="@+id/nav_share"
             android:icon="@drawable/baseline_share_24"
             android:title="@string/shared_notes" />

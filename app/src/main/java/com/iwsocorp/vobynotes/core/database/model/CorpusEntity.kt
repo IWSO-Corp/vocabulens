@@ -37,6 +37,7 @@ data class CorpusEntity(
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long? = null,
+    val exportedToAnkiAt: Long? = null
 )
 
 fun CorpusEntity.asExternalModel() = Corpus(
