@@ -1,5 +1,3 @@
-import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -101,6 +99,7 @@ dependencies {
 
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
+    implementation(libs.androidx.work.runtime.ktx)
     ksp(libs.room.compiler)
 
     implementation(libs.hilt.android)

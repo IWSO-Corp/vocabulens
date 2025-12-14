@@ -1,4 +1,4 @@
-package com.iwsocorp.vobynotes.core.common
+package com.iwsocorp.vobynotes.core.data.anki
 
 import android.app.Activity
 import android.content.Context
@@ -8,11 +8,15 @@ import android.os.Build
 import android.util.SparseArray
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.util.forEach
+import androidx.core.util.isEmpty
+import androidx.core.util.size
 import com.ichi2.anki.api.AddContentApi
 import com.ichi2.anki.api.AddContentApi.READ_WRITE_PERMISSION
 import com.ichi2.anki.api.NoteInfo
-import com.iwsocorp.vobynotes.core.data.anki.AnkiDeckNameResolver
 import com.iwsocorp.vobynotes.core.model.Note
+import timber.log.Timber
 import java.util.LinkedList
 
 class AnkiDroidHelper(
@@ -54,15 +58,15 @@ class AnkiDroidHelper(
     // --------------------------------------------------
 
     fun storeDeckReference(deckName: String, deckId: Long) {
-        decksPrefs().edit()
-            .putLong(deckName, deckId)
-            .apply()
+        decksPrefs().edit {
+            putLong(deckName, deckId)
+        }
     }
 
     fun storeModelReference(modelName: String, modelId: Long) {
-        modelsPrefs().edit()
-            .putLong(modelName, modelId)
-            .apply()
+        modelsPrefs().edit {
+            putLong(modelName, modelId)
+        }
     }
 
     private fun decksPrefs(): SharedPreferences =
@@ -87,16 +91,22 @@ class AnkiDroidHelper(
         if (fields.isEmpty()) return
 
         val keys = fields.map { it[0] }
-        val duplicates: SparseArray<List<NoteInfo>> =
-            api.findDuplicateNotes(modelId, keys) ?: return
+        val duplicates: SparseArray<List<NoteInfo>> = api.findDuplicateNotes(modelId, keys) ?: return
 
-        if (duplicates.size() == 0) return
+        duplicates.forEach { idx, value ->
+            Timber.d("Index: $idx")
+            value.forEach {
+                Timber.d("Duplicate fields: ${it.fields.toList()}")
+            }
+        }
+
+        if (duplicates.isEmpty()) return
 
         val fieldIterator = fields.listIterator()
         val tagIterator = tags.listIterator()
 
         var currentIndex = -1
-        for (i in 0 until duplicates.size()) {
+        for (i in 0 until duplicates.size) {
             val duplicateIndex = duplicates.keyAt(i)
             while (currentIndex < duplicateIndex) {
                 fieldIterator.next()
@@ -130,9 +140,9 @@ class AnkiDroidHelper(
     // Deck helpers
     // --------------------------------------------------
 
-    fun getOrCreateDeckIdForNote(
-        note: Note
-    ): Long {
+    fun checkDeckExists(note: Note): Boolean = findDeckIdByName(AnkiDeckNameResolver.fromNote(note)) != null
+
+    fun getOrCreateDeckIdForNote(note: Note): Long {
         val deckName = AnkiDeckNameResolver.fromNote(note)
 
         return findDeckIdByName(deckName)

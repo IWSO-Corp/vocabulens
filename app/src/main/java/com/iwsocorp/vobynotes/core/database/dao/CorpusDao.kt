@@ -115,8 +115,26 @@ interface CorpusDao {
     )
     suspend fun markExported(
         corpusIds: List<String>,
-        timestamp: Long = System.currentTimeMillis(),
+        timestamp: Long?,
     )
+
+    @Query("""
+        SELECT * FROM corpus
+        WHERE noteId = :noteId
+        AND deletedAt IS NULL
+        AND exportedToAnkiAt IS NULL
+        ORDER BY word ASC
+    """)
+    fun getNotExportedByNote(noteId: String): Flow<List<CorpusEntity>>
+
+    @Query("""
+        SELECT * FROM corpus
+        WHERE noteId = :noteId
+        AND deletedAt IS NULL
+        AND exportedToAnkiAt IS NOT NULL
+        ORDER BY word ASC
+    """)
+    suspend fun getExportedByNote(noteId: String): List<CorpusEntity>
 
 }
 

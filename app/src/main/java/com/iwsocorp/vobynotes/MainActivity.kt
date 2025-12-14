@@ -19,6 +19,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.iwsocorp.vobynotes.core.common.Utils.getLocaleLang
+import com.iwsocorp.vobynotes.core.data.anki.OPEN_ANKI
 import com.iwsocorp.vobynotes.databinding.ActivityMainBinding
 import com.iwsocorp.vobynotes.databinding.NavHeaderMainBinding
 import com.iwsocorp.vobynotes.ui.auth.AuthViewModel
@@ -232,6 +233,10 @@ class MainActivity : AppCompatActivity() {
 
                 OPEN_SCAN -> {
                     navController.navigate(R.id.nav_scan)
+                }
+
+                OPEN_ANKI -> {
+                    navController.navigate(R.id.nav_anki)
                 }
             }
         }

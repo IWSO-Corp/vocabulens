@@ -77,4 +77,6 @@
     <string name="delete_account">This will also delete all your shared notes and backed up data. Are you sure you want to delete your account?</string>
     <string name="unshare">Unshare</string>
     <string name="menu_anki">Anki</string>
+    <string name="send_info">Total number of words to be sent: %1$d\n\nWords without definition: %2$d\nWords with definition: %3$d</string>
+    <string name="deck_info">Anki deck names are unique, so make sure no two note titles are the same.</string>
 </resources>

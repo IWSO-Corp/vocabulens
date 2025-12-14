@@ -1,4 +1,4 @@
-package com.iwsocorp.vobynotes.core.common
+package com.iwsocorp.vobynotes.core.data.anki
 
 /**
  * Konfigurasi integrasi AnkiDroid untuk aplikasi Vocabulens
@@ -7,10 +7,10 @@ package com.iwsocorp.vobynotes.core.common
 object AnkiDroidConfig {
 
     /** Nama deck yang akan dibuat / digunakan di AnkiDroid */
-    const val DECK_NAME = "Vocabulens Vocabulary"
+    const val DECK_NAME = "Vocabulens: Vocabulary"
 
     /** Nama model (note type) di AnkiDroid */
-    const val MODEL_NAME = "com.iwsocorp.vobynotes.model"
+    const val MODEL_NAME = "Vocabulens"
 
     /** Tag default untuk setiap note */
     val TAGS: Set<String> = setOf(
@@ -74,10 +74,10 @@ object AnkiDroidConfig {
         <hr>
         <b>{{Meaning}}</b>
         <div class='example'>
-            {{ExampleSentence}}<br>
-            <i>{{ExampleMeaning}}</i>
+            {{ExampleMeaning}}<br><br>
+            <i>{{ExampleSentence}}</i>
         </div>
-        <br>
+        <hr>
         <small>{{Tags}}</small>
         """.trimIndent(),
 
@@ -87,10 +87,10 @@ object AnkiDroidConfig {
         <hr>
         <b>{{Meaning}}</b>
         <div class='example'>
-            {{ExampleSentence}}<br>
-            <i>{{ExampleMeaning}}</i>
+            {{ExampleMeaning}}<br><br>
+            <i>{{ExampleSentence}}</i>
         </div>
-        <br>
+        <hr>
         <small>{{Tags}}</small>
         """.trimIndent()
     )

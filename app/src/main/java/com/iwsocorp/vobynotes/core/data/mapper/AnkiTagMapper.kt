@@ -8,9 +8,7 @@ object AnkiTagMapper {
     fun fromCorpus(corpus: Corpus): Set<String> {
         val tags = mutableSetOf<String>()
 
-        tags += "vocabulens"
-        tags += corpus.wordLang.lowercase()
-        tags += corpus.meaningLang.lowercase()
+        tags += if (corpus.meanings.isEmpty()) "undefined" else "defined"
 
         // mark → tag
         tags += when (corpus.mark.name) {

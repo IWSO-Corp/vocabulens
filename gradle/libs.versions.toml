@@ -38,6 +38,7 @@ okhttp = "4.12.0"
 activity = "1.9.3"
 translate = "17.0.3"
 vbpd = "2.0.4"
+workRuntimeKtx = "2.11.0"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
@@ -92,6 +93,7 @@ okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 translate = { module = "com.google.mlkit:translate", version.ref = "translate" }
 vbpd = { module = "dev.androidbroadcast.vbpd:vbpd", version.ref = "vbpd" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
