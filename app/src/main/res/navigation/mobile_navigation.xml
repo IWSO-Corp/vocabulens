@@ -121,6 +121,9 @@
         <action
             android:id="@+id/action_nav_settings_to_accountFragment"
             app:destination="@id/accountFragment" />
+        <action
+            android:id="@+id/action_nav_settings_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
     </fragment>
     
     <fragment
@@ -212,5 +215,10 @@
         android:name="com.iwsocorp.vobynotes.ui.anki.AnkiFragment"
         android:label="Anki"
         tools:layout="@layout/fragment_anki" />
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="com.iwsocorp.vobynotes.ui.setting.AboutFragment"
+        android:label="AboutFragment"
+        tools:layout="@layout/fragment_about" />
 
 </navigation>

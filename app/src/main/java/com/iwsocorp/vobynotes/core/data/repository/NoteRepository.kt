@@ -50,8 +50,8 @@ class NoteRepositoryImpl @Inject constructor(
         noteDao.deleteNoteByIds(ids)
     }
 
-    override suspend fun getNoteById(id: String): Note {
-        return noteDao.getNoteById(id).asExternalModel()
+    override suspend fun getNoteById(id: String): Note? {
+        return noteDao.getNoteById(id)?.asExternalModel()
     }
 
     override fun getNotesFlow(): Flow<List<Note>> {
@@ -146,7 +146,7 @@ interface NoteRepository {
     suspend fun incrementContentSize(id: String, count: Int)
     suspend fun decrementContentSize(id: String, count: Int)
     suspend fun deleteNotes(ids: List<String>)
-    suspend fun getNoteById(id: String): Note
+    suspend fun getNoteById(id: String): Note?
     fun getNotesFlow(): Flow<List<Note>>
     fun getNoteWithCorpusFlow(): Flow<List<NoteWithCorpus>>
     fun getNotesPagingFlow(): Flow<PagingData<NoteWithCorpus>>

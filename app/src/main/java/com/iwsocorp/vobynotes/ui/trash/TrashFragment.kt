@@ -28,8 +28,12 @@ import kotlinx.coroutines.withContext
 class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::inflate) {
 
     private val viewModel: TrashViewModel by activityViewModels()
-    private val adapter: NoteAdapter by lazy {
-        NoteAdapter(
+    private lateinit var adapter: NoteAdapter
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        adapter = NoteAdapter(
             object : NoteAdapter.ClickListener {
                 override fun onClick(pos: Int, noteId: String) {
                     findNavController().navigate(
@@ -58,10 +62,6 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             },
             true
         )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
 
         setNormalToolbar()
         observeState()
@@ -105,6 +105,7 @@ class TrashFragment : BaseFragment<FragmentTrashBinding>(FragmentTrashBinding::i
             (requireActivity() as MainActivity).drawerLayout.openDrawer(GravityCompat.START)
         }
         menu.clear()
+        if (adapter.itemCount > 0) inflateMenu(R.menu.menu_trash)
     }
 
     private fun setSelectionToolbar(size: Int) = binding.toolbarTrash.apply {

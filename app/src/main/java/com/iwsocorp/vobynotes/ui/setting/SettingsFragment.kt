@@ -190,6 +190,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>(FragmentSettingsB
                 .setNegativeButton("Cancel", null)
                 .show()
         }
+        btnAbout.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_settings_to_aboutFragment)
+        }
         btnVersion.setOnClickListener {
             checkForAppUpdates()
         }

@@ -46,8 +46,15 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
     private val sharedViewModel: ShareViewModel by activityViewModels()
     private val importViewModel: ImportViewModel by activityViewModels()
 
-    private val adapter: NoteAdapter by lazy {
-        NoteAdapter(
+    @Inject
+    lateinit var fileManager: CorpusFileManager
+    private lateinit var adapter: NoteAdapter
+    private lateinit var pickerManager: FilePickerManager
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        adapter = NoteAdapter(
             object : NoteAdapter.ClickListener {
                 override fun onClick(pos: Int, noteId: String) = findNavController().navigate(
                     R.id.action_nav_home_to_noteFragment,
@@ -76,15 +83,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
 
             }
         )
-    }
-
-    @Inject
-    lateinit var fileManager: CorpusFileManager
-    private lateinit var pickerManager: FilePickerManager
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
         pickerManager = FilePickerManager(
             caller = this,
             context = requireContext(),
@@ -338,8 +336,9 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(FragmentHomeBinding::infl
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        binding.rvNote.adapter = null
         sharedViewModel.setIdle()
+        super.onDestroyView()
     }
 
 }

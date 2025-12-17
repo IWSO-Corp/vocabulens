@@ -295,6 +295,7 @@ class NoteFragment() : BaseFragment<FragmentNoteBinding>(
             argNoteId?.let {
                 inflateMenu(R.menu.menu_note)
                 if (it.isEmpty()) {
+                    menu.removeItem(R.id.action_edit)
                     menu.removeItem(R.id.action_share)
                     menu.removeItem(R.id.action_delete_note)
                 }
