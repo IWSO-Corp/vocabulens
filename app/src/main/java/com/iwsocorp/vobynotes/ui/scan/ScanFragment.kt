@@ -2,11 +2,8 @@ package com.iwsocorp.vobynotes.ui.scan
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -30,9 +27,12 @@ import com.iwsocorp.vobynotes.R
 import com.iwsocorp.vobynotes.core.common.BaseFragment
 import com.iwsocorp.vobynotes.core.common.Utils.alertInputDialog
 import com.iwsocorp.vobynotes.core.common.Utils.fadeVisibility
+import com.iwsocorp.vobynotes.core.common.Utils.hasPermission
 import com.iwsocorp.vobynotes.core.common.Utils.langCode
 import com.iwsocorp.vobynotes.core.common.Utils.langName
 import com.iwsocorp.vobynotes.core.common.Utils.showAlertDialog
+import com.iwsocorp.vobynotes.core.common.Utils.showPermanentlyDeniedDialog
+import com.iwsocorp.vobynotes.core.common.Utils.showRationaleDialog
 import com.iwsocorp.vobynotes.core.model.Note
 import com.iwsocorp.vobynotes.core.model.WordResult
 import com.iwsocorp.vobynotes.core.model.asCorpus
@@ -66,7 +66,9 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
                 Toast.makeText(requireContext(), "Permission Granted", Toast.LENGTH_SHORT).show()
             } else {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
-                    showRationaleDialog() else showPermanentlyDeniedDialog()
+                    showRationaleDialog(requireContext()) {
+                        checkCameraPermission()
+                    } else showPermanentlyDeniedDialog(requireContext())
             }
         }
     }
@@ -405,35 +407,14 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
     }
 
     private fun checkCameraPermission() = when {
-        ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED -> startCamera()
+        hasPermission(requireContext(), Manifest.permission.CAMERA) -> startCamera()
 
-        shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showRationaleDialog()
+        shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showRationaleDialog(requireContext()) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
 
         else -> permissionLauncher.launch(Manifest.permission.CAMERA)
     }
-
-    private fun showRationaleDialog() = AlertDialog.Builder(requireContext())
-        .setTitle("Permission Required")
-        .setMessage("The app needs this permission to continue.")
-        .setPositiveButton("Try Again") { _, _ ->
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-        .setNegativeButton("Cancel", null)
-        .show()
-
-    private fun showPermanentlyDeniedDialog() = AlertDialog.Builder(requireContext())
-        .setTitle("Permission Required")
-        .setMessage("Permission has been permanently denied. Enable it via app settings.")
-        .setPositiveButton("Open Settings") { _, _ ->
-            val intent = Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", requireContext().packageName, null)
-            )
-            startActivity(intent)
-        }
-        .setNegativeButton("Cancel", null)
-        .show()
 
     private fun captureImageForProcessing() {
         val imageCapture = imageCapture ?: return

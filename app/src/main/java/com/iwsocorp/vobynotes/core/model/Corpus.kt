@@ -17,6 +17,7 @@ data class Corpus(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val indexNumber: Int = 0,
+    val ankiNoteId: Long? = null
 )
 
 fun Corpus.asEntity() = CorpusEntity(
@@ -29,9 +30,11 @@ fun Corpus.asEntity() = CorpusEntity(
     phonetic = phonetic,
     audio = audio,
     meanings = meanings,
+    hasMeaning = meanings.isNotEmpty(),
     mark = mark,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    ankiNoteId = ankiNoteId
 )
 
 enum class Mark {

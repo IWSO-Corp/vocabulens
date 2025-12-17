@@ -19,8 +19,13 @@ import com.iwsocorp.vobynotes.core.model.Meaning
         )
     ],
     indices = [
-        Index(value = ["noteId"]),
+        Index("noteId"),
         Index(value = ["word", "wordLang", "meaningLang"], unique = true),
+        Index("exportedToAnkiAt"),
+        Index("ankiNoteId"),
+        Index(value = ["noteId", "exportedToAnkiAt"]),
+        Index(value = ["noteId", "exportedToAnkiAt", "hasMeaning"]),
+        Index(value = ["noteId", "exportedToAnkiAt", "ankiNoteId"]),
     ]
 )
 data class CorpusEntity(
@@ -33,10 +38,12 @@ data class CorpusEntity(
     val phonetic: String,
     val audio: String,
     val meanings: List<Meaning>,
+    val hasMeaning: Boolean,
     val mark: Mark,
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long? = null,
+    val ankiNoteId: Long? = null,
     val exportedToAnkiAt: Long? = null
 )
 
@@ -53,4 +60,5 @@ fun CorpusEntity.asExternalModel() = Corpus(
     mark = mark,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    ankiNoteId = ankiNoteId
 )

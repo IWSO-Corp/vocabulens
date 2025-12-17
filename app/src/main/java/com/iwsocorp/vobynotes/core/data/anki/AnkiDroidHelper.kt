@@ -1,21 +1,15 @@
 package com.iwsocorp.vobynotes.core.data.anki
 
-import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.os.Build
 import android.util.SparseArray
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.util.forEach
 import androidx.core.util.isEmpty
 import androidx.core.util.size
 import com.ichi2.anki.api.AddContentApi
-import com.ichi2.anki.api.AddContentApi.READ_WRITE_PERMISSION
 import com.ichi2.anki.api.NoteInfo
-import com.iwsocorp.vobynotes.core.model.Note
+import com.iwsocorp.vobynotes.core.data.mapper.CorpusToAnkiMapper
 import timber.log.Timber
 import java.util.LinkedList
 
@@ -29,29 +23,13 @@ class AnkiDroidHelper(
         private const val MODEL_REF_DB = "com.ichi2.anki.api.models"
 
         fun isApiAvailable(context: Context): Boolean {
-            return AddContentApi.getAnkiDroidPackageName(context) != null
+            val anki = AddContentApi.getAnkiDroidPackageName(context)
+            Timber.d("Anki: $anki")
+            return anki != null
         }
     }
 
     private val appContext: Context = context.applicationContext
-
-    // --------------------------------------------------
-    // Permission handling
-    // --------------------------------------------------
-
-    fun shouldRequestPermission(): Boolean =
-        Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(
-            context,
-            READ_WRITE_PERMISSION
-        ) != PackageManager.PERMISSION_GRANTED
-
-    fun requestPermission(activity: Activity) {
-        ActivityCompat.requestPermissions(
-            activity,
-            arrayOf(READ_WRITE_PERMISSION),
-            7001
-        )
-    }
 
     // --------------------------------------------------
     // SharedPreferences helpers
@@ -91,7 +69,8 @@ class AnkiDroidHelper(
         if (fields.isEmpty()) return
 
         val keys = fields.map { it[0] }
-        val duplicates: SparseArray<List<NoteInfo>> = api.findDuplicateNotes(modelId, keys) ?: return
+        val duplicates: SparseArray<List<NoteInfo>> =
+            api.findDuplicateNotes(modelId, keys) ?: return
 
         duplicates.forEach { idx, value ->
             Timber.d("Index: $idx")
@@ -140,10 +119,11 @@ class AnkiDroidHelper(
     // Deck helpers
     // --------------------------------------------------
 
-    fun checkDeckExists(note: Note): Boolean = findDeckIdByName(AnkiDeckNameResolver.fromNote(note)) != null
+    fun checkDeckExists(title: String, wordLang: String, meaningLang: String): Boolean =
+        findDeckIdByName(CorpusToAnkiMapper.makeDeckName(title, wordLang, meaningLang)) != null
 
-    fun getOrCreateDeckIdForNote(note: Note): Long {
-        val deckName = AnkiDeckNameResolver.fromNote(note)
+    fun getOrCreateDeckIdForNote(title: String, wordLang: String, meaningLang: String): Long {
+        val deckName = CorpusToAnkiMapper.makeDeckName(title, wordLang, meaningLang)
 
         return findDeckIdByName(deckName)
             ?: api.addNewDeck(deckName).also {
@@ -168,4 +148,45 @@ class AnkiDroidHelper(
             it.value.equals(deckName, ignoreCase = true)
         }?.key
     }
+
+    /**
+     * Add new note → return ankiNoteId
+     */
+    fun addNote(
+        modelId: Long,
+        deckId: Long,
+        fields: Array<String>,
+        tags: Set<String>
+    ): Long? = try {
+        api.addNote(
+            modelId,
+            deckId,
+            fields,
+            tags
+        )
+    } catch (e: Exception) {
+        Timber.e(e)
+        null
+    }
+
+    /**
+     * Update existing note (ANTI DUPLICATE)
+     */
+    fun updateNote(
+        noteId: Long,
+        fields: Array<String>,
+        tags: Set<String>
+    ): Boolean = try {
+        val result1 = api.updateNoteFields(noteId, fields)
+        val result2 = api.updateNoteTags(noteId, tags)
+
+        Timber.d("Result 1: $result1")
+        Timber.d("Result 2: $result2")
+
+        result1 && result2
+    } catch (e: Exception) {
+        Timber.e(e)
+        false
+    }
+
 }

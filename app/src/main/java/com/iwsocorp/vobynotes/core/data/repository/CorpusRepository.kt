@@ -50,6 +50,11 @@ class CorpusRepositoryImpl @Inject constructor(
                 it.asEntity()
             }
         )
+
+        corpusDao.markExported(
+            corpusIds = listOf(corpus.id),
+            timestamp = null
+        )
     }
 
     override suspend fun deleteBatch(ids: List<String>) {

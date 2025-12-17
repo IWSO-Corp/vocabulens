@@ -78,5 +78,27 @@
     <string name="unshare">Unshare</string>
     <string name="menu_anki">Anki</string>
     <string name="send_info">Total number of words to be sent: %1$d\n\nWords without definition: %2$d\nWords with definition: %3$d</string>
-    <string name="deck_info">Anki deck names are unique, so make sure no two note titles are the same.</string>
+    <string name="deck_info">*Anki deck names are unique, so make sure no two note titles are the same.</string>
+    <!-- Open Source Licenses -->
+    <string name="open_source_title">Open Source Licenses</string>
+    <!-- Free Dictionary API Attribution -->
+    <string name="free_dictionary_attribution">
+        This app uses the Free Dictionary API provided by meetDeveloper.\n\n
+        API documentation and source are available at:\n
+        https://github.com/meetDeveloper/freeDictionaryAPI
+    </string>
+    <!-- AnkiDroid Attribution -->
+    <string name="anki_attribution">
+        This app uses the AnkiDroid API, licensed under the GNU Lesser General Public License (LGPL).\n\n
+        API documentation and source are available at:\n
+        https://github.com/ankidroid/Anki-Android
+    </string>
+    <string name="about">About</string>
+    <string name="dropdown_title">%1$s (%2$s - %3$s)</string>
+    <string name="dropdown_info">
+        Total number of words to be sent: %1$d\n\n
+        Words without definition: %2$d\n
+        Words with definition: %3$d\n
+        Words to be updated: %4$d
+    </string>
 </resources>

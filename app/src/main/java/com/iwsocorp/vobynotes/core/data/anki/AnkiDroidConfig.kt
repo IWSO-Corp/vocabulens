@@ -12,26 +12,63 @@ object AnkiDroidConfig {
     /** Nama model (note type) di AnkiDroid */
     const val MODEL_NAME = "Vocabulens"
 
-    /** Tag default untuk setiap note */
-    val TAGS: Set<String> = setOf(
-        "vocabulens",
-        "auto_generated"
-    )
-
-    /** Field yang digunakan pada model Anki */
     val FIELDS = arrayOf(
         "Word",
         "Reading",
         "Meaning",
-        "ExampleSentence",
-        "ExampleMeaning",
-        "PartOfSpeech"
+        "PosJson"
     )
 
-    /** Nama kartu (card templates) */
-    val CARD_NAMES = arrayOf(
-        "Word → Meaning",
-        "Meaning → Word"
+    val CARD_NAMES = arrayOf("Vocabulary")
+
+    val QFMT = arrayOf(
+        """
+        <div class="word">{{Word}}</div>
+        <div class="reading">{{Reading}}</div>
+        """
+    )
+
+    val AFMT = arrayOf(
+        """
+        <div class='word'>{{Word}}</div>
+        <div class="reading">{{Reading}}</div>
+        <br>
+        <b>{{Meaning}}</b>
+        <br><hr>
+        <div id="pos"></div>
+        <hr>
+        <small>{{Tags}}</small>
+    
+        <script type="text/javascript">
+        (function () {
+            var raw = '{{PosJson}}';
+            if (!raw || raw.trim() === '') return;
+        
+            var data;
+            try {
+                data = JSON.parse(raw);
+            } catch (e) {
+                return;
+            }
+        
+            if (!data.pos) return;
+        
+            var html = '';
+            for (var pos in data.pos) {
+                html += '<h6>' + pos + '</h6>';
+        
+                var list = data.pos[pos];
+                for (var i = 0; i < list.length; i++) {
+                    var d = list[i];
+                    html += '<p>' + (d.definition || '-') + '<br>';
+                    html += '<i>' + (d.example || '') + '</i></p>';
+                }
+            }
+        
+            document.getElementById('pos').innerHTML = html;
+        })();
+        </script>
+        """
     )
 
     /** CSS global untuk seluruh kartu */
@@ -57,80 +94,4 @@ object AnkiDroidConfig {
         }
     """.trimIndent()
 
-    /** Question format untuk masing-masing kartu */
-    val QFMT = arrayOf(
-        // Word → Meaning
-        "<div class='word'>{{Word}}</div><br>{{Reading}}<br><small>{{PartOfSpeech}}</small>",
-
-        // Meaning → Word
-        "<div class='word'>{{Meaning}}</div><br><small>{{PartOfSpeech}}</small>"
-    )
-
-    /** Answer format (sama untuk kedua kartu) */
-    val AFMT = arrayOf(
-        """
-        <div class='word'>{{Word}}</div>
-        <br>{{Reading}}
-        <hr>
-        <b>{{Meaning}}</b>
-        <div class='example'>
-            {{ExampleMeaning}}<br><br>
-            <i>{{ExampleSentence}}</i>
-        </div>
-        <hr>
-        <small>{{Tags}}</small>
-        """.trimIndent(),
-
-        """
-        <div class='word'>{{Word}}</div>
-        <br>{{Reading}}
-        <hr>
-        <b>{{Meaning}}</b>
-        <div class='example'>
-            {{ExampleMeaning}}<br><br>
-            <i>{{ExampleSentence}}</i>
-        </div>
-        <hr>
-        <small>{{Tags}}</small>
-        """.trimIndent()
-    )
-
-    /** Field utama (untuk legacy ACTION_SEND jika diperlukan) */
-    const val FRONT_SIDE_KEY = "Word"
-    const val BACK_SIDE_KEY = "Meaning"
-
-    /**
-     * Contoh data dummy untuk testing integrasi
-     */
-    fun getSampleData(): List<Map<String, String>> {
-        val words = listOf("Resilient", "Persist", "Insight")
-        val readings = listOf("-", "-", "-")
-        val meanings = listOf(
-            "Mampu bangkit kembali",
-            "Terus bertahan atau melanjutkan",
-            "Pemahaman yang mendalam"
-        )
-        val examples = listOf(
-            "She remained resilient despite many failures.",
-            "He decided to persist until he succeeded.",
-            "This experience gave him valuable insight."
-        )
-        val exampleMeanings = listOf(
-            "Dia tetap tangguh meskipun banyak kegagalan.",
-            "Dia memutuskan untuk bertahan sampai berhasil.",
-            "Pengalaman ini memberinya pemahaman berharga."
-        )
-        val pos = listOf("Adjective", "Verb", "Noun")
-
-        return words.indices.map { idx ->
-            mapOf(
-                FIELDS[0] to words[idx],
-                FIELDS[1] to readings[idx],
-                FIELDS[2] to meanings[idx],
-                FIELDS[3] to examples[idx],
-                FIELDS[4] to exampleMeanings[idx],
-                FIELDS[5] to pos[idx]
-            )
-        }
-    }
 }

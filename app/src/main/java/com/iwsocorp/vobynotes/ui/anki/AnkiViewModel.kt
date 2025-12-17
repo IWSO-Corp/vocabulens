@@ -1,21 +1,18 @@
 package com.iwsocorp.vobynotes.ui.anki
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iwsocorp.vobynotes.core.data.repository.AnkiRepository
-import com.iwsocorp.vobynotes.core.data.repository.ExportResult
+import com.iwsocorp.vobynotes.core.database.dao.NoteExportStat
 import com.iwsocorp.vobynotes.core.model.Corpus
-import com.iwsocorp.vobynotes.core.model.Note
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,123 +20,70 @@ class AnkiViewModel @Inject constructor(
     private val ankiRepository: AnkiRepository
 ) : ViewModel() {
 
+    val isAnkiAvailable: Boolean = ankiRepository.isAnkiAvailable()
+
+    fun getNoteExportStats(): Flow<List<NoteExportStat>> = ankiRepository.getNoteExportStats()
+
     private val _previewState = MutableSharedFlow<PreviewState>()
     val previewState = _previewState
 
-    fun preview(note: Note, corpus: Corpus) = viewModelScope.launch(Dispatchers.IO) {
-        _previewState.emit(PreviewState(loading = true))
+    fun preview(title: String, wordLang: String, meaningLang: String, corpus: Corpus) =
+        viewModelScope.launch(Dispatchers.IO) {
+            _previewState.emit(PreviewState(loading = true))
 
-        ankiRepository.previewFirstNote(note, corpus)
-            .onSuccess {
-                _previewState.emit(PreviewState(cards = it))
-            }
-            .onFailure {
-                _previewState.emit(PreviewState(error = it.message ?: "Preview failed"))
-            }
-    }
+            ankiRepository.previewFirstNote(title, wordLang, meaningLang, corpus)
+                .onSuccess {
+                    _previewState.emit(PreviewState(cards = it))
+                }
+                .onFailure {
+                    _previewState.emit(PreviewState(error = it.message ?: "Preview failed"))
+                }
+        }
 
     fun setPreviewState(state: PreviewState) = viewModelScope.launch {
         _previewState.emit(state)
     }
 
-    fun checkDeckExists(note: Note): Boolean {
-        return ankiRepository.checkDeckExists(note)
+    fun checkDeckExists(title: String, wordLang: String, meaningLang: String): Boolean {
+        return ankiRepository.checkDeckExists(title, wordLang, meaningLang)
     }
+
+    fun markUnexported(corpusIds: List<String>) = viewModelScope.launch {
+        ankiRepository.markUnexported(corpusIds)
+    }
+
+    fun getNotExportedByNote(noteId: String): Flow<List<Corpus>> = ankiRepository.getNotExportedByNote(noteId)
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    /**
-     * Export seluruh Corpus dalam satu Note
-     * 1 Note = 1 Deck Anki
-     */
-    fun exportNoteToAnki(
-        activity: Activity,
-        note: Note,
-        corpusList: List<Corpus>,
-        onProgress: (current: Int, total: Int) -> Unit
-    ) {
-        // 1️⃣ Validasi Anki
-        if (!ankiRepository.isAnkiAvailable()) {
-            _uiState.value = UiState.AnkiNotInstalled
-            return
-        }
-
-        // 2️⃣ Permission
-        if (ankiRepository.shouldRequestPermission()) {
-            ankiRepository.requestPermission(activity)
-            _uiState.value = UiState.PermissionRequired
-            return
-        }
-
-        // 3️⃣ Export (Background)
-        performExport(corpusList, note, onProgress)
-    }
-
-    @SuppressLint("DirectSystemCurrentTimeMillisUsage")
-    private fun performExport(
-        corpusList: List<Corpus>,
-        note: Note,
+    fun sendListToAnki(
+        title: String, wordLang: String, meaningLang: String,
+        corpora: List<Corpus>,
         onProgress: (Int, Int) -> Unit
     ) = viewModelScope.launch {
         _uiState.value = UiState.Loading
 
-        val result = withContext(Dispatchers.IO) {
-            runCatching {
-                var totalAdded = 0
-                val total = corpusList.size
+        val result =
+            ankiRepository.sendListToAnki(title, wordLang, meaningLang, corpora, onProgress)
 
-                corpusList.forEachIndexed { index, corpus ->
-                    val export = ankiRepository
-                        .addCorpusToNoteDeck(note, corpus)
-                        .getOrThrow()
-
-                    totalAdded += when (export) {
-                        is ExportResult.Success -> {
-                            ankiRepository.markExported(
-                                listOf(corpus.id),
-                                System.currentTimeMillis()
-                            )
-                            export.added
-                        }
-
-                        else -> 0
-                    }
-
-                    // 🔔 Progress callback (UI / Notification)
-                    onProgress(index + 1, total)
-                }
-
-                totalAdded
-            }
+        result.onSuccess { (success, failed) ->
+            _uiState.value = UiState.Success(title, success, failed)
+        }.onFailure {
+            _uiState.value = UiState.Error(
+                it.message ?: "Failed to export note to Anki"
+            )
         }
-
-        result
-            .onSuccess { added ->
-                _uiState.value = UiState.Success(
-                    noteTitle = note.title,
-                    totalAdded = added
-                )
-            }
-            .onFailure { e ->
-                _uiState.value = UiState.Error(
-                    e.message ?: "Failed to export note to Anki"
-                )
-            }
     }
 
-    fun markUnexported(corpusIds: List<String>) = viewModelScope.launch {
-        ankiRepository.markExported(corpusIds, null)
-    }
-
-    fun getNotExportedByNote(noteId: String, callback: (List<Corpus>) -> Unit) =
-        viewModelScope.launch {
-            ankiRepository.getNotExportedByNote(noteId).collect { callback(it) }
-        }
-
-    suspend fun handleBeforeSelect(note: Note) {
-        if (!checkDeckExists(note)) {
-            val list = ankiRepository.getExportedByNote(note.id)
+    suspend fun handleBeforeSelect(
+        noteId: String,
+        title: String,
+        wordLang: String,
+        meaningLang: String
+    ) {
+        if (!checkDeckExists(title, wordLang, meaningLang)) {
+            val list = ankiRepository.getExportedByNote(noteId)
             markUnexported(list.map { it.id })
         }
     }
@@ -186,14 +130,11 @@ data class PreviewState(
 sealed interface UiState {
     object Idle : UiState
     object Loading : UiState
-
     data class Success(
         val noteTitle: String,
-        val totalAdded: Int
+        val success: Int,
+        val failed: Int
     ) : UiState
-
-    object AnkiNotInstalled : UiState
-    object PermissionRequired : UiState
 
     data class Error(
         val message: String
@@ -212,8 +153,6 @@ body {
     color: #000000;
     font-size: 20px;
     padding: 16px;
-}
-.card {
     text-align: center;
 }
 """

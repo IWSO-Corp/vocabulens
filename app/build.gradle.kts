@@ -25,6 +25,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -81,6 +85,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.vbpd)
     implementation(libs.github.anki.android)
+    implementation(libs.androidx.webkit)
 
     implementation(libs.language.id)
     implementation(libs.text.recognition)
@@ -104,6 +109,8 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    debugImplementation(libs.leakcanary.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

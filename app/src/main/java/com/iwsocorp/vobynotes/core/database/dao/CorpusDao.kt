@@ -108,32 +108,48 @@ interface CorpusDao {
 
     @Query(
         """
-        UPDATE corpus
-        SET exportedToAnkiAt = :timestamp
-        WHERE id IN (:corpusIds)
+        UPDATE corpus 
+        SET ankiNoteId = :ankiNoteId 
+        WHERE id = :corpusId
     """
+    )
+    suspend fun updateAnkiNoteId(
+        corpusId: String,
+        ankiNoteId: Long?
+    )
+
+    @Query(
+        """
+            UPDATE corpus
+            SET exportedToAnkiAt = :timestamp
+            WHERE id IN (:corpusIds)
+        """
     )
     suspend fun markExported(
         corpusIds: List<String>,
-        timestamp: Long?,
+        timestamp: Long?
     )
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM corpus
         WHERE noteId = :noteId
         AND deletedAt IS NULL
         AND exportedToAnkiAt IS NULL
         ORDER BY word ASC
-    """)
+    """
+    )
     fun getNotExportedByNote(noteId: String): Flow<List<CorpusEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM corpus
         WHERE noteId = :noteId
         AND deletedAt IS NULL
-        AND exportedToAnkiAt IS NOT NULL
+        AND ankiNoteId IS NOT NULL
         ORDER BY word ASC
-    """)
+    """
+    )
     suspend fun getExportedByNote(noteId: String): List<CorpusEntity>
 
 }

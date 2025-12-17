@@ -46,7 +46,7 @@ interface NoteDao {
     suspend fun deleteNoteByIds(ids: List<String>)
 
     @Query("SELECT * FROM notes WHERE id = :id")
-    suspend fun getNoteById(id: String): NoteEntity
+    suspend fun getNoteById(id: String): NoteEntity?
 
     @Query(
         """
@@ -209,6 +209,41 @@ interface NoteDao {
         deleteExpiredCorpus(expiredTime)
         deleteExpiredNotes(expiredTime)
     }
+
+    @Query("""
+        SELECT
+          n.id AS noteId,
+          n.title AS title,
+          n.wordLang AS wordLang,
+          n.meaningLang AS meaningLang,
+        
+          SUM(CASE
+              WHEN c.exportedToAnkiAt IS NULL
+               AND c.hasMeaning = 0
+              THEN 1 ELSE 0 END
+          ) AS unexportedWithoutMeaning,
+        
+          SUM(CASE
+              WHEN c.exportedToAnkiAt IS NULL
+               AND c.hasMeaning = 1
+               AND c.ankiNoteId IS NULL
+              THEN 1 ELSE 0 END
+          ) AS unexportedWithMeaning,
+        
+          SUM(CASE
+              WHEN c.exportedToAnkiAt IS NULL
+               AND c.ankiNoteId IS NOT NULL
+              THEN 1 ELSE 0 END
+          ) AS unexportedWithAnkiNoteId
+        
+        FROM notes n
+        LEFT JOIN corpus c ON c.noteId = n.id
+        WHERE n.deletedAt IS NULL
+        GROUP BY n.id
+        ORDER BY n.updatedAt DESC
+    """)
+    fun getNoteExportStats(): Flow<List<NoteExportStat>>
+
 }
 
 data class NoteAggregateEntity(
@@ -217,4 +252,14 @@ data class NoteAggregateEntity(
     @ColumnInfo(name = "familiarCount") val familiarCount: Int,
     @ColumnInfo(name = "unfamiliarCount") val unfamiliarCount: Int,
     @ColumnInfo(name = "corpusCount") val corpusCount: Int,
+)
+
+data class NoteExportStat(
+    val noteId: String,
+    val title: String,
+    val wordLang: String,
+    val meaningLang: String,
+    val unexportedWithoutMeaning: Int,
+    val unexportedWithMeaning: Int,
+    val unexportedWithAnkiNoteId: Int
 )

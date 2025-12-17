@@ -2,8 +2,11 @@ package com.iwsocorp.vobynotes.core.common
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
+import android.provider.Settings
 import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
@@ -207,5 +210,34 @@ object Utils {
             IndexedValue(counter, item)
         }
     }
+
+    fun hasPermission(context: Context, permission: String): Boolean =
+        ContextCompat.checkSelfPermission(
+            context,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
+
+    fun showPermanentlyDeniedDialog(context: Context): AlertDialog = AlertDialog.Builder(context)
+        .setTitle("Permission Required")
+        .setMessage("Permission has been permanently denied. Enable it via app settings.")
+        .setPositiveButton("Open Settings") { _, _ ->
+            val intent = Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", context.packageName, null)
+            )
+            context.startActivity(intent)
+        }
+        .setNegativeButton("Cancel", null)
+        .show()
+
+    fun showRationaleDialog(context: Context, action: () -> Unit): AlertDialog =
+        AlertDialog.Builder(context)
+            .setTitle("Permission Required")
+            .setMessage("The app needs this permission to continue.")
+            .setPositiveButton("Try Again") { _, _ ->
+                action()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
 
 }
