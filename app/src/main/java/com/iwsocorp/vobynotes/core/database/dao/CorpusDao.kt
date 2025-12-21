@@ -110,11 +110,11 @@ interface CorpusDao {
         """
         UPDATE corpus 
         SET ankiNoteId = :ankiNoteId 
-        WHERE id = :corpusId
+        WHERE id IN (:corpusIds)
     """
     )
     suspend fun updateAnkiNoteId(
-        corpusId: String,
+        corpusIds: List<String>,
         ankiNoteId: Long?
     )
 

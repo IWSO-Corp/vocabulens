@@ -16,60 +16,89 @@ object AnkiDroidConfig {
         "Word",
         "Reading",
         "Meaning",
-        "PosJson"
+        "PosNoun",
+        "PosPronoun",
+        "PosVerb",
+        "PosAdjective",
+        "PosAdverb",
+        "PosPreposition",
+        "PosConjunction",
+        "PosInterjection"
     )
 
-    val CARD_NAMES = arrayOf("Vocabulary")
+    val CARD_NAMES = arrayOf(
+        "Vocabulary",
+        "Noun",
+        "Pronoun",
+        "Verb",
+        "Adjective",
+        "Adverb",
+        "Preposition",
+        "Conjunction",
+        "Interjection"
+    )
 
     val QFMT = arrayOf(
+        // Default
         """
         <div class="word">{{Word}}</div>
         <div class="reading">{{Reading}}</div>
-        """
+        """,
+        // Pos defined
+        posQFormat("Noun"),
+        posQFormat("Pronoun"),
+        posQFormat("Verb"),
+        posQFormat("Adjective"),
+        posQFormat("Adverb"),
+        posQFormat("Preposition"),
+        posQFormat("Conjunction"),
+        posQFormat("Interjection")
     )
 
+    private fun posQFormat(pos: String): String = """
+        {{#Pos$pos}}
+        <div class='word'>{{Word}}</div>
+        <div class="reading">{{Reading}}</div>
+        <br>
+        <small>($pos)</small>
+        {{/Pos$pos}}
+        """.trimIndent()
+
     val AFMT = arrayOf(
+        // Default
         """
         <div class='word'>{{Word}}</div>
         <div class="reading">{{Reading}}</div>
         <br>
         <b>{{Meaning}}</b>
         <br><hr>
-        <div id="pos"></div>
+        <small>{{Tags}}</small>
+        """,
+        // Pos defined
+        posAFormat("Noun"),
+        posAFormat("Pronoun"),
+        posAFormat("Verb"),
+        posAFormat("Adjective"),
+        posAFormat("Adverb"),
+        posAFormat("Preposition"),
+        posAFormat("Conjunction"),
+        posAFormat("Interjection")
+    )
+
+    private fun posAFormat(pos: String): String = """
+        {{#Pos$pos}}
+        <div class='word'>{{Word}}</div>
+        <div class="reading">{{Reading}}</div>
+        <br>
+        <b>{{Meaning}}</b>
+        <br><hr>
+        <small>${pos.lowercase()}</small>
+        <br>
+        <div class='pos'>{{Pos$pos}}</div>
         <hr>
         <small>{{Tags}}</small>
-    
-        <script type="text/javascript">
-        (function () {
-            var raw = '{{PosJson}}';
-            if (!raw || raw.trim() === '') return;
-        
-            var data;
-            try {
-                data = JSON.parse(raw);
-            } catch (e) {
-                return;
-            }
-        
-            if (!data.pos) return;
-        
-            var html = '';
-            for (var pos in data.pos) {
-                html += '<h6>' + pos + '</h6>';
-        
-                var list = data.pos[pos];
-                for (var i = 0; i < list.length; i++) {
-                    var d = list[i];
-                    html += '<p>' + (d.definition || '-') + '<br>';
-                    html += '<i>' + (d.example || '') + '</i></p>';
-                }
-            }
-        
-            document.getElementById('pos').innerHTML = html;
-        })();
-        </script>
-        """
-    )
+        {{/Pos$pos}}
+        """.trimIndent()
 
     /** CSS global untuk seluruh kartu */
     val CSS: String = """

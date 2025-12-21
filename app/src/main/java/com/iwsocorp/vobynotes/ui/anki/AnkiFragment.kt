@@ -141,7 +141,7 @@ class AnkiFragment : BaseFragment<FragmentAnkiBinding>(FragmentAnkiBinding::infl
     }
 
     private fun onSelect(noteId: String, title: String, wordLang: String, meaningLang: String) =
-        viewModel.getNotExportedByNote(noteId).collectOnStarted { list ->
+        viewModel.getNotExportedByNote(noteId).distinctUntilChanged().collectOnStarted { list ->
             Timber.d("Corpus: ${list.size}")
 
             binding.btnSend.isEnabled = list.isNotEmpty()
@@ -210,14 +210,14 @@ class AnkiFragment : BaseFragment<FragmentAnkiBinding>(FragmentAnkiBinding::infl
 
             frontWebView.loadDataWithBaseURL(
                 null,
-                previewUI.first().frontHtml,
+                previewUI.last().frontHtml,
                 "text/html",
                 "utf-8",
                 null
             )
             backWebView.loadDataWithBaseURL(
                 null,
-                previewUI.first().backHtml,
+                previewUI.last().backHtml,
                 "text/html",
                 "utf-8",
                 null
