@@ -49,7 +49,6 @@
     <string name="action_delete_forever">Delete Forever</string>
     <string name="export">Export</string>
     <string name="shared_notes">Shared Notes</string>
-    <string name="shared_note_lang">%1$s / %2$s</string>
     <string name="shared_note_updated_at">Updated at %1$s</string>
     <string name="backup_amp_restore"><![CDATA[Backup & restore]]></string>
     <string name="export_amp_import"><![CDATA[Export & import]]></string>
