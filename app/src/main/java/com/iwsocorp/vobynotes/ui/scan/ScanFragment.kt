@@ -106,7 +106,7 @@ class ScanFragment : BaseFragment<FragmentScanBinding>(FragmentScanBinding::infl
 
     private fun setupUI() = with(binding) {
         toolbarScan.apply {
-            title = getString(R.string.menu_scan)
+            title = getString(R.string.scan)
             setNavigationIcon(R.drawable.baseline_arrow_back_24)
             setNavigationOnClickListener {
                 findNavController().navigateUp()
