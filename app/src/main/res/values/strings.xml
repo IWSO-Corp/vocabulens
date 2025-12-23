@@ -16,7 +16,6 @@
     <string name="word_amount">%1$d words</string>
     <string name="example_amount">%1$d examples</string>
     <string name="action_search">Search</string>
-    <string name="action_delete">Delete</string>
     <string name="action_share">Share</string>
     <string name="action_delete_note">Delete Note</string>
     <string name="delete">Delete</string>
@@ -52,7 +51,6 @@
     <string name="shared_notes">Shared Notes</string>
     <string name="shared_note_lang">%1$s / %2$s</string>
     <string name="shared_note_updated_at">Updated at %1$s</string>
-    <string name="action_save">Save</string>
     <string name="backup_amp_restore"><![CDATA[Backup & restore]]></string>
     <string name="export_amp_import"><![CDATA[Export & import]]></string>
     <string name="language_translations"><![CDATA[Language & translations]]></string>
