@@ -71,6 +71,9 @@ android {
             )
         }
     }
+    lint {
+        lintConfig = file("${rootProject.projectDir}/lint.xml")
+    }
 }
 
 play {
