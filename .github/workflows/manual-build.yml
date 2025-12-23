@@ -16,6 +16,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
       - name: Grant execute
         run: chmod +x gradlew
 
