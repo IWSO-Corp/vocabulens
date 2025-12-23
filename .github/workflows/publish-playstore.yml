@@ -1,0 +1,55 @@
+name: Publish Android App to Play Store
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Set up JDK
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> local.properties
+
+      # 3. Decode keystore
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+
+      # 4. Extract version from TAG
+      - name: Extract version name from tag
+        run: |
+          VERSION_NAME=${GITHUB_REF#refs/tags/v}
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
+      # 5. Grant permission
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      # 6. Build Release AAB
+      - name: Build Release Bundle
+        run: ./gradlew bundleRelease
+
+      # 7. Publish to Play Store
+      - name: Publish to Play Store (Internal)
+        run: ./gradlew publishReleaseBundle
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}

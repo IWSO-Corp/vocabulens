@@ -77,6 +77,7 @@ class AnkiRepositoryImpl @Inject constructor(
     }
 
     override suspend fun markUnexported(corpusIds: List<String>) {
+        corpusDao.updateAnkiNoteId(corpusIds, null)
         corpusDao.markExported(corpusIds, null)
     }
 
@@ -150,7 +151,7 @@ class AnkiRepositoryImpl @Inject constructor(
         )
 
         corpusDao.updateAnkiNoteId(
-            corpusId = corpus.id,
+            corpusIds = listOf(corpus.id),
             ankiNoteId = newNoteId
         )
         markExported(corpus)
@@ -186,10 +187,4 @@ interface AnkiRepository {
     suspend fun getExportedByNote(noteId: String): List<Corpus>
     fun getNotExportedByNote(noteId: String): Flow<List<Corpus>>
     fun getNoteExportStats(): Flow<List<NoteExportStat>>
-}
-
-sealed class ExportResult {
-    data class Success(val added: Int) : ExportResult()
-    object SkippedDuplicate : ExportResult()
-    object Failed : ExportResult()
 }

@@ -20,7 +20,7 @@ import com.iwsocorp.vobynotes.databinding.ItemNoteBinding
 import com.iwsocorp.vobynotes.databinding.ItemWordPreviewBinding
 
 class NoteAdapter(
-    private val listener: ClickListener,
+    private var listener: ClickListener?,
     private val isTrash: Boolean = false,
 ) : PagingDataAdapter<NoteWithCorpus, NoteAdapter.ViewHolder>(DIFF_CALLBACK) {
 
@@ -68,12 +68,12 @@ class NoteAdapter(
                     noteWithCorpus.familiarCount,
                     noteWithCorpus.unfamiliarCount
                 )
-            } else listener.getAllCorpusSize() {
+            } else listener?.getAllCorpusSize() {
                 tvWordCount.text = itemView.context.getString(R.string.word_amount, it)
             }
 
             itemView.setOnClickListener {
-                if (!isSelectionMode) listener.onClick(
+                if (!isSelectionMode) listener?.onClick(
                     absoluteAdapterPosition,
                     note.id
                 ) else {
@@ -99,7 +99,7 @@ class NoteAdapter(
             val adapter = PreviewAdapter(
                 noteId = note.id,
                 onClick = {
-                    if (!isSelectionMode) listener.onClick(
+                    if (!isSelectionMode) listener?.onClick(
                         absoluteAdapterPosition,
                         note.id
                     ) else toggleSelection(note)
@@ -109,7 +109,7 @@ class NoteAdapter(
                 toggleSelection(note)
             }
 
-            listener.getLastFiveCorpus(note.id) { newList ->
+            listener?.getLastFiveCorpus(note.id) { newList ->
                 val cachedList = corpusCache[note.id]
                 if (cachedList != newList) {
                     corpusCache[note.id] = newList
@@ -141,7 +141,7 @@ class NoteAdapter(
             isSelectionMode = false
         }
 
-        listener.onSelectionChanged(selectedNotes.size)
+        listener?.onSelectionChanged(selectedNotes.size)
         notifyItemChanged(pos)
     }
 
@@ -150,7 +150,7 @@ class NoteAdapter(
         selectedNotes.clear()
         isSelectionMode = false
         notifyDataSetChanged()
-        listener.onSelectionChanged(0)
+        listener?.onSelectionChanged(0)
     }
 
     fun getSelectedItems(): List<Note> = selectedNotes.toList()
@@ -167,6 +167,12 @@ class NoteAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.let { holder.bind(it, position) }
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+
+        listener = null
     }
 
     companion object {
@@ -189,8 +195,8 @@ class NoteAdapter(
 
 class PreviewAdapter(
     private val noteId: String,
-    private val onClick: (noteId: String) -> Unit,
-    private val onLongClick: (noteId: String) -> Unit,
+    private var onClick: ((noteId: String) -> Unit)?,
+    private var onLongClick: ((noteId: String) -> Unit)?,
 ) : ListAdapter<Corpus, PreviewAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     inner class ViewHolder(val binding: ItemWordPreviewBinding) :
@@ -211,10 +217,10 @@ class PreviewAdapter(
                 if (rtlLang.contains(corpus.meaningLang)) View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
 
             itemView.setOnClickListener {
-                onClick(noteId)
+                onClick?.invoke(noteId)
             }
             itemView.setOnLongClickListener {
-                onLongClick(noteId)
+                onLongClick?.invoke(noteId)
                 true
             }
         }
@@ -232,6 +238,13 @@ class PreviewAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(getItem(position))
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+
+        onClick = null
+        onLongClick = null
     }
 
     companion object {

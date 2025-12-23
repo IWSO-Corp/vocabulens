@@ -44,7 +44,7 @@ class AnkiViewModel @Inject constructor(
         _previewState.emit(state)
     }
 
-    fun checkDeckExists(title: String, wordLang: String, meaningLang: String): Boolean {
+    private fun checkDeckExists(title: String, wordLang: String, meaningLang: String): Boolean {
         return ankiRepository.checkDeckExists(title, wordLang, meaningLang)
     }
 

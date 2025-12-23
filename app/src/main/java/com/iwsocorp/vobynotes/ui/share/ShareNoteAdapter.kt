@@ -46,7 +46,7 @@ class ShareNoteAdapter(
                 sharedNote.content.sumOf { it.examples.size }
             )
             tvLang.text = itemView.context.getString(
-                R.string.shared_note_lang,
+                R.string.note_lang,
                 sharedNote.wordLang.langName(itemView.context),
                 sharedNote.meaningLang.langName(itemView.context)
             )

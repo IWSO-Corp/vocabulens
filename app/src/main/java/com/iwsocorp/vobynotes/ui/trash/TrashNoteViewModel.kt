@@ -25,7 +25,7 @@ class TrashNoteViewModel @Inject constructor(
 ) : ViewModel() {
 
     fun getNote(noteId: String, callback: (note: Note) -> Unit) = viewModelScope.launch {
-        callback(noteRepository.getNoteById(noteId))
+        noteRepository.getNoteById(noteId)?.let { callback(it) }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

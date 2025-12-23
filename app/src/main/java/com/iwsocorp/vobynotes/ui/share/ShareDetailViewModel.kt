@@ -55,8 +55,12 @@ class ShareDetailViewModel @Inject constructor(
 
                 noteRepository.addNote(sharedNote.asNote())
                 val result =
-                    backupRepository.insertCorpusSafely(sharedNote.content.map { it.asCorpus() }
-                        .map { it.asEntity() })
+                    backupRepository.insertCorpusSafely(sharedNote.content.map {
+                        it.asCorpus().copy(
+                            wordLang = sharedNote.wordLang,
+                            meaningLang = sharedNote.meaningLang
+                        )
+                    }.map { it.asEntity() })
                 insertResult(result)
 
                 _saveState.emit("Saved")
@@ -80,7 +84,9 @@ class ShareDetailViewModel @Inject constructor(
             return@launch
         }
 
-        noteRepository.refreshSavedNote(
+        val note = noteRepository.getNoteById(sharedNote.id)
+        if (note == null) noteRepository.addNote(sharedNote.asNote())
+        else noteRepository.refreshSavedNote(
             sharedNote.id,
             sharedNote.title,
             sharedNote.wordLang,
@@ -88,8 +94,12 @@ class ShareDetailViewModel @Inject constructor(
             sharedNote.content.size,
         )
 
-        val result = backupRepository.insertCorpusSafely(sharedNote.content.map { it.asCorpus() }
-            .map { it.asEntity() })
+        val result = backupRepository.insertCorpusSafely(sharedNote.content.map {
+            it.asCorpus().copy(
+                wordLang = sharedNote.wordLang,
+                meaningLang = sharedNote.meaningLang
+            )
+        }.map { it.asEntity() })
         insertResult(result)
 
         _saveState.emit(if (result.successCount > 0) "Updated" else "Note already up to date")
