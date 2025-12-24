@@ -1,4 +1,4 @@
-name: Publish Android App to Play Store (Internal Draft)
+name: Publish Android App to Play Store
 
 on:
   push:
