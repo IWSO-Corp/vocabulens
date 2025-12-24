@@ -167,5 +167,7 @@ dependencies {
 }
 
 fun getVersionCode(): Int {
-    return System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
+    val base = 9 // last published versionCode
+    val run = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
+    return base + run
 }
