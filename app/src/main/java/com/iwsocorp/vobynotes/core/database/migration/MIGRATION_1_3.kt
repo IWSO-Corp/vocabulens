@@ -49,10 +49,10 @@ val MIGRATION_1_3 = object : Migration(1, 3) {
                 IFNULL(phonetic, ''),
                 IFNULL(audio, ''),
                 IFNULL(meanings, '[]'),
-                0,                      -- ⬅️ JANGAN ambil dari corpus
+                0,
                 IFNULL(mark, ''),
                 createdAt,
-                createdAt,              -- fallback aman
+                createdAt,
                 NULL,
                 NULL,
                 NULL
