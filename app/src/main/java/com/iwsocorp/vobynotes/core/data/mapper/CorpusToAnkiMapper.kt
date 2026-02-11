@@ -3,9 +3,7 @@ package com.iwsocorp.vobynotes.core.data.mapper
 import com.iwsocorp.vobynotes.core.data.anki.AnkiDroidConfig
 import com.iwsocorp.vobynotes.core.model.Corpus
 import com.iwsocorp.vobynotes.core.model.Mark
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.iwsocorp.vobynotes.core.model.Meaning
 
 object CorpusToAnkiMapper {
 
@@ -28,66 +26,6 @@ object CorpusToAnkiMapper {
         return tags
     }
 
-    fun generateFlashcards(corpus: Corpus): List<Pair<Map<String, String>, Set<String>>> {
-        val tags = generateTags(corpus)
-
-        // Fallback: jika meanings kosong, buat 1 card dasar
-        if (corpus.meanings.isEmpty()) {
-            val fields = mapOf(
-                "Word" to corpus.word,
-                "Reading" to corpus.phonetic.ifBlank { "-" },
-                "Meaning" to corpus.meaning,
-                "ExampleSentence" to "-",
-                "ExampleMeaning" to "-",
-                "PartOfSpeech" to "-"
-            )
-
-            return listOf(fields to tags)
-        }
-
-        // Normal case
-        return corpus.meanings.map { meaning ->
-            val definition = meaning.definitions.firstOrNull()
-            val fields = mapOf(
-                "Word" to corpus.word,
-                "Reading" to corpus.phonetic.ifBlank { "-" },
-                "Meaning" to corpus.meaning,
-                "ExampleSentence" to definition?.example.orEmpty(),
-                "ExampleMeaning" to definition?.definition.orEmpty(),
-                "PartOfSpeech" to meaning.partOfSpeech.ifBlank { "-" }
-            )
-
-            fields to tags
-        }
-    }
-
-    fun generateAnkiFields(corpus: Corpus): List<Array<String>> {
-        val meaning = corpus.meanings
-
-        return if (meaning.isEmpty()) listOf(
-            arrayOf(
-                corpus.word,
-                corpus.phonetic.ifBlank { "-" },
-                corpus.meaning,
-                "-",
-                "-",
-                "-"
-            )
-        ) else meaning.map {
-            val definition = it.definitions.firstOrNull()
-            val pos = it.partOfSpeech
-
-            arrayOf(
-                "${corpus.word} ($pos)",
-                corpus.phonetic.ifBlank { "-" },
-                corpus.meaning,
-                definition?.example ?: "-",
-                definition?.definition ?: "-",
-                pos
-            )
-        }
-    }
-
     fun makeDeckName(title: String, wordLang: String, meaningLang: String): String {
         val safeTitle = "$title ($wordLang - $meaningLang)"
             .trim()
@@ -98,37 +36,37 @@ object CorpusToAnkiMapper {
     }
 
     fun Corpus.toAnkiFields(): Array<String> {
+        val posHtml = fromMeanings(this.meanings)
+
         return arrayOf(
-            word,
-            phonetic.ifBlank { "-" },
-            meaning,
-            toPosJson()
+            this.word,
+            this.phonetic.ifBlank { "-" },
+            this.meaning,
+            posHtml["noun"] ?: "",
+            posHtml["verb"] ?: "",
+            posHtml["adjective"] ?: "",
+            posHtml["adverb"] ?: "",
+            posHtml["pronoun"] ?: "",
+            posHtml["preposition"] ?: "",
+            posHtml["conjunction"] ?: "",
+            posHtml["interjection"] ?: "",
         )
     }
 
-    fun Corpus.toPosJson(): String {
-        val map = meanings
+    fun fromMeanings(meanings: List<Meaning>): Map<String, String> {
+        return meanings
             .groupBy { it.partOfSpeech.lowercase() }
-            .mapValues { (_, meanings) ->
-                meanings.flatMap { m ->
-                    m.definitions.map { def ->
-                        PosEntry(def.definition, def.example)
+            .mapValues { (_, list) ->
+                buildString {
+                    list.forEach { m ->
+                        m.definitions.forEach {
+                            append("<p><b>${it.definition}</b>")
+                            if (it.definition.isNotBlank()) append("<br><br><i>${it.example}</i>")
+                            append("</p>")
+                        }
                     }
                 }
             }
-
-        return Json.encodeToString(PosPayload(map))
     }
 
 }
-
-@Serializable
-data class PosEntry(
-    val definition: String,
-    val example: String? = null
-)
-
-@Serializable
-data class PosPayload(
-    val pos: Map<String, List<PosEntry>>
-)

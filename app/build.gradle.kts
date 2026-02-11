@@ -1,3 +1,5 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,6 +10,7 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.firebase.crashlytics")
+    id("com.github.triplet.play") version "3.13.0"
 }
 
 android {
@@ -18,10 +21,28 @@ android {
         applicationId = "com.iwsocorp.vobynotes"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.1.1"
+        versionCode = getVersionCode()
+        versionName = System.getenv("VERSION_NAME") ?: "0.0.0-dev"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "CLIENT_ID",
+            "\"${project.findProperty("CLIENT_ID") ?: ""}\""
+        )
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -29,9 +50,10 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
-        release {
+        getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -49,6 +71,32 @@ android {
         viewBinding = true
         buildConfig = true
     }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt"
+            )
+        }
+    }
+    lint {
+        lintConfig = file("${rootProject.projectDir}/lint.xml")
+    }
+}
+
+play {
+    val credentialsPath = System.getenv("PLAY_SERVICE_ACCOUNT_JSON")
+
+    if (!credentialsPath.isNullOrBlank()) {
+        serviceAccountCredentials.set(file(credentialsPath))
+    }
+
+    track.set("internal")
+
+    releaseStatus.set(ReleaseStatus.DRAFT)
 }
 
 dependencies {
@@ -101,6 +149,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation(libs.googleid)
+    implementation(libs.play.publisher)
 
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
@@ -115,4 +164,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+fun getVersionCode(): Int {
+    val base = 9 // last published versionCode
+    val run = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
+    return base + run
 }
