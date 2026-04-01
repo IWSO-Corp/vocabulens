@@ -31,6 +31,11 @@ android {
             "CLIENT_ID",
             "\"${project.findProperty("CLIENT_ID") ?: ""}\""
         )
+        buildConfigField(
+            "String",
+            "FORM_URL",
+            "\"${project.findProperty("FORM_URL") ?: ""}\""
+        )
     }
 
     signingConfigs {
