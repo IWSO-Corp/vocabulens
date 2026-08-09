@@ -45,6 +45,9 @@
       "api_key": [
         {
           "current_key": "AIzaSyD5XedXx-JAx5Ys-Qgug9q8zSY3Yyz-jvM"
+        },
+        {
+          "current_key": "AIzaSyC7XplOsd6bI_857crjfu_Vc7ZIhITlhHY"
         }
       ],
       "services": {
@@ -67,6 +70,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "529847151049-4hgivk9icuui349hekpflkdem7fsbeck.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.iwsocorp.vobynotes.debug",
+            "certificate_hash": "90ce8f3083aa6c795149e1a1a6c03f6d8f2051e7"
+          }
+        },
+        {
           "client_id": "529847151049-ef677s6ibqdnfoduhad9puvk9dvnckgt.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -74,6 +85,9 @@
       "api_key": [
         {
           "current_key": "AIzaSyD5XedXx-JAx5Ys-Qgug9q8zSY3Yyz-jvM"
+        },
+        {
+          "current_key": "AIzaSyC7XplOsd6bI_857crjfu_Vc7ZIhITlhHY"
         }
       ],
       "services": {

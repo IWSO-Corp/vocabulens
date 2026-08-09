@@ -15,12 +15,12 @@ plugins {
 
 android {
     namespace = "com.iwsocorp.vobynotes"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.iwsocorp.vobynotes"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = getVersionCode()
         versionName = System.getenv("VERSION_NAME") ?: "0.0.0-dev"
 
